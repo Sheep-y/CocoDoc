@@ -1,0 +1,69 @@
+<!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta charset="UTF-8" />
+<title>CocoDoc Design Doc</title>
+</head><body>
+<h1>CocoDoc Design Doc v1</h1>
+<aside>Date: <time>2015-03-17</time>.</aside>
+<section>
+   <h2>Purpose</h2>
+   <p>
+      CocoDoc is a simple file processor specialise in merging text and binary files to build independent, single file web app.
+      (It is <em>not</em> designed to replace Ant/Grunt/Gulp.)
+   </p>
+   <h3>Aims</h3>
+   <ol>
+      <li>Simple setup, simple to build. (e.g. drop file on builder / default build file)</li>
+      <li>Base (x)html file can be used both built (single file) and unbuilt (multi-file).</li>
+      <li>Multi-level building. (e.g. consolidate data js and trim/compress as one entity)</li>
+      <li>Support data uri, mime detection, charset conversion.</li>
+      <li>Support GUI and headless usage.</li>
+   </ol>
+</section>
+<section>
+   <h2>Program</h2>
+   <p>
+      CocoDoc is written in Java SE 1.8 and deployed in form of an executable, independent jar file.
+      GUI is done in Java FX.
+   </p>
+   <p>
+      All libraries (if any), licenses and documentations are included in the jar.
+      Licenses are accessible by end user.
+      Other resources are accessible by decompressing the jar.
+   </p>
+   <h3>Program Structure</h3>
+   <dl>
+      <dt>sheepy.cocodoc</dt><dd>Base package. Main application entry point.</dd>
+      <dt>sheepy.cocodoc.ui</dt><dd>User Interface package.</dd>
+      <dt>sheepy.cocodoc.worker</dt><dd>Main processing logic package.</dd>
+      <dt>sheepy.cocodoc.worker.error</dt><dd>Application specific exceptions. Most runtime errors are wrapped in these.</dd>
+      <dt>sheepy.cocodoc.worker.parser</dt><dd>Parser package.  Parsers parse Coco tags, Html Tag, or trim JavaScript.</dd>
+      <dt>sheepy.cocodoc.worker.task</dt><dd>Task package. Most task modifies or parses data, such as converting to base64.</dd>
+      <dt>sheepy.cocodoc.worker.util</dt><dd>App specific utilities / helper classes.</dd>
+      <dt>sheepy.util</dt><dd>Generic utilities / helper classes.</dd>
+   </dl>
+
+   <h3>Process Flow</h3>
+   <ol>
+   <li>A job is initialised by selecting a file, such as by command line (drag n drop) or GUI.</li>
+   <li>A new <code>INLINE</code> <code>Directive</code> is created to read the file and do coco parsing.</li>
+   <li>When asked for result the directive creates a new <code>Block</code> and calls <code>Worker</code>.</li>
+   <li><code>Worker</code> runs the directive.
+   <ol>
+      <li>Each <code>Task</code> of the directive is asked to initialise and validate its parameters.</li>
+      <li>Each <code>Task</code> is executed one by one
+      <ol>
+         <li><code>TaskFile</code> (of <code>INLINE</code> <code>Directive</code>) reads from the file and adds to the block's content.</li>
+         <li><code>TaskCoco</code> parse <code>Directive</code> from block data; each <code>INLINE</code> and <code>START</code> directive creates a new children <code>Block</code>.
+         <ol>
+            <li><code>Directive</code>s are asked to <code>start()</code> as soon as they are created, which calls <code>Worker</code> to run its <code>Block</code> (recur from topmost step 4).</li>
+            <li>After the whole block is parsed, <code>Directive</code> are asked for text result in order.</li>
+         </ol>
+         </li>
+         <li><code>TaskFile</code> (of <code>OUTPUT</code> <code>Directive</code>) set the block's output file.</li>
+      </ol>
+      </li>
+      <li>A <code>Block</code> may save its result (text or binary) into a file.  If not saved the result can be read by the parent <code>Block</code>.</li>
+   </ol>
+   </li>
+   </ol>
+</section>
+</body></html>
