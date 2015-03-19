@@ -1,16 +1,17 @@
-package sheepy.cocodoc.worker;
+package sheepy.cocodoc.worker.directive;
 
 import java.util.ArrayList;
 import java.util.List;
-import static sheepy.cocodoc.worker.Directive.Action.END;
-import static sheepy.cocodoc.worker.Directive.Action.INLINE;
-import static sheepy.cocodoc.worker.Directive.Action.OUTPUT;
-import static sheepy.cocodoc.worker.Directive.Action.START;
+import sheepy.cocodoc.worker.Block;
+import static sheepy.cocodoc.worker.directive.Directive.Action.END;
+import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
+import static sheepy.cocodoc.worker.directive.Directive.Action.OUTPUT;
+import static sheepy.cocodoc.worker.directive.Directive.Action.START;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.util.collection.NullData;
 
-public class Directive {
+public abstract class Directive {
    // protected static final Logger log = Logger.getLogger( Directive.class.getName() );
 
    public enum Action {
@@ -23,10 +24,24 @@ public class Directive {
    public static Directive create ( String action, List<Task> tasks ) {
       action = action.trim().toUpperCase();
       try {
-         Action act = Action.valueOf( action );
-         return new Directive( act, tasks );
+         return create( Action.valueOf( action ), tasks );
       } catch ( IllegalArgumentException ex ) {
          return createMapped( action.toLowerCase(), tasks );
+      }
+   }
+
+   public static Directive create ( Action action, List<Task> tasks ) {
+      switch ( action ) {
+         case INLINE:
+            return new DirInline( action, tasks );
+         case OUTPUT:
+            return new DirOutput( action, tasks );
+         case START:
+            return new DirStart( action, tasks );
+         case END:
+            return new DirEnd( action, tasks );
+         default:
+            throw new UnsupportedOperationException( "Not implemented" );
       }
    }
 
@@ -82,40 +97,9 @@ public class Directive {
    public Block getBlock () { return block; }
    public void setBlock ( Block block ) { this.block = block; }
 
-   public Directive start( Block context ) {
-      switch ( getAction() ) {
-         case START:
-            new Block( context, this );
-            break;
-         case INLINE:
-         case END:
-            Worker.startBlock( new Block( context, this )  );
-            break;
+   public abstract Directive start( Block context );
 
-         case OUTPUT:
-            setBlock( context );
-            break;
-      }
-      return this;
-   }
-
-   public Block get() throws InterruptedException {
-      switch ( getAction() ) {
-         case START:
-            block.run();
-            return block;
-
-         case INLINE:
-            if ( block == null ) start( new Block( this ) );
-            return Worker.getBlockResult( block );
-
-         case OUTPUT:
-            if ( block == null ) throw new IllegalStateException();
-            for ( Task task : getTasks() )
-               task.process();
-      }
-      return null;
-   }
+   public abstract Block get() throws InterruptedException;
 
    /*****************************************************************************************************/
 

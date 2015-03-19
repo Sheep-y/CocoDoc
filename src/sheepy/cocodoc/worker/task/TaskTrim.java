@@ -17,7 +17,7 @@ public class TaskTrim extends Task {
    private static final String[] validParams = new String[]{ "css","html","js","xml","ws","line","crlf","lf","oneline" };
    private static final Predicate<List<String>> validate = andAlso( hasItem(), onlyContains( Arrays.asList( validParams ) ) );
    @Override protected Predicate<List<String>> validParam() { return validate; }
-   @Override protected String invalidParamMessage() { return "trim() task should have one or more of " + String.join( ",", validParams ) + ": {0}"; }
+   @Override protected String invalidParamMessage() { return "trim() task should have one or more of " + String.join( ",", validParams ) + ". Actual: {0}"; }
 
    private static String WsTrim = "([^\\S\r\n])[^\\S\r\n]+"; // TODO: Rewrite with proper parser
    private static String WsReplace = "$1";
@@ -28,10 +28,6 @@ public class TaskTrim extends Task {
    private static String CssTrim = "/\\*.*?\\*/"; // I don't think we need rewrite to avoid values and filenames.
    private static String JsTrim = "/\\*.*?\\*/|(?<=^|[\\s{};])(?<!:)//[^\n]*(?=\n|$)"; // TODO: Replace with a JS parser
    private static String HtmlTrim = "<!--.*?-->"; // TODO: Replace with HTML parser to avoid script, template etc
-
-   @Override public void init() {
-      super.init();
-   }
 
    @Override public void run () {
       if ( ! hasParams() ) return;
@@ -52,14 +48,14 @@ public class TaskTrim extends Task {
                text = replace( text, WsTrim  , WsReplace   ); // Line
                text = replace( text, "\r?\n" , "" ); // CRLF
                break;
-            default : throw new CocoParseError( "Unknown encode parameter: " + e );
+            default : throwOrWarn( new CocoParseError( "Unknown trim parameter: " + e ) );
          }
       }
       log.log( Level.FINE, "Trimmed {1} characters to {2}: {0}", new Object[]{ getParamText(), startLen, text.length() } );
       getBlock().setText( text );
    }
 
-   private static String replace( String text, String pattern, String replacement ) {
+   private static String replace ( String text, String pattern, String replacement ) {
       Matcher m = tagPool.get( pattern ).reset( text );
       String result = m.replaceAll( replacement );
       tagPool.recycle( pattern, m );

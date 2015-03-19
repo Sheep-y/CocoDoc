@@ -12,10 +12,10 @@
    <h3>Aims</h3>
    <ol>
       <li>Simple setup, simple to build. (e.g. drop file on builder / default build file)</li>
-      <li>Base (x)html file can be used both built (single file) and unbuilt (multi-file).</li>
+      <li>Base (x)html file can be used both after build (single file) and before build (multi-file).</li>
       <li>Multi-level building. (e.g. consolidate data js and trim/compress as one entity)</li>
       <li>Support data uri, mime detection, charset conversion.</li>
-      <li>Support GUI and headless usage.</li>
+      <li>Support both GUI and commandline (headless) environment.</li>
    </ol>
 </section>
 <section>
@@ -34,16 +34,17 @@
       <dt>sheepy.cocodoc</dt><dd>Base package. Main application entry point.</dd>
       <dt>sheepy.cocodoc.ui</dt><dd>User Interface package.</dd>
       <dt>sheepy.cocodoc.worker</dt><dd>Main processing logic package.</dd>
+      <dt>sheepy.cocodoc.worker.directive</dt><dd>Processing directive. Represents major, structural CocoDoc commands, argumented by tasks.</dd>
       <dt>sheepy.cocodoc.worker.error</dt><dd>Application specific exceptions. Most runtime errors are wrapped in these.</dd>
       <dt>sheepy.cocodoc.worker.parser</dt><dd>Parser package.  Parsers parse Coco tags, Html Tag, or trim JavaScript.</dd>
-      <dt>sheepy.cocodoc.worker.task</dt><dd>Task package. Most task modifies or parses data, such as converting to base64.</dd>
+      <dt>sheepy.cocodoc.worker.task</dt><dd>Task package. A task modifies or parses data, such as converting to base64.</dd>
       <dt>sheepy.cocodoc.worker.util</dt><dd>App specific utilities / helper classes.</dd>
       <dt>sheepy.util</dt><dd>Generic utilities / helper classes.</dd>
    </dl>
 
    <h3>Process Flow</h3>
    <ol>
-   <li>A job is initialised by selecting a file, such as by command line (drag n drop) or GUI.</li>
+   <li>A job is initialised by selecting a file, through command line or GUI.</li>
    <li>A new <code>INLINE</code> <code>Directive</code> is created to read the file and do coco parsing.</li>
    <li>When asked for result the directive creates a new <code>Block</code> and calls <code>Worker</code>.</li>
    <li><code>Worker</code> runs the directive.
@@ -61,7 +62,7 @@
          <li><code>TaskFile</code> (of <code>OUTPUT</code> <code>Directive</code>) set the block's output file.</li>
       </ol>
       </li>
-      <li>A <code>Block</code> may save its result (text or binary) into a file.  If not saved the result can be read by the parent <code>Block</code>.</li>
+      <li>A block may save its result (text or binary) into a file.  If not saved the result can be read by the parent block.</li>
    </ol>
    </li>
    </ol>

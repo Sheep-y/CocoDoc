@@ -1,10 +1,10 @@
 <!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta charset="UTF-8" />
 <title>CocoDoc</title>
 </head><body>
-<h1>CocoDoc v0.1</h1>
+<h1>CocoDoc v0.1</h1>   <p>Licensed under <a href='http://www.gnu.org/copyleft/gpl.html'>LGPL v3</a>. </p>
 <p>
    CocoDoc is a simple text document builder, designed to merge web app resources such as html, css, js, and images. <br/>
-   Usage: Drag and drop build file onto jar, or pass in build file name(s) as parameter. Default build file is "cocodoc.conf".
+   Usage: Drag and drop build file onto jar, or pass in build file(s) as parameter. Default build file is "cocodoc.conf".
 </p>
 <h2>Syntax Example</h2>
 <pre><code>
@@ -26,6 +26,7 @@
    <dt>&lt;?coco-output&gt;</dt>  <dd>Specify output file for current scope. Default output to upper scope, or to console when at top scope.</dd>
 </dl>
 <h2>Processes</h2>
+<p>  Many processes accepts "noerr" as parameter to ignore errors and allow execution to continue.</p>
 <dl>
    <dt>file(filename)</dt>          <dd>Name of file(s) to inline.  When used as first parameter, can directly use file name.  Read data is initially binary.</dd>
    <dt>charset(utf-8)</dt>          <dd>Alias of <code>text</code>, see below. If used to convert input, should be the first or second parameter.</dd>
@@ -33,7 +34,7 @@
    <dt>position(noerr?,before|after|replace? locator)</dt> <dd>Position and scope of output. Default use current position (this).</dd>
 </dl>
 <h2>Data Processes</h2>
-<p>Some data process expect binary or text data.  If conversion is necessary, it will be done using default encoding.</p>
+<p>  These process may modify data in binary or text form.  If conversion is necessary, it will be done using last used encoding.</p>
 <dl>
    <dt>binary(utf-8)</dt>            <dd>Explictly convert text data to binary using the first encoding that works. Default utf-8. </dd>
    <dt>text(utf-8)</dt>              <dd>Explictly convert binary data to text using the first encoding that works. Default utf-8,utf-16.</dd>
@@ -42,8 +43,8 @@
    <dt>decode(base64,xml)</dt>       <dd>Decode data from Base64 code / XML entities. [Text]</dd>
    <dt>encode(base64,xml,crlf)</dt>  <dd>Encode data into Base64 code / XML entities / JS string / URL / convert line breaks to lf/crlf. [Text]</dd>
    <dt>prefix("prefix")</dt>         <dd>Add text to head of data. Use <kbd>${auto-datauri}</kbd> to auto set mime and charset. [Text]</dd>
-   <dt>postfix("postfix")</dt>       <dd>Add text to tail of data. [Text] </dd>
+   <dt>postfix("postfix")</dt>       <dd>Add text to tail of data. [Text]</dd>
+   <dt>test(xml)</dt>                <dd>Test (validate) current data as xml. [Text or Binary] Present</dd>
    <dt>trim(xml,css,js,line,ws,crlf)</dt> <dd>Trim XML/CSS/JS comments, lines, multiple whitespaces, and line breaks. "oneline" is alias of "line,ws,crlf" [Text]</dd>
-   <dt>wrap(80)</dt>                 <dd>Wrap data at 80 character using \n. [Text]</dd>
 </dl>
 </body></html>

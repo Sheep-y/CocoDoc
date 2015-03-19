@@ -6,32 +6,30 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.activation.MimetypesFileTypeMap;
-import sheepy.cocodoc.worker.Directive;
+import sheepy.cocodoc.worker.directive.Directive;
 import static sheepy.cocodoc.worker.task.Task.log;
 import sheepy.util.collection.NullData;
 
 public class TaskPrefix extends Task {
 
-   @Override public Action getAction () { return Action.TEXT; }
+   @Override public Action getAction () { return Action.PREFIX; }
 
    @Override protected Predicate<List<String>> validParam() { return nonEmpty; }
    @Override protected String invalidParamMessage() { return "prefix() task should have parameter."; }
 
    @Override public void run () {
       if ( ! hasParams() ) return;
-      StringBuilder prefix = new StringBuilder();
+      StringBuilder affix = new StringBuilder();
       for ( String s : getParams() ) {
          if ( s.equals( "${auto-datauri}" ) ) {
             s = detect_prefix();
          }
-         prefix.append( s );
+         affix.append( s );
       }
-      log.log( Level.FINE, "Adding {0} characters as prefix", prefix.length() );
-      if ( prefix.length() <= 0 ) return;
+      log.log( Level.FINE, "Adding {0} characters as prefix", affix.length() );
+      if ( affix.length() <= 0 ) return;
 
-      StringBuilder text = getBlock().getText();
-      text.insert( 0, prefix );
-      getBlock().setText( text );
+      getBlock().setText( getBlock().getText().insert( 0, affix ) );
    }
 
    private static MimetypesFileTypeMap mimeMap;

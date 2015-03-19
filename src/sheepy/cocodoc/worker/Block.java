@@ -1,5 +1,6 @@
 package sheepy.cocodoc.worker;
 
+import sheepy.cocodoc.worker.directive.Directive;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sheepy.cocodoc.worker.error.CocoRunError;
+import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.cocodoc.worker.util.CharsetUtils;
 import sheepy.util.concurrent.AbstractFuture;
@@ -136,7 +138,8 @@ public class Block extends AbstractFuture<Block> {
       if ( data == null ) {
          setText( null );
       } else {
-         if ( textResult   != null ) textResult.setLength( 0 );
+         if ( data == binaryResult ) return;
+         if ( textResult != null ) textResult.setLength( 0 );
          binaryResult = data;
       }
    }
@@ -146,8 +149,9 @@ public class Block extends AbstractFuture<Block> {
          binaryResult = null;
          textResult = null;
       } else {
+         if ( text == textResult ) return;
          if ( binaryResult != null ) binaryResult.reset();
-         if ( text instanceof  StringBuilder ) {
+         if ( text instanceof StringBuilder ) {
             textResult = (StringBuilder) text;
          } else {
             textResult = new StringBuilder( text );
@@ -193,6 +197,11 @@ public class Block extends AbstractFuture<Block> {
       throw new CocoRunError( "Cannot decode text in " + String.join( ", ", list ) , error );
    }
 
+   /** Return last used binary / text encoding. */
+   public Charset getCurrentCharset() {
+      return currentCharset;
+   }
+
    /************************************************************************************************/
 
    public File getBasePath() { return basePath; }
@@ -205,8 +214,7 @@ public class Block extends AbstractFuture<Block> {
       this.outputTarget = output;
    }
 
-   /** Return last used binary / text encoding. */
-   public Charset getCurrentCharset() {
-      return currentCharset;
-   }
+   private Parser parser;
+   public Parser getParser () { return parser; }
+   public void setParser ( Parser currentParser ) { this.parser = currentParser; }
 }

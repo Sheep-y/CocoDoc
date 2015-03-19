@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.StreamSupport;
 import sheepy.cocodoc.worker.Block;
-import static sheepy.cocodoc.worker.Directive.Action.INLINE;
+import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.error.CocoRunError;
 import static sheepy.util.collection.CollectionPredicate.hasItem;
@@ -33,7 +33,7 @@ public class TaskFile extends Task {
             }
             break;
          default     :
-            throw new CocoParseError( "file() task only supports <?coco-inline?> and <?coco-output?>. Current: coco-" + getDirective().getAction().name().toLowerCase() );
+            throwOrWarn( new CocoParseError( "file() task only supports <?coco-inline?> and <?coco-output?>. Current: coco-" + getDirective().getAction().name().toLowerCase() ) );
       }
    }
 

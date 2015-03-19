@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
 import static java.util.regex.Pattern.DOTALL;
 import static java.util.regex.Pattern.UNICODE_CHARACTER_CLASS;
 import sheepy.cocodoc.worker.Block;
-import sheepy.cocodoc.worker.Directive;
+import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.util.Text;
 import sheepy.util.collection.CollectionPredicate;
@@ -45,8 +45,8 @@ public abstract class Task {
       ENCODE,
       PREFIX,
       POSTFIX,
-      TRIM,
-      WRAP
+      TEST,
+      TRIM
    }
 
    public static Task create ( String task ) {
@@ -72,7 +72,9 @@ public abstract class Task {
          case ENCODE  : result = new TaskEncode(); break;
          case FILE    : result = new TaskFile(); break;
          case PREFIX  : result = new TaskPrefix(); break;
+         case POSTFIX : result = new TaskPostfix(); break;
          case TEXT    : result = new TaskText(); break;
+         case TEST    : result = new TaskTest(); break;
          case TRIM    : result = new TaskTrim(); break;
          default      : throw new UnsupportedOperationException( "Unimplemented task: " + task );
       }
@@ -125,6 +127,10 @@ public abstract class Task {
 
    public boolean isThrowError () { return throwError; }
    public void setThrowError( boolean throwError ) { this.throwError = throwError; }
+   public <T extends Exception> void throwOrWarn ( T ex ) throws T {
+      if ( isThrowError() ) throw ex;
+      else log.warning( ex.getLocalizedMessage() );
+   }
 
    // Errors should be thrown, warnings should be logged.
    @SuppressWarnings("empty-statement")
@@ -138,15 +144,15 @@ public abstract class Task {
       // Validate parameters
       Predicate<List<String>> validate = validParam();
       if ( validate != null )
-         if ( ! validate.test(params ) )
+         if ( ! validate.test( params ) )
             log.log( Level.WARNING, invalidParamMessage(), this );
    }
    protected abstract Predicate<List<String>> validParam();
    protected String invalidParamMessage() { return "Incorrect or non-effective parameters: {0}"; };
 
    List<String> params;
-   public boolean hasParams () { return ! NullData.isEmpty(params ); }
-   public List<String> getParams () { return NullData.copy(params ); }
+   public boolean hasParams () { return ! NullData.isEmpty( params ); }
+   public List<String> getParams () { return NullData.copy( params ); }
    public String getParam ( int index ) { return NullData.get(params, index ); }
    public String getParamText () {
       return hasParams() ? '"' + String.join(",", params ) + '"' : "";

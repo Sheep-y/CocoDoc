@@ -5,17 +5,19 @@ import java.io.IOException;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
-import sheepy.util.collection.NullData;
+import sheepy.cocodoc.worker.error.CocoRunError;
+import static sheepy.util.collection.CollectionPredicate.andAlso;
+import static sheepy.util.collection.CollectionPredicate.onlyContains;
+import static sheepy.util.collection.CollectionPredicate.size;
 
 public class TaskDeflate extends Task {
 
    @Override public Action getAction () { return Action.DEFLATE; }
 
-   private static final Predicate<List<String>> validate = params ->
-         NullData.isEmpty( params ) || ( params.size() <= 2 && params.stream().allMatch( p -> p.equals( "zip" ) || p.matches( "0-9" ) ) );
+   private static final Predicate<List<String>> validate = andAlso( size( 0, 2 ), onlyContains( Pattern.compile( "\\d|zip" ) ) );
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "deflate() task accepts 0-9 for compression level (default 9), and 'zlib' to include zlib header/checksum: {0}"; }
 
@@ -31,7 +33,7 @@ public class TaskDeflate extends Task {
          getBlock().setBinary( buffer );
          log.log( Level.FINE, "Deflate({2},{3}) {0} bytes to {1}.", new Object[]{ data.length, buffer.size(), zlib ? "zlib" : "gz", level } );
       } catch ( IOException ex ) {
-         Logger.getLogger(TaskDeflate.class.getName()).log(Level.SEVERE, null, ex);
+         throwOrWarn( new CocoRunError( ex ) );
       }
    }
 }

@@ -1,5 +1,7 @@
 package sheepy.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
@@ -26,4 +28,37 @@ public class Text {
       return strip == null ? result : strip.apply(result);
    }
 
+   public static String ellipsis ( CharSequence text, int max ) {
+      if ( text == null ) return null;
+      if ( max <= 0 ) throw new IllegalArgumentException();
+      String txt = text.toString().replaceAll( "[\r\n]+", " " ).trim();
+      return txt.length() < max ? txt : txt.substring( 0, max-1 ) + "…";
+   }
+
+   public static String toCrLf ( CharSequence text ) {
+      return text.toString().replaceAll( "(?<!\r)\n", "\r\n" );
+   }
+
+   public static String toLf ( CharSequence text ) {
+      return text.toString().replaceAll( "\r\n", "\n" );
+   }
+
+   public static String escapeUrl ( CharSequence text ) {
+      try {
+         return URLEncoder.encode( text.toString(), "UTF-8" );
+      } catch (UnsupportedEncodingException ex) {
+         return URLEncoder.encode( text.toString() );
+      }
+   }
+
+   public static String escapeJavaScript ( CharSequence text ) {
+      return text.toString().replaceAll( "[\"'`\n\r]", "\\$0" );
+   }
+
+   public static String escapeXml ( CharSequence text ) {
+      return text.toString()
+            .replaceAll( "&", "&#38;" ).replaceAll( "/" , "&#34;" )
+            .replaceAll( "'", "&#39;" ).replaceAll( "\"", "&#47;" )
+            .replaceAll( "<", "&lt;"  ).replaceAll( "<" , "&gt;"  );
+   }
 }

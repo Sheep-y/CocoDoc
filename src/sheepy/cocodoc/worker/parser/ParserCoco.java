@@ -8,35 +8,33 @@ package sheepy.cocodoc.worker.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import sheepy.cocodoc.worker.Block;
-import sheepy.cocodoc.worker.Directive;
+import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.task.Task;
-import static sheepy.cocodoc.worker.task.Task.tagPool;
 import sheepy.cocodoc.worker.task.TaskFile;
+import sheepy.cocodoc.worker.util.CocoUtils;
 import sheepy.util.Text;
 import sheepy.util.collection.NullData;
 
-public class ParserCoco {
-   protected static final Logger log = Logger.getLogger( ParserCoco.class.getSimpleName() );
+public class ParserCoco extends Parser {
+   private String startTag = "<\\?coco(?:-(\\w*))?";
+   private String endTag = "\\?>";
 
-   private String startTag = "<\\?coco(?:-(\\w*))?"; // Must clear start_matcher when set
-   private String endTag = "\\?>"; // Must clear end_matcher when set
-
-   private static final String firstTagRegx = "<[^!>][^>]*>";
-   private static final String paramRegx = "\"([^\"]|\"\")*\"|'([^']|'')*'|[^\t\r\n ,()'\"]+"; // double quoted | single quoted | plain parameter
+   private static final String paramRegx = "\"([^\"]|\"\")*\"|'([^']|'')*'|[^,()]+"; // double quoted | single quoted | plain parameter
    private static final String attrRegx = ("(\\w+)\\s* ( \\(\\s* (?:" + paramRegx + ") (?:\\s*,\\s*(?:"+paramRegx+") )* \\s* \\))?").replaceAll( " +", "" );
-                                //   directive     \(          first param             , more params                   \)
+   private static final String firstParamRegx = "\"([^\"]|\"\")*\"|'([^']|'')*'|[^\r\n\t ,()]+"; // differs from paramRegx in that this stop at space
+                                       //   directive     \(          first param      (      ,        more params   )*       \)
+   // Only live during parsing.
    private Matcher startMatcher;
    private Matcher endMatcher;
    private Matcher attributeMatcher;
    private Matcher parameterMatcher;
+   private Matcher firstParameterMatcher;
    private int tagCount;
 
    private List<Object> resultStack;
-   private String unparsed;
 
    public ParserCoco () {}
 
@@ -44,16 +42,23 @@ public class ParserCoco {
       this.setTags( startTag, endTag );
    }
 
-   public StringBuilder parse ( Block context ) {
-      String text = context.getText().toString();
-      if ( text.isEmpty() ) return null;
-      log.log( Level.INFO, "Parsing coco tag in {0} characters. {1}", new Object[]{ text.length(), findFirstTag( text ) } ) ;
+   public ParserCoco ( Parser parent ) {
+      super( parent );
+      ParserCoco p = (ParserCoco) parent;
+      this.startTag = p.startTag;
+      this.endTag = p.endTag;
+   }
 
+   @Override protected StringBuilder implParse ( Block context, String text ) {
       parseDocument( context, text );
       clearMatchers();
       if ( resultStack == null ) return null; // No tag found
 
       return getTextResult();
+   }
+
+   @Override public ParserCoco clone() {
+      return new ParserCoco( this );
    }
 
    /**************************************************************************************************************/
@@ -67,8 +72,8 @@ public class ParserCoco {
     */
    private void parseDocument ( Block context, String text ) {
       tagCount = 0;
-      Matcher start = startMatcher = tagPool.get( startTag );
-      Matcher end   = endMatcher   = tagPool.get( endTag   );
+      Matcher start = startMatcher = CocoUtils.tagPool.get( startTag );
+      Matcher end   = endMatcher   = CocoUtils.tagPool.get( endTag   );
 
       while ( start.reset( text ).find() ) {
          if ( shouldStop() ) return;
@@ -80,28 +85,26 @@ public class ParserCoco {
             if ( dir != null ) {
                ++tagCount;
                addToResult( text.subSequence( 0, start.start() ) );
+               log.log( Level.FINE, "Found coco tag {0}", dir );
                switch ( dir.getAction() ) {
                   case START:
-                     ParserCoco parser = new ParserCoco( startTag, endTag );
-                     dir.setContent( text.substring( end.end() ) ).start( context );
-                     dir.getBlock().setText( parser.parse( dir.getBlock() ) );
-                     text = parser.unparsed;
-                     addToResult( dir );
+                     dir.setContent( text.substring( end.end() ) ); // Pass content to directive
+                     addToResult( dir.start( context ) );
+                     text = dir.getContent().toString(); // Get remaining (unparsed) content
                      if ( text == null ) throw new CocoParseError( "Coco:start without Coco:end" );
                      break;
                   case END:
                      if ( context.getParent() == null ) throw new CocoParseError( "Coco:end without Coco:start" );
-                     unparsed = text.substring( end.end() );
+                     context.getDirective().setContent( text.substring( end.end() ) ); // Parse unparsed content back to upper level.
                      return; // Terminate
                   default:
-                     log.log( Level.FINE, "Found coco tag {0}", dir );
-                     dir.start( context );
-                     addToResult( dir );
+                     addToResult( dir.start( context ) );
                      text = text.substring( end.end() );
                }
             }
          } catch ( CocoParseError ex ) {
             log.log( Level.WARNING, "Cannot parse coco tag {1}: {0}", new Object[]{ ex, tag } );
+            if ( text == null ) return;
             addToResult( text.subSequence( 0, end.end() ) );
             text = text.substring( end.end() );
          }
@@ -113,45 +116,50 @@ public class ParserCoco {
 
    private Directive parseDirective ( String tag, Matcher start ) {
       String action = start.group( 1 );
-      String attrTxt = tag.substring( start.group().length() ).trim();
+      String txt = tag.substring( start.group().length() ).trim();
       List<Task> tasks = null;
 
-      log.log( Level.FINER, "Parsing coco directive: {0} {1}", new Object[]{ action, attrTxt } );
-      if ( ! attrTxt.isEmpty() ) {
+      log.log( Level.FINER, "Parsing coco directive: {0} {1}", new Object[]{ action, txt } );
+      if ( ! txt.isEmpty() ) {
          tasks = new ArrayList<>();
-         String[] defaultCheck = checkDefaultParameter( attrTxt );
+         String[] defaultCheck = checkDefaultParameter( txt );
          if ( defaultCheck != null ) {
             log.log( Level.FINEST, "Matched parameter {1} for default task {0}", new Object[]{ action, defaultCheck[0] } );
             tasks.add( new TaskFile().addParam( defaultCheck[0] ) );
-            attrTxt = defaultCheck[1];
+            txt = defaultCheck[1];
          }
-         if ( ! attrTxt.isEmpty() ) { // Match remaining parameters
+         if ( ! txt.isEmpty() ) { // Match remaining parameters
             Matcher attr = attributeMatcher;
-            if ( attr == null ) attr = attributeMatcher = tagPool.get( attrRegx );
-            while ( ! attrTxt.isEmpty() ) {
-               if ( ! attr.reset( attrTxt ).find() || attr.start() != 0 )
-                  throw new CocoParseError( "Cannot parse parameters " + attrTxt );
+            if ( attr == null ) attr = attributeMatcher = CocoUtils.tagPool.get( attrRegx );
+            while ( ! txt.isEmpty() ) {
+               if ( ! attr.reset( txt ).find() || attr.start() != 0 )
+                  throw new CocoParseError( "Cannot parse tasks " + txt );
+
                tasks.add( parseTask( attr.group(1), attr.group(2) ) );
-               attrTxt = attrTxt.substring( attr.end() ).trim();
+
+               txt = txt.substring( attr.end() ).trim();
             }
          }
       }
       return Directive.create( action, tasks );
    }
 
-   private Task parseTask ( String taskname, String attr ) {
+   private Task parseTask ( String taskname, String txt ) {
       List<String> params = new ArrayList<>(8);
       Matcher para = parameterMatcher;
-      log.log( Level.FINEST, "Parsing coco task: {0} {1}", new Object[]{ taskname, attr } );
-      if ( attr != null ) {
-         attr = Text.unquote( attr, '(', ')' ).trim();
-         while ( ! attr.isEmpty() ) {
+      if ( para == null ) para = parameterMatcher = CocoUtils.tagPool.get( paramRegx );
+      log.log( Level.FINEST, "Parsing coco task: {0} {1}", new Object[]{ taskname, txt } );
+      if ( txt != null ) {
+         txt = Text.unquote( txt, '(', ')' ).trim();
+         while ( ! txt.isEmpty() ) {
             if ( shouldStop() ) return null;
-            if ( ! para.reset( attr ).find() || para.start() != 0 )
-               throw new UnsupportedOperationException( "Bug: parameterMatcher failed to match attributeMatcher result: " + attr );
+            if ( ! para.reset( txt ).find() || para.start() != 0 )
+               throw new UnsupportedOperationException( "Bug: parameterMatcher failed to match attributeMatcher result: " + txt );
+
             params.add( Task.unquote( para.group() ) );
-            attr = attr.substring( para.end() ).trim();
-            if ( attr.startsWith( "," ) ) attr = attr.substring( 1 ).trim();
+
+            txt = txt.substring( para.end() ).trim();
+            if ( txt.startsWith( "," ) ) txt = txt.substring( 1 ).trim();
          }
       }
       return Task.create( taskname, NullData.nullIfEmpty( params ) );
@@ -161,18 +169,18 @@ public class ParserCoco {
    // Helpers
 
    /**
-    * Try to match a default parameter from a cocotag text.
+    * Try to match the first task as a default parameter.
     *
-    * @param tagBody CocoTag content.
-    * @return null or { parameter, remaining text }
+    * @param txt Text to match.
+    * @return null or [ default parameter, remaining text ]
     */
-   private String[] checkDefaultParameter( String tagBody ) {
-      Matcher para = parameterMatcher;
-      if ( para == null ) para = parameterMatcher = tagPool.get( paramRegx );
-      if ( ! para.reset( tagBody ).find() || para.start() != 0 ) return null;
+   private String[] checkDefaultParameter ( String txt ) {
+      Matcher para = firstParameterMatcher;
+      if ( para == null ) para = firstParameterMatcher = CocoUtils.tagPool.get( firstParamRegx );
+      if ( ! para.reset( txt ).find() || para.start() != 0 ) return null;
       // Found a candidate. Test whether it should be parsed as parameter or task.
       String defaultParam = para.group();
-      String remaining = tagBody.substring( para.end() ).trim();
+      String remaining = txt.substring( para.end() ).trim();
       boolean isParam = Task.isQuoted( defaultParam );
       if ( ! isParam ) try {
          Task.create( defaultParam ); // Not quoted, not followed by bracket, so try parse as task.
@@ -182,10 +190,6 @@ public class ParserCoco {
       if ( isParam && remaining.startsWith( "(" ) ) return null; // Unless it is followed by a bracket
       if ( isParam ) return new String[]{ Task.unquote( defaultParam ), remaining };
       return null;
-   }
-
-   private static boolean shouldStop() {
-      return Thread.currentThread().isInterrupted();
    }
 
    /************************************************************************************************************/
@@ -226,28 +230,26 @@ public class ParserCoco {
    /************************************************************************************************************/
    // Tag and matcher management
 
-   private static String findFirstTag( CharSequence text ) {
-      Matcher firstTagMatcher = tagPool.get( firstTagRegx ).reset( text );
-      String firstTag = firstTagMatcher.find() ? firstTagMatcher.group() : "";
-      if ( firstTag.length() > 30 ) firstTag = Text.toString( firstTag.codePoints().limit(27) ) + "...";
-      tagPool.recycle( firstTagRegx, firstTagMatcher );
-      return firstTag;
+   private void clearMatchers () {
+      if ( startMatcher != null ) CocoUtils.tagPool.recycle( startTag, startMatcher );
+      if (   endMatcher != null ) CocoUtils.tagPool.recycle( endTag, endMatcher );
+      if ( attributeMatcher != null ) CocoUtils.tagPool.recycle( attrRegx, attributeMatcher );
+      if ( parameterMatcher != null ) CocoUtils.tagPool.recycle( paramRegx, parameterMatcher );
+      if ( firstParameterMatcher != null ) CocoUtils.tagPool.recycle( firstParamRegx, firstParameterMatcher );
+      startMatcher = null;
+      endMatcher = null;
+      attributeMatcher = null;
+      parameterMatcher = null;
+      firstParameterMatcher = null;
    }
 
-   private void clearMatchers() {
-      if ( startMatcher != null ) tagPool.recycle( startTag, startMatcher );
-      if (   endMatcher != null ) tagPool.recycle( endTag, endMatcher );
-      if ( attributeMatcher != null ) tagPool.recycle( attrRegx, attributeMatcher );
-      if ( parameterMatcher != null ) tagPool.recycle( paramRegx, parameterMatcher );
-   }
-
-   public String getStartTag() { return startTag; }
+   public String getStartTag () { return startTag; }
    public void setStartTag(String start_tag) { assert( start_tag != null ); this.startTag = start_tag; }
 
-   public String getEndTag() { return endTag; }
+   public String getEndTag () { return endTag; }
    public void setEndTag(String end_tag) { assert( end_tag != null ); this.endTag = end_tag; }
 
-   public void setTags( String start, String end ) {
+   public void setTags ( String start, String end ) {
       if ( start != null ) setStartTag( start );
       if ( end != null ) setEndTag( end );
    }
