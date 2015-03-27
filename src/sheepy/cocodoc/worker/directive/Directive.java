@@ -9,6 +9,7 @@ import static sheepy.cocodoc.worker.directive.Directive.Action.OUTPUT;
 import static sheepy.cocodoc.worker.directive.Directive.Action.START;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.task.Task;
+import sheepy.util.Text;
 import sheepy.util.collection.NullData;
 
 public abstract class Directive {
@@ -108,8 +109,6 @@ public abstract class Directive {
    public Directive setContent ( CharSequence content ) { this.content = content; return this; }
 
    @Override public String toString() {
-      return "Coco:" + getAction().name().toLowerCase() + "("
-            + String.join( " ", getTasks().stream().map( Object::toString ).toArray( String[]::new ) )
-            + ")";
+      return "Coco:" + getAction().name().toLowerCase() + Text.toString( "(", " ", ")", getTasks() );
    }
 }

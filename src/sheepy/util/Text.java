@@ -2,6 +2,9 @@ package sheepy.util;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Collection;
+import java.util.StringJoiner;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
@@ -10,6 +13,36 @@ public class Text {
    public static String toString ( IntStream in ) {
       return in.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
    }
+
+   public static String toString ( CharSequence delimiter, Collection<?> list ) {
+      if ( list == null || list.isEmpty() ) return "";
+      return String.join( delimiter, list.stream().map( Object::toString ).toArray( String[]::new ) );
+   }
+   public static String toString ( CharSequence prefix, CharSequence delimiter, CharSequence suffix, Collection<?> list ) {
+      return toString( prefix, delimiter, suffix, list, "" );
+   }
+   public static String toString ( CharSequence prefix, CharSequence delimiter, CharSequence suffix, Collection<?> list, CharSequence ifEmpty ) {
+      if ( list == null || list.isEmpty() ) return ifEmpty == null ? null : ifEmpty.toString();
+      StringJoiner joiner = new StringJoiner( delimiter, prefix, suffix );
+      list.stream().map( Object::toString ).forEach( joiner::add );
+      return joiner.toString();
+   }
+   public static <T> String toString ( CharSequence delimiter, Collection<T> list, Function<T,? extends CharSequence> map ) {
+      if ( list == null || list.isEmpty() ) return "";
+      StringJoiner joiner = new StringJoiner( delimiter );
+      list.stream().map( map ).forEach( joiner::add );
+      return joiner.toString();
+   }
+
+   public static String nonNull( CharSequence s ) { return ifNull( s, "" ); }
+   public static String ifNull( CharSequence s, String ifnull ) {
+      return s == null ? ifnull: s.toString();
+   }
+
+   public static String trim( CharSequence s ) {
+      return s == null ? null : s.toString().trim();
+   }
+
 
    public static String unquote ( CharSequence subject, char start )           { return unquote( subject, start, start, null ); }
    public static String unquote ( CharSequence subject, char start, char end ) { return unquote( subject, start, end, null ); }
@@ -29,10 +62,27 @@ public class Text {
    }
 
    public static String ellipsis ( CharSequence text, int max ) {
+      return ellipsisAfter( text, max );
+   }
+   public static String ellipsisBefore ( CharSequence text, int max ) {
       if ( text == null ) return null;
       if ( max <= 0 ) throw new IllegalArgumentException();
       String txt = text.toString().replaceAll( "[\r\n]+", " " ).trim();
-      return txt.length() < max ? txt : txt.substring( 0, max-1 ) + "…";
+      return txt.length() < max ? txt : '…' + txt.substring( txt.length()-max, txt.length() );
+   }
+   public static String ellipsisAfter ( CharSequence text, int max ) {
+      if ( text == null ) return null;
+      if ( max <= 0 ) throw new IllegalArgumentException();
+      String txt = text.toString().replaceAll( "[\r\n]+", " " ).trim();
+      return txt.length() < max ? txt : txt.substring( 0, max-1 ) + '…';
+   }
+   public static String ellipsisAround ( CharSequence text, int position, int around ) {
+      return ellipsisAround( text, position, 'λ', around, around );
+   }
+   public static String ellipsisAround ( CharSequence text, int position, char infix, int before, int after ) {
+      if ( text == null ) return null;
+      position = Math.max( 0, Math.min( position, text.length() ) );
+      return ellipsisBefore( text.subSequence( 0, position ), before ) + infix + ellipsisAfter( text.subSequence( position, text.length() ), after );
    }
 
    public static String toCrLf ( CharSequence text ) {

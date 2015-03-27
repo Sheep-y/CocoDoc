@@ -10,8 +10,8 @@ import java.util.logging.Logger;
 import sheepy.cocodoc.worker.Block;
 import sheepy.util.Text;
 
-public abstract class Parser {
-   protected static final Logger log = Logger.getLogger( ParserCoco.class.getSimpleName() );
+public abstract class Parser implements AutoCloseable {
+   protected static final Logger log = Logger.getLogger( Parser.class.getSimpleName() );
    private Parser parent;
 
    public Parser() {}
@@ -46,4 +46,6 @@ public abstract class Parser {
    }
 
    @Override public abstract Parser clone();
+
+   @Override public void close() {}
 }

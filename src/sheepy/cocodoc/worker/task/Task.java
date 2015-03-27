@@ -7,18 +7,12 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import static java.util.regex.Pattern.DOTALL;
-import static java.util.regex.Pattern.UNICODE_CHARACTER_CLASS;
 import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.util.Text;
 import sheepy.util.collection.CollectionPredicate;
 import sheepy.util.collection.NullData;
-import sheepy.util.concurrent.CacheMap;
-import sheepy.util.concurrent.ObjectPoolMap;
 
 /* A normalised action, e.g. prefix({auto-datauri}), encode(base64), or position(src of the img before) */
 public abstract class Task {
@@ -67,6 +61,8 @@ public abstract class Task {
    public static Task create ( Action task, String ... params ) {
       Task result = null;
       switch ( task ) {
+         case DELETE  : result = new TaskDelete(); break;
+         case POSITION: result = new TaskPosition(); break;
          case COCO    : result = new TaskCoco(); break;
          case DEFLATE : result = new TaskDeflate(); break;
          case ENCODE  : result = new TaskEncode(); break;
@@ -87,19 +83,14 @@ public abstract class Task {
    }
 
    public static String unquote ( String param ) {
-      if ( ! isQuoted( param ) ) return param;
-      if ( param.charAt( 0 ) == '"'  ) return Text.unquote( param, '"' , str -> str.replaceAll( "\"\"", "\"" ) );
-      else                             return Text.unquote( param, '\'', str -> str.replaceAll( "''"  , "'"  ) );
+      if ( param == null || ! isQuoted( param ) ) return param;
+      return param.substring( 1, param.length()-1 ).replaceAll( "\\'" , "'" ).replaceAll( "\\\"", "\"" );
    }
 
-   /** Cache Pattern and Matcher for task reuse. */
-   private static final CacheMap<String, Pattern> patternPool = CacheMap.create(
-         pattern -> Pattern.compile( pattern, UNICODE_CHARACTER_CLASS | DOTALL )
-      );
-   public static final ObjectPoolMap<String, Matcher> tagPool = ObjectPoolMap.create(
-         key -> patternPool.get( key ).matcher(""),
-         v   -> v.reset("")
-      );
+   public static String quote ( String param ) {
+      if ( param.indexOf( '"'  ) >= 0 ) return "'" + param.replace( "'", "\\'" ) + "'";
+      return '"' + param.replace( "\"", "\\\"" ) + '"';
+   }
 
    /*****************************************************************************************************/
 
@@ -154,9 +145,7 @@ public abstract class Task {
    public boolean hasParams () { return ! NullData.isEmpty( params ); }
    public List<String> getParams () { return NullData.copy( params ); }
    public String getParam ( int index ) { return NullData.get(params, index ); }
-   public String getParamText () {
-      return hasParams() ? '"' + String.join(",", params ) + '"' : "";
-   }
+   public String getParamText () { return Text.toString( ",", getParams(), Task::quote ); }
    public Task addParam ( String ... param ) {
       if ( param != null && param.length > 0 ) {
          if ( params == null ) params = new ArrayList<>();

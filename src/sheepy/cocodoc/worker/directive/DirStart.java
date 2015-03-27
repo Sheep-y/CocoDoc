@@ -17,10 +17,11 @@ public class DirStart extends Directive {
 
    @Override public Directive start( Block context ) {
       Block b = new Block( context, this );
-      Parser parser = context.getParser().clone();
-      b.setText( parser.parse( b ) );
-      Worker.startBlock( b );
-      return this;
+      try ( Parser parser = context.getParser().clone() ) {
+         b.setText( parser.parse( b ) );
+         Worker.startBlock( b );
+         return this;
+      }
    }
 
    @Override public Block get() throws InterruptedException {

@@ -8,8 +8,7 @@ package sheepy.cocodoc.worker.task;
 import java.util.List;
 import java.util.function.Predicate;
 import sheepy.cocodoc.worker.error.CocoParseError;
-import sheepy.cocodoc.worker.parser.ParserCoco;
-import static sheepy.util.collection.CollectionPredicate.isEmpty;
+import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 
 public class TaskCoco extends Task {
    private String startTag = null;
@@ -17,8 +16,7 @@ public class TaskCoco extends Task {
 
    public Action getAction () { return Action.COCO; }
 
-   private static final Predicate<List<String>> validate = isEmpty();
-   @Override protected Predicate<List<String>> validParam() { return validate; }
+   @Override protected Predicate<List<String>> validParam() { return isEmpty; }
    @Override protected String invalidParamMessage() { return "coco() task should have no parameters."; }
 
    @Override public void init() {
@@ -30,9 +28,10 @@ public class TaskCoco extends Task {
    }
 
    @Override public void run () {
-      ParserCoco parser = new ParserCoco( startTag, endTag );
-      StringBuilder result = parser.parse( getBlock() );
-      if ( result != null ) getBlock().setText( result );
+      try ( ParserCoco parser = new ParserCoco( startTag, endTag ) ) {
+         StringBuilder result = parser.parse( getBlock() );
+         if ( result != null ) getBlock().setText( result );
+      }
    }
 
    public String getStartTag() { return startTag; }

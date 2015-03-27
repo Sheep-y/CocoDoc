@@ -9,8 +9,6 @@ import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import static sheepy.cocodoc.worker.task.Task.log;
 import sheepy.util.Text;
-import static sheepy.util.collection.CollectionPredicate.andAlso;
-import static sheepy.util.collection.CollectionPredicate.hasItem;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 
 public class TaskEncode extends Task {
@@ -18,7 +16,7 @@ public class TaskEncode extends Task {
    @Override public Action getAction () { return Action.ENCODE; }
 
    private static final String[] validParams = new String[]{ "base64","crlf","lf","js","url","html","xhtml","xml" };
-   private static final Predicate<List<String>> validate = andAlso( hasItem(), onlyContains( Arrays.asList( validParams ) ) );
+   private static final Predicate<List<String>> validate = nonEmpty.and( onlyContains( Arrays.asList( validParams ) ) );
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "encode() task should have one or more of " + String.join( ",", validParams ) + ". Actual: {0}"; }
 

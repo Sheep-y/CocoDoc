@@ -1,6 +1,5 @@
 package sheepy.cocodoc.worker;
 
-import sheepy.cocodoc.worker.directive.Directive;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -13,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.error.CocoRunError;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.task.Task;
@@ -217,4 +217,13 @@ public class Block extends AbstractFuture<Block> {
    private Parser parser;
    public Parser getParser () { return parser; }
    public void setParser ( Parser currentParser ) { this.parser = currentParser; }
+
+   @Override public String toString() {
+      if ( hasText() )
+         return "Block(" + textResult.length()+ " characters)";
+      else if ( hasBinary() )
+         return "Block(" + binaryResult.size() + " bytes)";
+      else
+         return "Block(no data)";
+   }
 }

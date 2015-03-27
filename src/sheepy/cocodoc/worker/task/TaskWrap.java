@@ -4,9 +4,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
-import static sheepy.util.collection.CollectionPredicate.andAlso;
+import sheepy.util.collection.CollectionPredicate;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
-import static sheepy.util.collection.CollectionPredicate.size;
 
 /**
  * This class is unused because it should be implemented as quoted printable or other intelligence wrap instead.
@@ -16,7 +15,7 @@ public class TaskWrap extends Task {
 
    @Override public Action getAction () { throw new UnsupportedOperationException("Deprecated"); }
 
-   private static final Predicate<List<String>> validate = andAlso( size( 0, 2 ), onlyContains( Pattern.compile( "[1-9]\\d{0,4}|(cr)?lf" ) ) );
+   private static final Predicate<List<String>> validate = CollectionPredicate.<List<String>>size( 0, 2 ).and( onlyContains( Pattern.compile( "[1-9]\\d{0,4}|(cr)?lf" ) ) );
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "wrap() task accepts a number of characters (default 72), and 'crlf' or 'lf' to indicate line breaks (default same as platform)"; }
 

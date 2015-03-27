@@ -6,8 +6,7 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
 import sheepy.cocodoc.worker.error.CocoParseError;
-import static sheepy.util.collection.CollectionPredicate.andAlso;
-import static sheepy.util.collection.CollectionPredicate.hasItem;
+import sheepy.cocodoc.worker.util.CocoUtils;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 
 public class TaskTrim extends Task {
@@ -15,7 +14,7 @@ public class TaskTrim extends Task {
    @Override public Action getAction () { return Action.TRIM; }
 
    private static final String[] validParams = new String[]{ "css","html","js","xml","ws","line","crlf","lf","oneline" };
-   private static final Predicate<List<String>> validate = andAlso( hasItem(), onlyContains( Arrays.asList( validParams ) ) );
+   private static final Predicate<List<String>> validate = nonEmpty.and( onlyContains( Arrays.asList( validParams ) ) );
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "trim() task should have one or more of " + String.join( ",", validParams ) + ". Actual: {0}"; }
 
@@ -56,9 +55,9 @@ public class TaskTrim extends Task {
    }
 
    private static String replace ( String text, String pattern, String replacement ) {
-      Matcher m = tagPool.get( pattern ).reset( text );
+      Matcher m = CocoUtils.tagPool.get( pattern ).reset( text );
       String result = m.replaceAll( replacement );
-      tagPool.recycle( pattern, m );
+      CocoUtils.tagPool.recycle( pattern, m );
       return result;
    }
 

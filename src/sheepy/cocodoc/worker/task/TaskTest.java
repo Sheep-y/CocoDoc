@@ -16,8 +16,6 @@ import org.xml.sax.helpers.DefaultHandler;
 import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.error.CocoRunError;
-import static sheepy.util.collection.CollectionPredicate.andAlso;
-import static sheepy.util.collection.CollectionPredicate.hasItem;
 import static sheepy.util.collection.CollectionPredicate.noDuplicate;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 
@@ -26,7 +24,7 @@ public class TaskTest extends Task {
    @Override public Action getAction () { return Action.TEST; }
 
    private static final String[] validParams = new String[]{ "noerr","xml" };
-   private static final Predicate<List<String>> validate = andAlso( hasItem(), noDuplicate(), onlyContains( Arrays.asList( validParams ) ) );
+   private static final Predicate<List<String>> validate = nonEmpty.and( noDuplicate() ).and( onlyContains( Arrays.asList( validParams ) ) );
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "test() task should have one or more of " + String.join( ",", validParams ) + " with no duplicate. Actual: {0}"; }
 

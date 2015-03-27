@@ -8,7 +8,7 @@
 </p>
 <h2>Syntax Example</h2>
 <pre><code>
-   &lt;html>&lt;link rel="stylesheet" href="style.css">&lt;style>&lt;coco-css style.css?> body {
+   &lt;html>&lt;link rel="stylesheet" href="style.css">&lt;style>&lt;?coco-css style.css?> body {
       background: url('background.jpg');  background: url('&lt;?coco-datauri background.jpg?>');
    }&lt;/style>
    &lt;img src="image.png"/>&lt;?coco-inline file(image.png) encode(base64) prefix("data:image/png;base64,") position(src of img before) ?>
@@ -26,7 +26,8 @@
    <dt>&lt;?coco-output&gt;</dt>  <dd>Specify output file for current scope. Default output to upper scope, or to console when at top scope.</dd>
 </dl>
 <h2>Processes</h2>
-<p>  Many processes accepts "noerr" as parameter to ignore errors and allow execution to continue.</p>
+<p>  Many processes accepts "noerr" as parameter to ignore errors and allow execution to continue. <br/>
+  For "delete" and "position", close tag must be provided for all relevant tags, or they must be self-closing.</p>
 <dl>
    <dt>file(filename)</dt>          <dd>Name of file(s) to inline.  When used as first parameter, can directly use file name.  Read data is initially binary.</dd>
    <dt>charset(utf-8)</dt>          <dd>Alias of <code>text</code>, see below. If used to convert input, should be the first or second parameter.</dd>

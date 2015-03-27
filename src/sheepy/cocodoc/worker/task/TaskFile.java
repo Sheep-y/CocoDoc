@@ -12,13 +12,11 @@ import sheepy.cocodoc.worker.Block;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.error.CocoRunError;
-import static sheepy.util.collection.CollectionPredicate.hasItem;
 
 public class TaskFile extends Task {
    @Override public Action getAction () { return Action.FILE; }
 
-   private static final Predicate<List<String>> validate = hasItem();
-   @Override protected Predicate<List<String>> validParam() { return validate; }
+   @Override protected Predicate<List<String>> validParam() { return nonEmpty; }
    @Override protected String invalidParamMessage() { return "file() task should have parameters."; }
 
    @Override public void init () {
