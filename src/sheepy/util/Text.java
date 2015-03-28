@@ -93,10 +93,11 @@ public class Text {
       return text.toString().replaceAll( "\r\n", "\n" );
    }
 
+   @SuppressWarnings("deprecation")
    public static String escapeUrl ( CharSequence text ) {
       try {
          return URLEncoder.encode( text.toString(), "UTF-8" );
-      } catch (UnsupportedEncodingException ex) {
+      } catch ( UnsupportedEncodingException ex ) {
          return URLEncoder.encode( text.toString() );
       }
    }

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="CocoDoc" default="make" basedir=".">
+   <description>Build CocoDoc: HTML App builder</description>
+
+   <!-- Jar main class -->
+   <property name="jar.main"  value="sheepy.cocodoc.CocoDoc" />
+   <!-- Source code folder -->
+   <property name="dir.src"   value="src" />
+   <!-- Document folder -->
+   <property name="dir.doc"   value="doc" />
+   <!-- Jar compilation folder -->
+   <property name="dir.jar"   value="dist" />
+   <!-- Jar file name -->
+   <property name="jar.name"   value="CocoDoc.jar" />
+   <!-- Convert ${jar.main} to path and set ${file.main} -->
+   <script language="javascript">
+       project.setProperty( "file.main", project.getProperty("jar.main").replaceAll( "\\.", "/" ) + ".java" );
+       project.setProperty( "file.main.class", project.getProperty("file.main").replace( ".java", ".class" ) );
+   </script>
+
+   <!-- Delete class folder which is left from extrading the jar -->
+   <condition property="class-in-root">
+      <available file="./${file.main.class}" />
+   </condition>
+   <target name="-delete-class" if="class-in-root">
+      <delete includeemptydirs="true" failonerror="false"><fileset dir ="sheepy" /></delete>
+   </target>
+
+   <!-- Compile and create a redistritabue jar -->
+   <target name="make" depends="-delete-class" description="Compile and build a deliverable.">
+      <!-- check -->
+      <fail message="Not found: ${dir.src}/${file.main}">
+         <condition><not><available file="${dir.src}/${file.main}" /></not></condition>
+      </fail>
+      <!-- clean -->
+      <delete includeemptydirs="true" failonerror="false"><fileset dir ="${dir.jar}" /></delete>
+      <mkdir dir="${dir.jar}" />
+      <!-- compile & copy support files -->
+      <javac srcdir="${dir.src}" destdir="${dir.jar}" encoding="UTF-8" debug="true" />
+      <property name="jar.root" value="${dir.jar}" />
+      <antcall target="-copy-file" />
+      <!-- jar -->
+      <delete file="${jar.name}" />
+      <jar destfile="${jar.name}">
+         <fileset dir="${dir.jar}"/>
+         <manifest>
+            <attribute name="Main-Class" value="${jar.main}" />
+            <attribute name="Application-Name" value="CocoDoc" />
+            <attribute name="Permissions" value="all-permissions" />
+         </manifest>
+      </jar>
+      <!-- clean -->
+      <delete includeemptydirs="true" failonerror="false"><fileset dir ="${dir.jar}" /></delete>
+   </target>
+
+   <!-- Copy support files to ${jar.root} -->
+   <target name="-copy-file">
+      <copy todir="${jar.root}/doc"><fileset dir="doc"/></copy>
+      <copy todir="${jar.root}/META-INF"><fileset dir="META-INF"/></copy>
+      <copy todir="${jar.root}/src"><fileset dir="src"/></copy>
+      <copy todir="${jar.root}">
+         <fileset file="build.xml"/>
+         <fileset file="read.me"/>
+      </copy>
+   </target>
+
+   <!--
+   There exist several NetBeans targets which are by default empty and which can be
+   used for execution of your tasks. They are:
+     -pre-init:                 called before initialization of project properties
+     -post-init:                called after initialization of project properties
+     -pre-compile:              called before javac compilation
+     -post-compile:             called after javac compilation
+     -pre-compile-single:       called before javac compilation of single file
+     -post-compile-single:      called after javac compilation of single file
+     -pre-compile-test:         called before javac compilation of JUnit tests
+     -post-compile-test:        called after javac compilation of JUnit tests
+     -pre-compile-test-single:  called before javac compilation of single JUnit test
+     -post-compile-test-single: called after javac compilation of single JUunit test
+     -pre-jar:                  called before JAR building
+     -post-jar:                 called after JAR building
+     -post-clean:               called after cleaning build products
+   -->
+   <import file="nbproject/build-impl.xml" optional="true" />
+   <target name="-pre-jar" if="src.src.dir">
+      <property name="jar.root" value="${build.dir}/classes" />
+      <antcall target="-copy-file" />
+   </target>
+
+   <target name="-post-jar" if="src.src.dir">
+      <delete includeemptydirs="true" failonerror="false">
+         <fileset dir ="${build.dir}/classes/doc" />
+         <fileset dir ="${build.dir}/classes/META-INF"/>
+         <fileset dir ="${build.dir}/classes/src"/>
+         <fileset file="${build.dir}/classes/build.xml"/>
+         <fileset file="${build.dir}/classes/read.me"/>
+      </delete>
+   </target>
+
+</project>

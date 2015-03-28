@@ -2,7 +2,7 @@
 <title>CocoDoc Design Doc</title>
 </head><body>
 <h1>CocoDoc Design Doc v1</h1>
-<aside>Date: <time>2015-03-17</time>.</aside>
+<aside>Date: <time>2015-03-27</time>.</aside>
 <section>
    <h2>Purpose</h2>
    <p>
@@ -26,8 +26,7 @@
    </p>
    <p>
       All libraries (if any), licenses and documentations are included in the jar.
-      Licenses are accessible by end user.
-      Other resources are accessible by decompressing the jar.
+      Licenses and user manual are accessible through command line arguments or GUI.
    </p>
    <h3>Program Structure</h3>
    <dl>
@@ -48,22 +47,29 @@
    <li>A new <code>INLINE</code> <code>Directive</code> is created to read the file and do coco parsing.</li>
    <li>When asked for result the directive creates a new <code>Block</code> and calls <code>Worker</code>.</li>
    <li><code>Worker</code> runs the directive.
-   <ol>
+      <ol>
       <li>Each <code>Task</code> of the directive is asked to initialise and validate its parameters.</li>
       <li>Each <code>Task</code> is executed one by one
-      <ol>
-         <li><code>TaskFile</code> (of <code>INLINE</code> <code>Directive</code>) reads from the file and adds to the block's content.</li>
-         <li><code>TaskCoco</code> parse <code>Directive</code> from block data; each <code>INLINE</code> and <code>START</code> directive creates a new children <code>Block</code>.
          <ol>
-            <li><code>Directive</code>s are asked to <code>start()</code> as soon as they are created, which calls <code>Worker</code> to run its <code>Block</code> (recur from topmost step 4).</li>
-            <li>After the whole block is parsed, <code>Directive</code> are asked for text result in order.</li>
-         </ol>
-         </li>
+         <li><code>TaskFile</code> (of <code>INLINE</code> <code>Directive</code>) reads from the file and adds to the block's content.</li>
          <li><code>TaskFile</code> (of <code>OUTPUT</code> <code>Directive</code>) set the block's output file.</li>
-      </ol>
+         <li><code>TaskCoco</code> parse <code>Directive</code> from block data; each <code>INLINE</code> and <code>START</code> directive creates a new children <code>Block</code>.
+            <ol>
+            <li><code>Directive</code>s are asked to <code>start()</code> as soon as they are created, which calls <code>Worker</code> to run its <code>Block</code> (recur from topmost step 4).</li>
+            <li>After the whole block is parsed, <code>Directive</code> are processed in order.
+               <ol>
+               <li><code>delete</code> tasks are processed, if any. They are parsed as <code>XmlSelector</code> which calls <code>XmlSeeker</code> to produce <code>IntRange</code>. </li>
+               <li>Text result will be retrieved from the Block, waiting if necessary.</li>
+               <li>Result is inserted to block content according to the last <code>position</code> task.</li>
+               </ol>
+            </li>
+            </ol>
+         </li>
+         <li>Other tasks modify or otherwise work with current block data.</li>
+         </ol>
       </li>
       <li>A block may save its result (text or binary) into a file.  If not saved the result can be read by the parent block.</li>
-   </ol>
+      </ol>
    </li>
    </ol>
 </section>

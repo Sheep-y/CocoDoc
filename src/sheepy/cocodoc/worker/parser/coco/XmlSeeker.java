@@ -1,6 +1,5 @@
 package sheepy.cocodoc.worker.parser.coco;
 
-import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.error.CocoRunError;
 import sheepy.util.Text;
 
