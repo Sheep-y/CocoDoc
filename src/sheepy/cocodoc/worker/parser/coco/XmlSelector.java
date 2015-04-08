@@ -1,9 +1,10 @@
 package sheepy.cocodoc.worker.parser.coco;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import sheepy.cocodoc.worker.error.CocoRunError;
+import sheepy.cocodoc.worker.parser.coco.XmlNode.NODE_TYPE;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.util.Text;
 import sheepy.util.collection.NullData;
@@ -21,29 +22,30 @@ abstract class XmlSelector {
       return this;
    }
 
-   List<IntRange> locate ( CharSequence text, int position ) {
-      return locate( text, new IntRange(position) );
-   }
-
-   List<IntRange> locate ( CharSequence text, IntRange position ) {
-      return locate( new XmlSeeker( text ), Collections.singletonList(position) );
-   }
-
-   List<IntRange> locate ( XmlSeeker seeker, List<IntRange> position ) {
-      if ( position == null || position.isEmpty() ) return Collections.emptyList();
-      List<IntRange> result = new ArrayList<>( position.size() );
-      for ( IntRange range : position ) {
-         if ( range != null && ! range.isValid() ) continue;
-         seeker.reset( range.start );
-         List<IntRange> add = find( seeker, range );
-         if ( add != null && ! add.isEmpty() )
-            add.stream().filter( e -> e != null && e.isValid() ).forEach( result::add );
+   TextRange locate ( CharSequence text, TextRange range ) {
+      try {
+         TextRange result = find( text, range );
+         if ( next != null ) {
+            if ( result == null ) throw new CocoRunError( "Cannot find " + toString() );
+            return next.locate( text, result );
+         }
+         return result;
+      } catch ( CocoRunError ex ) {
+         throw new CocoRunError( "Cannot find " + toString(), ex.getCause() == null ? ex : ex.getCause() );
       }
-      if ( next == null ) return result ;
-      return next.locate( seeker, result );
    }
 
-   abstract List<IntRange> find ( XmlSeeker text, IntRange range );
+   protected XmlNode firstTag( XmlNode subject ) {
+      while ( ! isTag( subject ) )
+         subject = subject.before();
+      return subject;
+   }
+
+   protected boolean isTag( XmlNode node ) {
+      return node == null || ( node.isValid() && node.getType() == NODE_TYPE.TAG );
+   }
+
+   abstract TextRange find ( CharSequence text, TextRange range );
 
    protected String nextToString() {
       return next == null ? "" : next.toString();
@@ -53,21 +55,19 @@ abstract class XmlSelector {
    // Sub classes
 
    static class PosThis extends XmlSelector {
-      @Override public List<IntRange> find ( XmlSeeker text, IntRange position) {
-         return Collections.singletonList( position );
+      @Override TextRange find ( CharSequence text, TextRange range ) {
+         return range;
       }
       @Override public String toString() {
          return ( nextToString() + " this" ).trim();
       }
    }
 
-   static class PosElement extends XmlSelector {
-      private String count; // may be null. Otherwise is all/2/3/4/etc.
-      private String tag;
-      private List<PosElementAttr> attr; // Never be null.
-      private String position; // before/after;
+   static class PosLine extends XmlSelector {
+      protected String count; // may be null. Otherwise is all/2/3/4/etc.
+      protected String position; // before/after;
 
-      PosElement ( String count, String tag, List<PosElementAttr> attr, String position ) {
+      PosLine ( String count, String position ) {
          if ( count != null ) {
             if ( count.equals( "the" ) ) count = null;
             else if ( ! count.equals( "all" ) ) {
@@ -78,29 +78,28 @@ abstract class XmlSelector {
          }
 
          this.count = count;
-         this.tag = tag;
-         this.attr = NullData.copy( attr );
          this.position = position;
       }
 
-      @Override List<IntRange> find ( XmlSeeker text, IntRange position ) {
+      @Override TextRange find ( CharSequence text, TextRange range ) {
          int howMany = count == null ? 1 : Integer.parseInt( count );
+         String str = text.toString();
          if ( this.position.equals( "before" ) ) {
-            if ( tag.equals( "line" ) ) { // before, line
-               String str = text.text().toString();
-               int end = text.start();
-               while ( howMany > 0 ) {
-                  end = str.lastIndexOf( '\n', end );
-                  if ( end >= 0 && --howMany <= 0 ) {
-                     return Collections.singletonList( new IntRange( str.lastIndexOf( '\n', end-1 )+1, end ) );
-                  }
+            int pos = range.start;
+            while ( howMany > 0 && pos > 0 ) {
+               pos = str.lastIndexOf( '\n', pos );
+               if ( pos > 0 && --howMany <= 0 ) {
+                  int pos2 = str.lastIndexOf( '\n', pos-1 );
+                  if ( pos2 >= 0 ) return new TextRange( pos2+1, pos ).setContext( range.context.root() );
                }
-            } else { // before, tag
-               while ( howMany > 0 ) {
-                  if ( ! text.findTagBefore( tag ) || text.end() < 0 ) break;
-                  if ( --howMany <= 0 ) {
-                     return Collections.singletonList( new IntRange( text.start(), text.end() ) );
-                  }
+            }
+         } else {
+            int pos = range.end;
+            while ( howMany > 0 && pos < str.length() ) {
+               pos = str.indexOf( '\n', pos );
+               if ( pos >= 0 && pos < str.length() &&  --howMany <= 0 ) {
+                  int pos2 = str.indexOf( '\n', pos+1 );
+                  if ( pos2 >= 0 ) return new TextRange( pos, pos2 ).setContext( range.context.root() );
                }
             }
          }
@@ -108,25 +107,60 @@ abstract class XmlSelector {
       }
 
       @Override public String toString() {
-         return ( nextToString() + " " + Text.ifNull( count, "the" ) + " " + tag + Text.toString( "[", "][", "]", attr ) + " " + position ).trim();
+         return ( nextToString() + " " + Text.ifNull( count, "the" ) + " line " + position ).trim();
       }
    }
-   static class PosElementAttr {
-      private String attr;
-      private String matcher;
-      private String value;
-      private boolean caseInsensitive;
 
-      PosElementAttr(String attr, String matcher, String value, boolean caseInsensitive) {
-         this.attr = attr;
-         this.matcher = matcher;
-         this.value = value;
-         this.caseInsensitive = caseInsensitive;
+   static class PosElement extends PosLine {
+      private String tag;
+      private List<PosElementAttr> attr; // Never be null.
+
+      PosElement ( String count, String tag, List<PosElementAttr> attr, String position ) {
+         super( count, position );
+         this.tag = tag;
+         this.attr = NullData.copy( attr );
       }
 
+      @Override TextRange find ( CharSequence text, TextRange range ) {
+         int howMany = count == null ? 1 : Integer.parseInt( count );
+         if ( this.position.equals( "before" ) ) {
+            XmlNode pos = firstTag( range.context.root().findBefore( range.start ) );
+            do {
+               pos = firstTag( pos.before() );
+               if ( ! this.match( pos ) ) break;
+               if ( --howMany <= 0 ) return pos.range;
+            } while ( pos != null && howMany > 0 );
+         } else {
+            throw new UnsupportedOperationException( "Not implemented" );
+         }
+         throw new CocoRunError( "Cannot find " + this );
+      }
+
+      private boolean match( XmlNode node ) {
+         return node != null && isTag( node ) && node.getValue().toString().equals( tag );
+      }
       @Override public String toString() {
-         if ( matcher == null ) return attr;
-         return attr + matcher + Task.quote( value ) + ( caseInsensitive ? " i" : "" );
+         return ( nextToString() + " " + Text.ifNull( count, "the" ) + " " + tag + Text.toString( "[", "][", "]", attr ) + " " + position ).trim();
+      }
+
+
+      static class PosElementAttr {
+         private String attr;
+         private String matcher;
+         private String value;
+         private boolean caseInsensitive;
+
+         PosElementAttr(String attr, String matcher, String value, boolean caseInsensitive) {
+            this.attr = attr;
+            this.matcher = matcher;
+            this.value = value;
+            this.caseInsensitive = caseInsensitive;
+         }
+
+         @Override public String toString() {
+            if ( matcher == null ) return attr;
+            return attr + matcher + Task.quote( value ) + ( caseInsensitive ? " i" : "" );
+         }
       }
    }
 
@@ -134,10 +168,15 @@ abstract class XmlSelector {
       String attr;
       PosAttr(String attr) { this.attr = attr; }
 
-      @Override List<IntRange> find ( XmlSeeker text, IntRange position) {
-         if ( text.findAttributeValue( attr ) )
-            return Collections.singletonList( new IntRange( text.start(), text.end() ) );
+      @Override TextRange find ( CharSequence text, TextRange range ) {
+         XmlNode base = firstTag( range.context.root().findBefore( range.start ) );
+         for ( XmlNode child : base.children() )
+            if ( match( child ) )
+               return child.range;
          throw new CocoRunError( "Cannot find " + this );
+      }
+      private boolean match( XmlNode node ) {
+         return node.isValid() && node.getType() == NODE_TYPE.ATTRIBUTE && node.value.toString().equals( attr );
       }
       @Override public String toString() {
          return attr + " of";
@@ -145,14 +184,14 @@ abstract class XmlSelector {
    }
 
    static class PosBefore extends XmlSelector {
-      @Override public List<IntRange> find ( XmlSeeker text, IntRange position) {
-         return Collections.singletonList( new IntRange( position.start ) );
+      @Override TextRange find ( CharSequence text, TextRange range ) {
+         return new TextRange( range.start ).setContext( range.context.root() );
       }
    }
 
    static class PosAfter extends XmlSelector {
-      @Override public List<IntRange> find ( XmlSeeker text, IntRange position) {
-         return Collections.singletonList( new IntRange( position.end ) );
+      @Override TextRange find ( CharSequence text, TextRange range ) {
+         return new TextRange( range.end ).setContext( range.context.root() );
       }
    }
 }

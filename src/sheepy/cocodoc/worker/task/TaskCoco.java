@@ -29,7 +29,7 @@ public class TaskCoco extends Task {
 
    @Override public void run () {
       try ( ParserCoco parser = new ParserCoco( startTag, endTag ) ) {
-         StringBuilder result = parser.parse( getBlock() );
+         CharSequence result = parser.parse( getBlock() );
          if ( result != null ) getBlock().setText( result );
       }
    }

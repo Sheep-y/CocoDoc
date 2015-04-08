@@ -5,23 +5,30 @@ import sheepy.util.Text;
 /**
  * Represents a range in integer
  */
-class IntRange {
+class TextRange {
    int start;
    int end;
+   XmlNode context;
 
-   IntRange(int start, int end) {
+   TextRange(int start, int end) {
       assert (start <= end);
       this.start = start;
       this.end = end;
    }
 
-   IntRange(int start) {
+   TextRange(int start) {
       this(start, start);
    }
 
    int length() {
       return end - start;
    }
+
+   TextRange setContext ( XmlNode context ) {
+      this.context = context;
+      return this;
+   }
+
 
    // 0 x 1 x 2 x 3 x 4
    //     1 range 3      test cases. Please make them a test...
@@ -43,7 +50,7 @@ class IntRange {
       end += deviation;
    }
 
-   void shiftDeleted ( IntRange range, boolean stayWhenDeleted ) {
+   void shiftDeleted ( TextRange range, boolean stayWhenDeleted ) {
       if ( ! range.isValid() || ! isValid() || range.start >= end )  return; // No change, insert or delete after us, or we were deleted.
       int atPosition = range.start;
       int affect_end = range.end;
@@ -82,6 +89,6 @@ class IntRange {
 
    @Override
    public String toString() {
-      return "TextRange [" + start + "," + end + ']';
+      return isValid() ? "TextRange [" + start + "," + end + ']' : "TextRange[Invalid]";
    }
 }

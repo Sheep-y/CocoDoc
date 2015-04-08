@@ -21,14 +21,14 @@ public abstract class Parser implements AutoCloseable {
 
    public Parser getParent() { return parent; }
 
-   public StringBuilder parse ( Block context ) {
+   public CharSequence parse ( Block context ) {
       String text = context.getText().toString();
       if ( text.isEmpty() ) return null;
       log.log( Level.INFO, "Parsing {1} characters with {0}. {2}", new Object[]{ this.getClass().getSimpleName(), text.length(), findFirstTag( text ) } ) ;
       context.setParser( this );
       return implParse( context, text );
    }
-   protected abstract StringBuilder implParse ( Block context, String text );
+   protected abstract CharSequence implParse ( Block context, String text );
 
    protected static boolean shouldStop() { return Thread.currentThread().isInterrupted(); }
 

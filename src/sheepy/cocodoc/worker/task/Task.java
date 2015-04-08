@@ -33,6 +33,7 @@ public abstract class Task {
 
       BINARY,
       TEXT,
+      CDATA,
       COCO,
       DEFLATE,
       DECODE,
@@ -64,6 +65,7 @@ public abstract class Task {
          case DELETE  : result = new TaskDelete(); break;
          case POSITION: result = new TaskPosition(); break;
          case COCO    : result = new TaskCoco(); break;
+         case CDATA   : result = new TaskCData(); break;
          case DEFLATE : result = new TaskDeflate(); break;
          case ENCODE  : result = new TaskEncode(); break;
          case FILE    : result = new TaskFile(); break;

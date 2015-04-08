@@ -50,9 +50,7 @@ public class Text {
       return unquote( subject, start, start, strip );
    }
    public static String unquote ( CharSequence subject, char start, char end, UnaryOperator<String> strip ) {
-      if ( subject == null ) {
-         return null;
-      }
+      if ( subject == null ) return null;
       int len = subject.length();
       if ( len < 2 || subject.charAt( 0 ) != start || subject.charAt( len - 1 ) != end ) {
          return subject.toString();
@@ -84,17 +82,28 @@ public class Text {
       position = Math.max( 0, Math.min( position, text.length() ) );
       return ellipsisBefore( text.subSequence( 0, position ), before ) + infix + ellipsisAfter( text.subSequence( position, text.length() ), after );
    }
+   public static String ellipsisWithin ( CharSequence text, int size ) {
+      return ellipsisWithin( text, size, size );
+   }
+   public static String ellipsisWithin ( CharSequence text, int head, int tail ) {
+      if ( text == null ) return null;
+      if ( text.length() <= head + tail ) return text.toString();
+      return ellipsisAfter( text, head ) + ellipsisBefore( text, tail ).toString().substring( 1 );
+   }
 
    public static String toCrLf ( CharSequence text ) {
+      if ( text == null ) return null;
       return text.toString().replaceAll( "(?<!\r)\n", "\r\n" );
    }
 
    public static String toLf ( CharSequence text ) {
+      if ( text == null ) return null;
       return text.toString().replaceAll( "\r\n", "\n" );
    }
 
    @SuppressWarnings("deprecation")
    public static String escapeUrl ( CharSequence text ) {
+      if ( text == null ) return null;
       try {
          return URLEncoder.encode( text.toString(), "UTF-8" );
       } catch ( UnsupportedEncodingException ex ) {
@@ -103,10 +112,12 @@ public class Text {
    }
 
    public static String escapeJavaScript ( CharSequence text ) {
+      if ( text == null ) return null;
       return text.toString().replaceAll( "[\"'`\n\r]", "\\$0" );
    }
 
    public static String escapeXml ( CharSequence text ) {
+      if ( text == null ) return null;
       return text.toString()
             .replaceAll( "&", "&#38;" ).replaceAll( "/" , "&#34;" )
             .replaceAll( "'", "&#39;" ).replaceAll( "\"", "&#47;" )

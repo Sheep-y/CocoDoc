@@ -6,7 +6,6 @@
 package sheepy.cocodoc.worker.parser.coco;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -16,7 +15,7 @@ import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.error.CocoRunError;
 import sheepy.cocodoc.worker.parser.Parser;
-import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElementAttr;
+import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElement.PosElementAttr;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.cocodoc.worker.task.TaskFile;
 import sheepy.cocodoc.worker.util.CocoUtils;
@@ -43,7 +42,7 @@ public class ParserCoco extends Parser {
       this.endTag = p.endTag;
    }
 
-   @Override protected StringBuilder implParse ( Block context, String text ) {
+   @Override protected CharSequence implParse ( Block context, String text ) {
       parseDocument( context, text );
       log.log( Level.FINE, "Parsed {0} coco tags.", tagCount );
       if ( resultStack == null ) return null; // No tag found
@@ -58,9 +57,9 @@ public class ParserCoco extends Parser {
    // General directive and task parsing
 
    private static final String paramRegx = "\"([^\"]|\"\")*\"|'([^']|'')*'|[^,()]+"; // double quoted | single quoted | plain parameter
-   private static final String attrRegx = ("(\\w+)\\s* ( \\(\\s* (?:" + paramRegx + ") (?:\\s*,\\s*(?:"+paramRegx+") )* \\s* \\))?").replaceAll( " +", "" );
    private static final String firstParamRegx = "\"([^\"]|\"\")*\"|'([^']|'')*'|[^\r\n\t ,()]+"; // differs from paramRegx in that this stop at space
-                                       //   directive     \(          first param      (      ,        more params   )*       \)
+   private static final String attrRegx = ("(\\w+)\\s* ( \\(\\s* (?: (?:" + paramRegx + ") (?:\\s*,\\s*(?:"+paramRegx+") )* \\s* )? \\))?").replaceAll( " +", "" );
+                                       //   directive     \(              first param      (      ,        more params   )*          \)
    // Only live during parsing.
    private Matcher attributeMatcher;
    private Matcher parameterMatcher;
@@ -259,8 +258,10 @@ public class ParserCoco extends Parser {
                if ( text.charAt( 0 ) == ']' ) text = text.substring( 1 ).trim();
             } while ( ! text.isEmpty() );
          }
+         return new XmlSelector.PosElement( count, tag, attrs, direction ).setNext( parent );
+      } else {
+         return new XmlSelector.PosLine( count, direction ).setNext( parent );
       }
-      return new XmlSelector.PosElement( count, tag, attrs, direction ).setNext( parent );
    }
 
    /************************************************************************************************************/
@@ -272,11 +273,11 @@ public class ParserCoco extends Parser {
 
    private class Context {
       Directive dir;
-      IntRange range;
+      TextRange range;
 
       private Context(Directive dir) {
          this.dir = dir;
-         this.range = new IntRange( resultPosition );
+         this.range = new TextRange( resultPosition );
       }
    }
 
@@ -299,17 +300,20 @@ public class ParserCoco extends Parser {
             final Context e = i.next();
             Task positionTask = null;
             XmlSelector cursor = null;
+            XmlNode document = null;
 
             // delete() task
             for ( Task task : e.dir.getTasks() ) try {
                if ( task.getAction() == Task.Action.DELETE && task.hasParams() ) {
+                  if ( document == null ) document = new XmlParser().parse( resultText );
                   for ( String param : task.getParams() ) {
                      final XmlSelector delSelector = parseSelector( param );
-                     for ( IntRange delete : delSelector.locate( resultText, e.range ) ) {
-                        System.out.println( "Delete: " + delSelector + ": " + delete + " " + delete.showInText( resultText ) );
-                        if ( ! delete.isValid() || delete.length() <= 0 ) continue;
-                        for ( Context c : resultStack ) c.range.shiftDeleted( delete, true );
-                        resultText.delete( delete.start, delete.end );
+                     TextRange delPos = delSelector.locate( resultText, document.range( e.range ) );
+                     if ( delPos != null && delPos.isValid() && delPos.length() > 0 ) {
+                        System.out.println( "Delete: " + delPos.showInText( resultText ) );
+                        resultText.delete( delPos.start, delPos.end );
+                        for ( Context c : resultStack ) c.range.shiftDeleted( delPos, true );
+                        document.stream().forEach( node -> node.range.shiftDeleted( delPos, true ) );
                      }
                   }
                } else if ( task.getAction() == Task.Action.POSITION && task.hasParams() ) {
@@ -326,18 +330,17 @@ public class ParserCoco extends Parser {
             final Block block = e.dir.get();
             if ( block != null && block.hasData() && e.range.isValid() ) try {
                final CharSequence txt = block.getText();
-               List<IntRange> position;
-               if ( cursor != null ) position = cursor.locate( resultText, e.range );
-               else position = Collections.singletonList( e.range );
-               for ( IntRange range : position ) {
-                  System.out.println( "Moves to: " + cursor + ": " + position + " " + range.showInText( resultText ) );
-                  if ( range.length() > 0 ) {
-                     resultText.delete( range.start, range.end );
-                     for ( Context c : resultStack ) c.range.shiftDeleted( range, false );
-                  }
-                  resultText.insert( range.start, txt );
-                  for ( Context c : resultStack ) c.range.shiftInserted( range.start, txt.length() );
+               TextRange insPos = cursor == null ? e.range : cursor.locate( resultText, document.range( e.range ) );
+               if ( insPos.length() > 0 ) {
+                  System.out.println( "Delete: " + insPos.showInText( resultText ) );
+                  resultText.delete( insPos.start, insPos.end );
+                  for ( Context c : resultStack ) c.range.shiftDeleted( insPos, true );
+                  document.stream().forEach( node -> node.range.shiftDeleted( insPos, true ) );
                }
+               System.out.println( "Inserts to: " + insPos.showInText( resultText ) );
+               resultText.insert( insPos.start, txt );
+               for ( Context c : resultStack ) c.range.shiftInserted( insPos.start, txt.length() );
+               document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
             } catch ( CocoRunError ex ) {
                positionTask.throwOrWarn( ex );
             }
