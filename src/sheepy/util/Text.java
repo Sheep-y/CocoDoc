@@ -87,8 +87,9 @@ public class Text {
    }
    public static String ellipsisWithin ( CharSequence text, int head, int tail ) {
       if ( text == null ) return null;
-      if ( text.length() <= head + tail ) return text.toString();
-      return ellipsisAfter( text, head ) + ellipsisBefore( text, tail ).toString().substring( 1 );
+      String txt = text.toString().replaceAll( "[\r\n]+", " " ).trim();
+      if ( txt.length() <= head + tail ) return txt.toString();
+      return ellipsisAfter( txt, head ) + ellipsisBefore( txt, tail ).toString().substring( 1 );
    }
 
    public static String toCrLf ( CharSequence text ) {
@@ -99,28 +100,5 @@ public class Text {
    public static String toLf ( CharSequence text ) {
       if ( text == null ) return null;
       return text.toString().replaceAll( "\r\n", "\n" );
-   }
-
-   @SuppressWarnings("deprecation")
-   public static String escapeUrl ( CharSequence text ) {
-      if ( text == null ) return null;
-      try {
-         return URLEncoder.encode( text.toString(), "UTF-8" );
-      } catch ( UnsupportedEncodingException ex ) {
-         return URLEncoder.encode( text.toString() );
-      }
-   }
-
-   public static String escapeJavaScript ( CharSequence text ) {
-      if ( text == null ) return null;
-      return text.toString().replaceAll( "[\"'`\n\r]", "\\$0" );
-   }
-
-   public static String escapeXml ( CharSequence text ) {
-      if ( text == null ) return null;
-      return text.toString()
-            .replaceAll( "&", "&#38;" ).replaceAll( "/" , "&#34;" )
-            .replaceAll( "'", "&#39;" ).replaceAll( "\"", "&#47;" )
-            .replaceAll( "<", "&lt;"  ).replaceAll( "<" , "&gt;"  );
    }
 }

@@ -60,6 +60,18 @@ public class XmlNode {
       return typeStr + '[' + range.start + ',' + range.end + "]: " + Text.ellipsisWithin(value, 8);
    }
 
+   static StringBuilder prefix = new StringBuilder();
+   private CharSequence treeToString () {
+      StringBuilder build = new StringBuilder( prefix + toString() ).append( '\n' );
+      if ( child != null ) {
+         prefix.append( "--" );
+         for ( XmlNode o : children() ) build.append( o.treeToString()).append( '\n' );
+         prefix.setLength( prefix.length() - 2 );
+      }
+      build.setLength( build.length() - 1 );
+      return build;
+   }
+
    /*******************************************************************/
    // Modification
 

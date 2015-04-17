@@ -64,7 +64,7 @@ public class TaskPrefix extends Task {
          return "";
       }
 
-      File f = new File( getBlock().getParentBasePath(), lastFile.toLowerCase() );
+      File f = new File( getBlock().getBasePath(), lastFile.toLowerCase() );
       StringBuilder result = new StringBuilder( 48 ).append( "data:" ).append( getContentType( f ) );
       if ( charset != null ) result.append( ';' ).append( charset.toString() );
       if ( hasBase64 ) result.append( ";base64" );

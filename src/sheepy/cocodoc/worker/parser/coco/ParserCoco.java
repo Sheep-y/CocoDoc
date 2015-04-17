@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package sheepy.cocodoc.worker.parser.coco;
 
 import java.util.ArrayList;
@@ -279,6 +274,10 @@ public class ParserCoco extends Parser {
          this.dir = dir;
          this.range = new TextRange( resultPosition );
       }
+
+      @Override public String toString() {
+         return dir.toString() + '[' + range.start + ',' + range.end + ']';
+      }
    }
 
    private void addToResult ( CharSequence text ) {
@@ -293,64 +292,82 @@ public class ParserCoco extends Parser {
       resultStack.add( new Context( dir ) );
    }
 
+   XmlNode document = null;
    private StringBuilder composeResult () {
+      if ( resultText == null ) resultText = new StringBuilder( 4096 );
       try {
          for ( Iterator<Context> i = resultStack.iterator() ; i.hasNext() ; ) {
             if ( shouldStop() ) throw new InterruptedException();
             final Context e = i.next();
             Task positionTask = null;
-            XmlSelector cursor = null;
-            XmlNode document = null;
 
             // delete() task
             for ( Task task : e.dir.getTasks() ) try {
-               if ( task.getAction() == Task.Action.DELETE && task.hasParams() ) {
-                  if ( document == null ) document = new XmlParser().parse( resultText );
-                  for ( String param : task.getParams() ) {
-                     final XmlSelector delSelector = parseSelector( param );
-                     TextRange delPos = delSelector.locate( resultText, document.range( e.range ) );
-                     if ( delPos != null && delPos.isValid() && delPos.length() > 0 ) {
-                        System.out.println( "Delete: " + delPos.showInText( resultText ) );
-                        resultText.delete( delPos.start, delPos.end );
-                        for ( Context c : resultStack ) c.range.shiftDeleted( delPos, true );
-                        document.stream().forEach( node -> node.range.shiftDeleted( delPos, true ) );
-                     }
-                  }
-               } else if ( task.getAction() == Task.Action.POSITION && task.hasParams() ) {
-                  positionTask = task;
-                  cursor = parseSelector( task.getParam( 0 ) );
+               switch ( task.getAction() ) {
+                  case DELETE:
+                     if ( document == null ) document = new XmlParser().parse( resultText );
+                     for ( String param : task.getParams() )
+                        deleteFromResult( parseSelector( param ).locate( resultText, document.range( e.range ) ).clone() );
+                     break;
+                  case POSITION:
+                     if ( task.hasParams() )
+                        positionTask = task;
                }
             } catch ( CocoParseError | CocoRunError ex ) {
                task.throwOrWarn( ex );
             }
-            i.remove();
+            i.remove(); // Remove self from resultStack to be excluded from future adjustments
 
             // position() task
             if ( e.dir.getAction() == Directive.Action.OUTPUT ) continue;
             final Block block = e.dir.get();
             if ( block != null && block.hasData() && e.range.isValid() ) try {
-               final CharSequence txt = block.getText();
-               TextRange insPos = cursor == null ? e.range : cursor.locate( resultText, document.range( e.range ) );
-               if ( insPos.length() > 0 ) {
-                  System.out.println( "Delete: " + insPos.showInText( resultText ) );
-                  resultText.delete( insPos.start, insPos.end );
-                  for ( Context c : resultStack ) c.range.shiftDeleted( insPos, true );
-                  document.stream().forEach( node -> node.range.shiftDeleted( insPos, true ) );
+               if ( document == null && positionTask != null ) document = new XmlParser().parse( resultText );
+               TextRange insPos = positionTask == null
+                     ? e.range
+                     : parseSelector( positionTask.getParam( 0 ) ).locate( resultText, document.range( e.range ) ).clone();
+               // If range is an attribute, target its value instead.
+               if ( insPos.context != null && insPos.context.getType() == XmlNode.NODE_TYPE.ATTRIBUTE && insPos.context.range.equals( insPos ) ) {
+                  XmlNode attr = insPos.context;
+                  if ( attr.children().size() <= 0 ) {
+                     log.log( Level.WARNING, "Target position attribute has no value. Replacing attribute instead." );
+                  } else {
+                     insPos = attr.children().get(0).range;
+                  }
                }
-               System.out.println( "Inserts to: " + insPos.showInText( resultText ) );
-               resultText.insert( insPos.start, txt );
-               for ( Context c : resultStack ) c.range.shiftInserted( insPos.start, txt.length() );
-               document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
+               deleteFromResult( insPos );
+               insertToResult( block.getText(), insPos );
             } catch ( CocoRunError ex ) {
                positionTask.throwOrWarn( ex );
             }
-
          }
       } catch ( InterruptedException ex ) {
          Thread.currentThread().interrupt();
          return null;
       }
       return resultText;
+   }
+
+   private void deleteFromResult ( TextRange range ) {
+      if ( range != null && range.isValid() && range.length() > 0 ) {
+         log.log( Level.FINER, "Delete: {0}", range.showInText( resultText ) );
+         resultText.delete( range.start, range.end );
+         for ( Context c : resultStack )
+            c.range.shiftDeleted( range, true );
+         if ( document != null )
+            document.stream().forEach( node -> node.range.shiftDeleted( range, false ) );
+      }
+   }
+
+   private void insertToResult ( CharSequence txt, TextRange insPos ) {
+      if ( insPos != null && insPos.isValid() ) {
+         log.log( Level.FINER, "Inserts {0} to {1}", new Object[]{ Text.ellipsisWithin( txt, 12 ), insPos.showInText( resultText ) } );
+         resultText.insert( insPos.start, txt );
+         for ( Context c : resultStack )
+            c.range.shiftInserted( insPos.start, txt.length() );
+         if ( document != null )
+            document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
+      }
    }
 
    /************************************************************************************************************/

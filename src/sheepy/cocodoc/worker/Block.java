@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +31,9 @@ public class Block extends AbstractFuture<Block> {
    private Task outputTarget;
    private final Directive directive;
 
+   private String name = "";
+   private Instant mtime = null;
+
    public Block ( Directive directive ) {
       this( null, directive );
    }
@@ -37,11 +41,18 @@ public class Block extends AbstractFuture<Block> {
    public Block ( Block parent, Directive directive ) {
       this.parent = parent;
       this.directive = directive;
+      this.basePath = parent == null ? null : parent.basePath;
       directive.setBlock( this ); // Do throw NPE if null
       if ( directive.getContent() != null ) {
          setText( directive.getContent() );
          directive.setContent( null );
       }
+   }
+
+   public Block setName( CharSequence name, Instant mtime ) {
+      this.name = name == null ? null : name.toString();
+      this.mtime = mtime;
+      return this;
    }
 
    public Block getParent() {
@@ -65,7 +76,7 @@ public class Block extends AbstractFuture<Block> {
 
       if ( hasData() ) {
          if ( getOutputTarget() != null ) {
-            File f = new File( getOutputTarget().getParam( 0 ) );
+            File f = new File( getBasePath(), getOutputTarget().getParam( 0 ) );
             byte[] data = getBinary();
             log.log( Level.INFO, "Writing {1} bytes to {0}.", new Object[]{ f, data.length } );
             try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
@@ -205,7 +216,6 @@ public class Block extends AbstractFuture<Block> {
    /************************************************************************************************/
 
    public File getBasePath() { return basePath; }
-   public File getParentBasePath() { return parent == null ? null : getParent().getBasePath(); }
    public Block setBasePath( File basePath ) { this.basePath = basePath; return this; }
 
    public Task getOutputTarget() { return outputTarget; }

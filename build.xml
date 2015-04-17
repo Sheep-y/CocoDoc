@@ -4,6 +4,8 @@
 
    <!-- Jar main class -->
    <property name="jar.main"  value="sheepy.cocodoc.CocoDoc" />
+   <!-- App title -->
+   <property name="app.title"  value="CocoDoc" />
    <!-- Source code folder -->
    <property name="dir.src"   value="src" />
    <!-- Document folder -->
@@ -36,7 +38,7 @@
       <delete includeemptydirs="true" failonerror="false"><fileset dir ="${dir.jar}" /></delete>
       <mkdir dir="${dir.jar}" />
       <!-- compile & copy support files -->
-      <javac srcdir="${dir.src}" destdir="${dir.jar}" encoding="UTF-8" debug="true" />
+      <javac srcdir="${dir.src}" destdir="${dir.jar}" encoding="UTF-8" debug="true" includeantruntime="false" />
       <property name="jar.root" value="${dir.jar}" />
       <antcall target="-copy-file" />
       <!-- jar -->
@@ -45,7 +47,7 @@
          <fileset dir="${dir.jar}"/>
          <manifest>
             <attribute name="Main-Class" value="${jar.main}" />
-            <attribute name="Application-Name" value="CocoDoc" />
+            <attribute name="Application-Name" value="${jar.main}" />
             <attribute name="Permissions" value="all-permissions" />
          </manifest>
       </jar>

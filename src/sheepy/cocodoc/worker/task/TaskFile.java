@@ -46,7 +46,7 @@ public class TaskFile extends Task {
    @Override public void run () {
       Block block = getBlock();
       if ( getDirective().getAction() == INLINE ) { // Read file and add to block
-         File base = block.getParentBasePath();
+         File base = block.getBasePath();
          for ( String s : getParams() ) try {
             log.log( Level.FINE, "Reading {1} from base path {0}.", new Object[]{ base, s } );
             File f = new File( base, s );

@@ -19,8 +19,7 @@ public class DirEnd extends Directive {
    }
 
    @Override public Block get() throws InterruptedException {
-      if ( getBlock() == null ) start( new Block( this ) );
-      return Worker.getBlockResult( getBlock() );
+      throw new UnsupportedOperationException();
    }
 
 }

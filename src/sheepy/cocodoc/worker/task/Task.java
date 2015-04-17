@@ -41,7 +41,8 @@ public abstract class Task {
       PREFIX,
       POSTFIX,
       TEST,
-      TRIM
+      TRIM,
+      VAR
    }
 
    public static Task create ( String task ) {
@@ -74,6 +75,7 @@ public abstract class Task {
          case TEXT    : result = new TaskText(); break;
          case TEST    : result = new TaskTest(); break;
          case TRIM    : result = new TaskTrim(); break;
+         case VAR     : result = new TaskVar(); break;
          default      : throw new UnsupportedOperationException( "Unimplemented task: " + task );
       }
       return result.addParam( params );
@@ -146,7 +148,7 @@ public abstract class Task {
    List<String> params;
    public boolean hasParams () { return ! NullData.isEmpty( params ); }
    public List<String> getParams () { return NullData.copy( params ); }
-   public String getParam ( int index ) { return NullData.get(params, index ); }
+   public String getParam ( int index ) { return NullData.get( params, index ); }
    public String getParamText () { return Text.toString( ",", getParams(), Task::quote ); }
    public Task addParam ( String ... param ) {
       if ( param != null && param.length > 0 ) {

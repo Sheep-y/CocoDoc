@@ -37,7 +37,7 @@ public class CocoDoc extends Application {
          if ( config.runFiles.size() > 0 ) try {
                Directive.create( INLINE,
                   Arrays.asList( new TaskFile().addParam( config.runFiles ), new TaskCoco() )
-               ).get();
+               ).start( null ).get();
             } catch ( RuntimeException ex ) {
                ex.printStackTrace();
             } catch ( InterruptedException ex ) {
