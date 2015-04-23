@@ -2,7 +2,7 @@
 <title>CocoDoc Design Doc</title>
 </head><body>
 <h1>CocoDoc Design Doc v1</h1>
-<aside>Date: <time>2015-03-27</time>.</aside>
+<aside>Date: <time>2015-04-23</time>.</aside>
 <section>
    <h2>Purpose</h2>
    <p>
@@ -45,32 +45,63 @@
    <ol>
    <li>A job is initialised by selecting a file, through command line or GUI.</li>
    <li>A new <code>INLINE</code> <code>Directive</code> is created to read the file and do coco parsing.</li>
-   <li>When asked for result the directive creates a new <code>Block</code> and calls <code>Worker</code>.</li>
-   <li><code>Worker</code> runs the directive.
+   <li>A directive do one of these things when ran (<code>Directive.start</code>):
+      <ul>
+      <li> <code>DirInline</code> creates a new, empty <code>Block</code>, and calls <code>Worker</code> to run it. </li>
+      <li> <code>DirStart</code> create a new <code>Block</code> populated with directive content.
+           A clone of parent's parser will <code>start()</code> on the block.
+           When done, <code>Worker</code> is called to run the block. </li>
+      <li> <code>DirOutput</code> will immediately run all its tasks, which should set the output target of containing block. </li>
+      <li> <code>DirEnd</code> is handled by CocoParser. </li>
+      </ul>
+      Worker runs a <code>Block</code> in a new Thread. <br/>
+      Thus for <code>INLINE</code> and <code>START</code>, trying to get result will block until the thread finish. <br/>
+      <code>OUTPUT</code> and <code>END</code> directives does not create new thread and would returns immediately.
+   </li>
+   <li> Each <code>INLINE</code> and <code>START</code> has a <code>Block</code>.  When a block runs it will:
       <ol>
-      <li>Each <code>Task</code> of the directive is asked to initialise and validate its parameters.</li>
-      <li>Each <code>Task</code> is executed one by one
+      <li> Initiate each <code>Task</code> of the directive, which currently just validate parameters. </li>
+      <li> Execute each <code>Task</code> one by one. </li>
+      <li> If the block has an output target, the block will saves its content into the output and becomes empty. </li>
+      <li> Otherwise, the content can be retrieved by the parent block.  If there are not parent block they goes to <code>system.out</code>. </li>
+      </ol>
+   </li>
+   <li> Different <code>Task</code> do different things:
+      <ol>
+      <li> <code>TaskFile</code> (of <code>INLINE Directive</code>) reads file(s) and adds to the block's content. </li>
+      <li> <code>TaskFile</code> (of <code>OUTPUT Directive</code>) set the block's output target. </li>
+      <li> <code>TaskDelete</code> does nothing and will be executed by <code>ParserCoco</code>. </li>
+      <li> <code>TaskPosition</code> does nothing and will be executed by <code>ParserCoco</code>. </li>
+      <li> <code>TaskCoco</code> calls <code>ParserCoco.parse</code> to parse <code>Directive</code>s. It does two things:
          <ol>
-         <li><code>TaskFile</code> (of <code>INLINE</code> <code>Directive</code>) reads from the file and adds to the block's content.</li>
-         <li><code>TaskFile</code> (of <code>OUTPUT</code> <code>Directive</code>) set the block's output file.</li>
-         <li><code>TaskCoco</code> parse <code>Directive</code> from block data; each <code>INLINE</code> and <code>START</code> directive creates a new children <code>Block</code>.
+         <li> <code>start()</code> will parse the document structure:
             <ol>
-            <li><code>Directive</code>s are asked to <code>start()</code> as soon as they are created, which calls <code>Worker</code> to run its <code>Block</code> (recur from topmost step 4).</li>
-            <li>After the whole block is parsed, <code>Directive</code> are processed in order.
-               <ol>
-               <li><code>delete</code> tasks are processed, if any. They are parsed as <code>XmlSelector</code> which calls <code>XmlSeeker</code> to produce <code>IntRange</code>. </li>
-               <li>Text result will be retrieved from the Block, waiting if necessary.</li>
-               <li>Result is inserted to block content according to the last <code>position</code> task.</li>
-               </ol>
-            </li>
+            <li> Calls <code>parseDirective</code> (which calls <code>parseTask</code>) to find and parse next coco directive. </li>
+            <li> <code>DirStart</code> will cause parser to transfer unparsed text to it and run it (until it meets <code>DirEnd</code>).
+                 Then this parsing continues with the (updated) directive text. </li>
+            <li> <code>DirEnd</code> immediately stop the parsing, and remaining (unparsed) text to be transferred to the parent <code>DirStart</code>. </li>
+            <li> Other directives are ran. </li>
+            <li> All directives are added to a list of Directives. (except <code>DirEnd</code>) </li>
+            <li> Non-directive text are concatenated to form the foundation of result text. </li>
             </ol>
          </li>
-         <li>Other tasks modify or otherwise work with current block data.</li>
+         <li> <code>get()</code> will process each parsed <code>Directive</code> to compose the actual result.
+            <ol>
+            <li> (Result text is parsed as loose XML when necessary, with the first delete or position task.) </li>
+            <li> Each <code>delete</code> task parameter is parsed by <code>parseSelector</code> which yields <code>XmlSelector</code>. <br/>
+                 <code>locate</code> is called on the selector to get the <code>TextRange</code>, and then deleted from the result. </li>
+            <li> If the <code>Directive</code> has no data, process will skip to next directive. </li>
+            <li> The last <code>position</code> parameter is also parsed by <code>parseSelector</code> and located. </li>
+            <li> If the location is an attribute, it is changed to attribute value instead. </li>
+            <li> The location is deleted, and the result inserted to the position. </li>
+            </ol>
+         </li>
          </ol>
       </li>
-      <li>A block may save its result (text or binary) into a file.  If not saved the result can be read by the parent block.</li>
+      <li>Other tasks modify or otherwise work with current block data.</li>
       </ol>
    </li>
    </ol>
+
 </section>
 </body></html>

@@ -83,7 +83,9 @@ class TextRange implements Comparable<TextRange> {
 
    String showInText ( CharSequence text ) {
       if ( ! isValid() ) return "(invalid range)";
-      if ( start >= text.length() || end >= text.length() ) return "(out of text range)";
+      if ( start >= text.length() || end >= text.length() )
+         if ( start == 0 && end == 0 ) return "(empty text)";
+         else return "(out of text range)";
       return Text.ellipsisBefore( text.subSequence( 0, start ), 12 )
            + 'λ'
            + text.subSequence(start, end).toString().replaceAll( "[\r\n]", "" )

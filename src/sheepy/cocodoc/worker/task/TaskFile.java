@@ -12,6 +12,7 @@ import sheepy.cocodoc.worker.Block;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.error.CocoRunError;
+import sheepy.cocodoc.worker.util.CocoUtils;
 
 public class TaskFile extends Task {
    @Override public Action getAction () { return Action.FILE; }
@@ -56,7 +57,9 @@ public class TaskFile extends Task {
                if ( len < buffer.length ) buffer = Arrays.copyOfRange( buffer, 0, len );
 
                log.log( Level.INFO, "Read {0} bytes from {1}.", new Object[]{ buffer.length, f } );
-               block.setBasePath( f.getParentFile() ).appendBinary( buffer );
+               block.appendBinary( buffer )
+                    .setBasePath( f.getParentFile() ).setName( f.toString() )
+                    .setMTime( CocoUtils.milliToZonedDateTime( f.lastModified() ) );
             }
          } catch ( IOException ex ) { // If not throwing, continue with next parameter
             if ( throwError ) throw new CocoRunError( ex );

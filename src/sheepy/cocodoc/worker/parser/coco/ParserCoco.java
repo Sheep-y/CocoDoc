@@ -37,15 +37,17 @@ public class ParserCoco extends Parser {
       this.endTag = p.endTag;
    }
 
-   @Override protected CharSequence implParse ( Block context, String text ) {
-      parseDocument( context, text );
-      log.log( Level.FINE, "Parsed {0} coco tags.", tagCount );
-      if ( resultStack == null ) return null; // No tag found
-      return composeResult();
-   }
-
    @Override public ParserCoco clone() {
       return new ParserCoco( this );
+   }
+
+   @Override public void start ( Block context, String text ) {
+      parseDocument( context, text );
+      log.log( Level.FINE, "Parsed {0} coco tags.", tagCount );
+   }
+
+   @Override public CharSequence get () {
+      return composeResult();
    }
 
    /**************************************************************************************************************/
@@ -109,7 +111,7 @@ public class ParserCoco extends Parser {
          if ( text.isEmpty() ) break;
       }
       if ( tagCount <= 0 ) resultStack = null;
-      else if ( ! text.isEmpty() ) addToResult( text );
+      if ( ! text.isEmpty() ) addToResult( text );
    }
 
    private Directive parseDirective ( String tag, Matcher start ) {
@@ -268,15 +270,15 @@ public class ParserCoco extends Parser {
 
    private class Context {
       Directive dir;
-      TextRange range;
+      TextRange position;
 
       private Context(Directive dir) {
          this.dir = dir;
-         this.range = new TextRange( resultPosition );
+         this.position = new TextRange( resultPosition );
       }
 
       @Override public String toString() {
-         return dir.toString() + '[' + range.start + ',' + range.end + ']';
+         return dir.toString() + '[' + position.start + ',' + position.end + ']';
       }
    }
 
@@ -294,6 +296,7 @@ public class ParserCoco extends Parser {
 
    XmlNode document = null;
    private StringBuilder composeResult () {
+      if ( resultStack == null ) return resultText; // No tag found
       if ( resultText == null ) resultText = new StringBuilder( 4096 );
       try {
          for ( Iterator<Context> i = resultStack.iterator() ; i.hasNext() ; ) {
@@ -307,7 +310,7 @@ public class ParserCoco extends Parser {
                   case DELETE:
                      if ( document == null ) document = new XmlParser().parse( resultText );
                      for ( String param : task.getParams() )
-                        deleteFromResult( parseSelector( param ).locate( resultText, document.range( e.range ) ).clone() );
+                        deleteFromResult( parseSelector( param ).locate( resultText, document.range( e.position ) ).clone() );
                      break;
                   case POSITION:
                      if ( task.hasParams() )
@@ -321,11 +324,11 @@ public class ParserCoco extends Parser {
             // position() task
             if ( e.dir.getAction() == Directive.Action.OUTPUT ) continue;
             final Block block = e.dir.get();
-            if ( block != null && block.hasData() && e.range.isValid() ) try {
+            if ( block != null && block.hasData() && e.position.isValid() ) try {
                if ( document == null && positionTask != null ) document = new XmlParser().parse( resultText );
                TextRange insPos = positionTask == null
-                     ? e.range
-                     : parseSelector( positionTask.getParam( 0 ) ).locate( resultText, document.range( e.range ) ).clone();
+                     ? e.position
+                     : parseSelector( positionTask.getParam( 0 ) ).locate( resultText, document.range( e.position ) ).clone();
                // If range is an attribute, target its value instead.
                if ( insPos.context != null && insPos.context.getType() == XmlNode.NODE_TYPE.ATTRIBUTE && insPos.context.range.equals( insPos ) ) {
                   XmlNode attr = insPos.context;
@@ -353,7 +356,7 @@ public class ParserCoco extends Parser {
          log.log( Level.FINER, "Delete: {0}", range.showInText( resultText ) );
          resultText.delete( range.start, range.end );
          for ( Context c : resultStack )
-            c.range.shiftDeleted( range, true );
+            c.position.shiftDeleted( range, true );
          if ( document != null )
             document.stream().forEach( node -> node.range.shiftDeleted( range, false ) );
       }
@@ -364,7 +367,7 @@ public class ParserCoco extends Parser {
          log.log( Level.FINER, "Inserts {0} to {1}", new Object[]{ Text.ellipsisWithin( txt, 12 ), insPos.showInText( resultText ) } );
          resultText.insert( insPos.start, txt );
          for ( Context c : resultStack )
-            c.range.shiftInserted( insPos.start, txt.length() );
+            c.position.shiftInserted( insPos.start, txt.length() );
          if ( document != null )
             document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
       }

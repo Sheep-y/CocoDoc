@@ -10,14 +10,24 @@ import sheepy.cocodoc.worker.error.CocoRunError;
  */
 public class Worker {
    static final Logger log = Logger.getLogger( Worker.class.getName() );
-   static final boolean isMulthThread = false;
+   static final boolean isMulthThread = true;
 
    public static Block startBlock( Block block ) {
-      if ( isMulthThread )
-         new Thread( block ).start();
-      else
-         block.run();
+      return startBlock( block, isMulthThread );
+   }
+
+   public static Block startBlock( Block block, boolean multhThread ) {
+      run( block, multhThread );
       return block;
+   }
+
+   public static void run( Runnable task ) {
+      run( task, isMulthThread );
+   }
+
+   public static void run( Runnable task, boolean multhThread ) {
+      if ( multhThread ) new Thread( task ).start();
+      else               task.run();
    }
 
    public static Block getBlockResult( Block block ) throws InterruptedException {

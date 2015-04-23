@@ -1,7 +1,5 @@
 package sheepy.util;
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.Collection;
 import java.util.StringJoiner;
 import java.util.function.Function;

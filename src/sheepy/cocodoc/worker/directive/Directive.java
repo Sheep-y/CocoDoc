@@ -2,6 +2,8 @@ package sheepy.cocodoc.worker.directive;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sheepy.cocodoc.worker.Block;
 import static sheepy.cocodoc.worker.directive.Directive.Action.END;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
@@ -13,7 +15,10 @@ import sheepy.util.Text;
 import sheepy.util.collection.NullData;
 
 public abstract class Directive {
-   // protected static final Logger log = Logger.getLogger( Directive.class.getName() );
+   protected static final Logger log = Logger.getLogger( Directive.class.getName() );
+   static {
+      log.setLevel( Level.ALL );
+   }
 
    public enum Action {
       INLINE,

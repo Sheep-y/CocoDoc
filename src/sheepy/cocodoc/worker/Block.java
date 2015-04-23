@@ -6,7 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.time.Instant;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -25,23 +25,28 @@ import sheepy.util.concurrent.AbstractFuture;
  */
 public class Block extends AbstractFuture<Block> {
    static final Logger log = Logger.getLogger(Block.class.getName() );
+   static {
+      log.setLevel( Level.ALL );
+   }
 
-   private Block parent;
+   private final Block parent;
+   private final Directive directive;
    private File basePath;
    private Task outputTarget;
-   private final Directive directive;
 
    private String name = "";
-   private Instant mtime = null;
-
-   public Block ( Directive directive ) {
-      this( null, directive );
-   }
+   private ZonedDateTime btime = null;
+   private ZonedDateTime mtime = null;
+   private ZonedDateTime child_mtime = null;
 
    public Block ( Block parent, Directive directive ) {
       this.parent = parent;
       this.directive = directive;
-      this.basePath = parent == null ? null : parent.basePath;
+      if ( parent == null ) {
+         btime = ZonedDateTime.now();
+      } else {
+         basePath = parent.basePath;
+      }
       directive.setBlock( this ); // Do throw NPE if null
       if ( directive.getContent() != null ) {
          setText( directive.getContent() );
@@ -49,14 +54,50 @@ public class Block extends AbstractFuture<Block> {
       }
    }
 
-   public Block setName( CharSequence name, Instant mtime ) {
-      this.name = name == null ? null : name.toString();
-      this.mtime = mtime;
+   public Block setName( CharSequence name ) {
+      if ( name == null || name.length() <= 0 ) return this;
+      if ( this.name != null ) {
+         this.name += ',' + name.toString();
+      } else
+         this.name = name.toString();
       return this;
+   }
+
+   public Block setMTime ( ZonedDateTime mtime ) {
+      if ( mtime == null ) return this;
+      if ( this.mtime != null ) {
+         if ( this.mtime.isBefore( mtime ) )
+            setChildMTime( this.mtime = mtime );
+      } else
+         setChildMTime( this.mtime = mtime );
+      return this;
+   }
+
+   private void setChildMTime ( ZonedDateTime mtime ) {
+      if ( child_mtime == null || mtime.isAfter( child_mtime ) )
+         child_mtime = mtime;
+      if ( getParent() == null ) return;
+      getParent().setChildMTime( mtime );
    }
 
    public Block getParent() {
       return this.parent;
+   }
+
+   public Block getRoot() {
+      return parent == null ? this : parent;
+   }
+
+   public ZonedDateTime getBuildTime() {
+      return getParent() == null ? btime : getParent().getBuildTime();
+   }
+
+   public ZonedDateTime getModifiedTime() {
+      return child_mtime;
+   }
+
+   public ZonedDateTime getLocalModifiedTime() {
+      return mtime;
    }
 
    public Directive getDirective() {
@@ -87,8 +128,7 @@ public class Block extends AbstractFuture<Block> {
             }
          } else {
             if ( getParent() == null )
-               //System.out.println( getText() );
-               ;
+               System.out.println( getText() );
          }
       }
 
@@ -123,11 +163,12 @@ public class Block extends AbstractFuture<Block> {
       return textResult;
    }
 
-   public void appendBinary( byte[] data ) {
+   public Block appendBinary( byte[] data ) {
       try {
          toBinary( null );
          if ( ! hasBinary() ) setBinary( data );
          else binaryResult.write( data );
+         return this;
       } catch ( IOException ex ) {
          throw new CocoRunError( ex );
       }
@@ -230,10 +271,10 @@ public class Block extends AbstractFuture<Block> {
 
    @Override public String toString() {
       if ( hasText() )
-         return "Block(" + textResult.length()+ " characters)";
+         return "Block " + name + " (" + textResult.length()+ " characters)";
       else if ( hasBinary() )
-         return "Block(" + binaryResult.size() + " bytes)";
+         return "Block " + name + " (" + binaryResult.size() + " bytes)";
       else
-         return "Block(no data)";
+         return "Block " + name + " (no data)";
    }
 }

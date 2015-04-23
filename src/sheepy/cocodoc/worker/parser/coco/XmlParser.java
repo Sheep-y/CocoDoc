@@ -17,10 +17,8 @@ public class XmlParser extends Parser {
    private static final int messageQuoteLimit = 20;
 
    @Override public Parser clone() { return new XmlParser(); }
-   @Override protected CharSequence implParse( Block context, String text ) {
-      parse( text );
-      return text;
-   }
+   @Override public void start(Block context, String text) { parse( text ); }
+   @Override public CharSequence get() { return text; }
 
    /***********************************************************************************************************/
 

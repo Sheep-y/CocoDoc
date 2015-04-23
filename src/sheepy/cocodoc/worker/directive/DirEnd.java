@@ -2,7 +2,6 @@ package sheepy.cocodoc.worker.directive;
 
 import java.util.List;
 import sheepy.cocodoc.worker.Block;
-import sheepy.cocodoc.worker.Worker;
 import sheepy.cocodoc.worker.task.Task;
 
 public class DirEnd extends Directive {

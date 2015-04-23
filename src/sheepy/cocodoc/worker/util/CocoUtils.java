@@ -1,7 +1,19 @@
 package sheepy.cocodoc.worker.util;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
+import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import sheepy.cocodoc.worker.task.TaskVar;
 import sheepy.util.concurrent.CacheMap;
 import sheepy.util.concurrent.ObjectPoolMap;
 
@@ -34,5 +46,50 @@ public class CocoUtils {
          ); // Un-escape HTML
    }
 
+
+   /**
+    * Find the build time of given class.
+    *
+    * @return The date if it can be determined
+    */
+   public static Optional<Long> getBuildTime( final Class currentClass ) {
+      long d = 0;
+      try {
+         URL resource = currentClass.getResource( currentClass.getSimpleName() + ".class" );
+         if ( resource == null ) return null;
+         switch ( resource.getProtocol() ) {
+            case "file":
+               d = new File( resource.toURI() ).lastModified();
+               break;
+
+            case "jar":
+               String path = resource.getPath();
+               d = new File( path.substring( 5, path.indexOf( "!" ) ) ).lastModified();
+               break;
+
+            case "zip":
+               path = resource.getPath();
+               File jarFileOnDisk = new File( path.substring( 0, path.indexOf("!") ) );
+               //long jfodLastModifiedLong = jarFileOnDisk.lastModified ();
+               //Date jfodLasModifiedDate = new Date(jfodLastModifiedLong);
+               try( JarFile jf = new JarFile( jarFileOnDisk ) ) {
+                  d = jf.getEntry( path.substring( path.indexOf( "!" ) + 2 ) ).getTime(); //Skip the ! and the //
+               }
+         }
+      } catch ( URISyntaxException | IOException | SecurityException ignored) { }
+      return Optional.ofNullable( d == 0 ? null : d );
+   }
+
+   public static Optional<Long> getBuildTime() {
+      return getBuildTime( CocoUtils.class );
+   }
+
+   public static ZonedDateTime milliToZonedDateTime ( long epoch ) {
+      return Instant.ofEpochMilli( epoch ).atZone( ZoneId.systemDefault() );
+   }
+
+   public static String formatTime ( ZonedDateTime time ) {
+      return time.truncatedTo( ChronoUnit.SECONDS ).format( DateTimeFormatter.ISO_INSTANT );
+   }
 
 }

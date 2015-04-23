@@ -8,6 +8,9 @@ import sheepy.util.Text;
 public abstract class Parser implements AutoCloseable {
    protected static final Logger log = Logger.getLogger( Parser.class.getSimpleName() );
    private Parser parent;
+   static {
+      log.setLevel( Level.ALL );
+   }
 
    public Parser() {}
    public Parser(Parser parent) {
@@ -20,10 +23,19 @@ public abstract class Parser implements AutoCloseable {
       String text = context.getText().toString();
       if ( text.isEmpty() ) return null;
       log.log( Level.INFO, "Parsing {1} characters with {0}. {2}", new Object[]{ this.getClass().getSimpleName(), text.length(), findFirstTag( text ) } ) ;
-      context.setParser( this );
-      return implParse( context, text );
+      Parser oldParser = context.getParser();
+      try {
+         context.setParser( this );
+         start( context, text );
+         return get();
+      } finally {
+         context.setParser( oldParser );
+      }
    }
-   protected abstract CharSequence implParse ( Block context, String text );
+   public void start( Block context ) { start( context, context.getText().toString() ); }
+   public abstract void start( Block context, String text );
+   public abstract CharSequence get();
+
 
    protected static boolean shouldStop() { return Thread.currentThread().isInterrupted(); }
 
