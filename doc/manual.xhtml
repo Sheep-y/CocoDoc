@@ -1,19 +1,19 @@
 <!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta charset="UTF-8" />
 <title>CocoDoc: HTML App builder</title>
 </head><body>
-<h1>CocoDoc v0.1</h1>   <p>Licensed under <a href='http://www.gnu.org/copyleft/gpl.html'>LGPL v3</a>. </p>
+<h3>CocoDoc v0.8</h3>   <p>Licensed under <a href='http://www.gnu.org/copyleft/gpl.html'>LGPL v3</a>. </p>
 <p>
    CocoDoc is a simple text document builder, designed to merge web app resources such as html, css, js, and images. <br/>
    Usage: Drag and drop build file onto jar, or pass in build file(s) as parameter. Default build file is "cocodoc.conf".
 </p>
-<h2>Syntax Example</h2>
+<h4>Syntax Example</h4>
 <pre><code>
   &lt;html>&lt;link rel="stylesheet" href="style.css">&lt;style>&lt;?coco-css style.css?> body {
     background: url('background.jpg');  background: url('&lt;?coco-datauri background.jpg?>');
   }&lt;/style>  &lt;img src="image.png">
   &lt;?coco-inline file(image.png) encode(base64) prefix("data:image/png;base64,") position(src of img before) ?>
 </code></pre>
-<h2>Directives</h2>
+<h4>Directives</h4>
 <dl>
   <dt>&lt;?coco-inline&gt;</dt>  <dd>Inline a file.</dd>
   <dt>&lt;?coco-image&gt;</dt>   <dd>Inline an image, i.e. <code>encode(base64) prefix(${auto-datauri}) position(noerr,replace src of &lt;img&gt; before this)</code>.</dd>
@@ -25,16 +25,16 @@
   <dt>&lt;?coco-end&gt;</dt>     <dd>Ends a process block.</dd>
   <dt>&lt;?coco-output&gt;</dt>  <dd>Specify output file for current scope. Default output to upper scope, or to console when at top scope.</dd>
 </dl>
-<h2>Processes</h2>
+<h4>Processes</h4>
 <p>    Many processes accepts "noerr" as parameter to ignore errors and allow execution to continue. <br/>
     For "delete" and "position", tags must be closed and attributes must be quoted.</p>
 <dl>
-  <dt>file(filename)</dt>           <dd>Name of file(s) to inline.  Read data is in binary form.</dd>
+  <dt>file(filename)</dt>           <dd>Name of file(s) to inline.  Read data is in binary form.  Output to <code>NUL</code> or <code>/dev/null</code> will discard output.</dd>
   <dt>charset(utf-8)</dt>           <dd>Alias of <code>text</code>, see below. If used to convert input, should be the first or second parameter.</dd>
   <dt>delete(noerr?,locator)</dt>   <dd>Stuffs to delete. ( <i>attr</i> of | (the|1st|2nd|all)? (&lt;?(<i>tag</i>|any)&gt;[<i>attr</i>]*|line)? (before|after) | this )+</dd>
   <dt>position(noerr?,before|after|replace? locator)</dt> <dd>Position and scope of output. Default use current position (this).</dd>
 </dl>
-<h2>Data Processes</h2>
+<h4>Data Processes</h4>
 <p>    These process may modify data in binary or text form.  If conversion is necessary, it will be done using last used encoding.</p>
 <dl>
   <dt>binary(utf-8)</dt>            <dd>Explictly convert text data to binary using the first encoding that works. Default utf-8. </dd>

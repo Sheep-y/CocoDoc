@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Phaser;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.directive.Directive;
-import sheepy.cocodoc.worker.error.CocoRunError;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.task.Task;
-import sheepy.cocodoc.worker.util.CharsetUtils;
 import sheepy.util.concurrent.AbstractFuture;
 
 /**
@@ -54,50 +54,12 @@ public class Block extends AbstractFuture<Block> {
       }
    }
 
-   public Block setName( CharSequence name ) {
-      if ( name == null || name.length() <= 0 ) return this;
-      if ( this.name != null ) {
-         this.name += ',' + name.toString();
-      } else
-         this.name = name.toString();
-      return this;
-   }
-
-   public Block setMTime ( ZonedDateTime mtime ) {
-      if ( mtime == null ) return this;
-      if ( this.mtime != null ) {
-         if ( this.mtime.isBefore( mtime ) )
-            setChildMTime( this.mtime = mtime );
-      } else
-         setChildMTime( this.mtime = mtime );
-      return this;
-   }
-
-   private void setChildMTime ( ZonedDateTime mtime ) {
-      if ( child_mtime == null || mtime.isAfter( child_mtime ) )
-         child_mtime = mtime;
-      if ( getParent() == null ) return;
-      getParent().setChildMTime( mtime );
-   }
-
    public Block getParent() {
       return this.parent;
    }
 
    public Block getRoot() {
       return parent == null ? this : parent;
-   }
-
-   public ZonedDateTime getBuildTime() {
-      return getParent() == null ? btime : getParent().getBuildTime();
-   }
-
-   public ZonedDateTime getModifiedTime() {
-      return child_mtime;
-   }
-
-   public ZonedDateTime getLocalModifiedTime() {
-      return mtime;
    }
 
    public Directive getDirective() {
@@ -117,15 +79,18 @@ public class Block extends AbstractFuture<Block> {
 
       if ( hasData() ) {
          if ( getOutputTarget() != null ) {
-            File f = new File( getBasePath(), getOutputTarget().getParam( 0 ) );
-            byte[] data = getBinary();
-            log.log( Level.INFO, "Writing {1} bytes to {0}.", new Object[]{ f, data.length } );
-            try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
-               out.write( data );
-               setText( null );
-            } catch ( IOException ex ) {
-               if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
+            String fname = getOutputTarget().getParam( 0 );
+            if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
+               File f = new File( getBasePath(), fname );
+               byte[] data = getBinary();
+               log.log( Level.INFO, "Writing {1} bytes to {0}.", new Object[]{ f, data.length } );
+               try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
+                  out.write( data );
+               } catch ( IOException ex ) {
+                  if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
+               }
             }
+            setText( null );
          } else {
             if ( getParent() == null )
                System.out.println( getText() );
@@ -252,6 +217,82 @@ public class Block extends AbstractFuture<Block> {
    /** Return last used binary / text encoding. */
    public Charset getCurrentCharset() {
       return currentCharset;
+   }
+
+   /************************************************************************************************/
+
+   public Block setName( CharSequence name ) {
+      if ( name == null || name.length() <= 0 ) return this;
+      if ( this.name != null ) {
+         this.name += ',' + name.toString();
+      } else
+         this.name = name.toString();
+      return this;
+   }
+
+   public Block setMTime ( ZonedDateTime mtime ) {
+      if ( mtime == null ) return this;
+      if ( this.mtime != null ) {
+         if ( this.mtime.isBefore( mtime ) )
+            setChildMTime( this.mtime = mtime );
+      } else
+         setChildMTime( this.mtime = mtime );
+      return this;
+   }
+
+   private void setChildMTime ( ZonedDateTime mtime ) {
+      if ( child_mtime == null || mtime.isAfter( child_mtime ) )
+         child_mtime = mtime;
+      if ( getParent() == null ) return;
+      getParent().setChildMTime( mtime );
+   }
+
+   public ZonedDateTime getBuildTime() {
+      return getParent() == null ? btime : getParent().getBuildTime();
+   }
+
+   public ZonedDateTime getModifiedTime() {
+      return child_mtime;
+   }
+
+   public ZonedDateTime getLocalModifiedTime() {
+      return mtime;
+   }
+
+   /************************************************************************************************/
+
+   private Phaser startCount;
+
+   public void regParse () {
+      if ( parent != null )
+         parent.regParse();
+      else synchronized ( this ) {
+         if ( startCount == null )
+            startCount = new Phaser( 1 );
+         else
+            startCount.register();
+      }
+   }
+
+   public void doneParse () {
+      if ( parent != null )
+         parent.doneParse();
+      else synchronized ( this ) {
+         if ( startCount != null )
+            throw new IllegalStateException( "doneStart() without regStart()" );
+         startCount.arrive();
+      }
+   }
+
+   public void waitForParse() {
+      if ( parent != null )
+         parent.waitForParse();
+      else synchronized ( this ) {
+         if ( startCount != null ) {
+            startCount.arriveAndAwaitAdvance();
+            startCount = null;
+         }
+      }
    }
 
    /************************************************************************************************/

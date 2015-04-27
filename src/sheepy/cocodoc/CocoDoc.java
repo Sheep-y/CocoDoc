@@ -1,41 +1,42 @@
 package sheepy.cocodoc;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.stage.Stage;
-import sheepy.cocodoc.ui.SceneMain;
+import static sheepy.cocodoc.CocoUtils.stripHtml;
+import sheepy.cocodoc.ui.MainStage;
 import sheepy.cocodoc.worker.directive.Directive;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import sheepy.cocodoc.worker.task.TaskCoco;
 import sheepy.cocodoc.worker.task.TaskFile;
-import sheepy.cocodoc.worker.util.CocoUtils;
 
 public class CocoDoc extends Application {
    public static final CocoConfig config = new CocoConfig();
 
    @Override public void start ( Stage stage ) {
-      /*
-      stage.setTitle( "ChocoDoc" );
-      stage.setScene( new SceneMain() );
-      stage.show();
-      */
+      try {
 
-      if ( config.runFiles.size() > 0 ) try {
+         new MainStage( stage );
+
+         if ( config.runFiles.size() > 0 ) try {
+
             Directive.create( INLINE,
                Arrays.asList( new TaskFile().addParam( config.runFiles ), new TaskCoco() )
             ).start( null ).get();
+
          } catch ( RuntimeException ex ) {
             ex.printStackTrace();
+
          } catch ( InterruptedException ex ) {
             System.err.println( "Interrupted" );
             System.exit( -1 );
-      } else {
-         showHeadlessHelp( null );
+         }
+
+      } catch ( Exception ex ) {
+         showHeadlessHelp( ex );
       }
    }
 
@@ -56,24 +57,23 @@ public class CocoDoc extends Application {
 
    public static void showHeadlessHelp ( Exception ex ) {
       if ( config.help != null ) {
-         String doc = CocoUtils.stripHtml( getDoc( config.help ) );
+
+         String doc;
+         try {
+            doc = stripHtml( CocoUtils.getText( CocoDoc.config.help ) );
+            if ( config.help.equals( CocoConfig.LGPL_FILE ) )
+               doc += "\u00A0\n\u00A0\n\u00A0\n" + stripHtml( CocoUtils.getText( CocoConfig.GPL_FILE ) );
+         } catch ( IOException err ) {
+            doc = err.getMessage();
+         }
+
          System.out.println( doc );
          System.exit( 0 );
+
       } else {
          if ( ex != null ) ex.printStackTrace();
-         System.out.println( "Input /? or --help for manual, or --license for the LGPL license.");
-      }
-   }
+         System.out.println( "Input /? or --help for manual, or --license for the license.");
 
-   public static String getDoc( String file ) {
-      try ( InputStream is = CocoDoc.class.getResourceAsStream( "/doc/" + file ) ) {
-         String result = new Scanner(is).useDelimiter( "\\A" ).next();
-         if ( file.contains( "_lgpl." ) ) result += "\u00A0\n\u00A0\n\u00A0\n" + getDoc( "license_gpl.html" );
-         return result;
-
-      } catch ( IOException | NullPointerException ex ) {
-         ex.printStackTrace();
-         return "Cannot load documentation " + file + ".";
       }
    }
 }

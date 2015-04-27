@@ -13,9 +13,9 @@ import javax.xml.parsers.SAXParserFactory;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
+import sheepy.cocodoc.CocoParseError;
+import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.Block;
-import sheepy.cocodoc.worker.error.CocoParseError;
-import sheepy.cocodoc.worker.error.CocoRunError;
 import static sheepy.util.collection.CollectionPredicate.noDuplicate;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 

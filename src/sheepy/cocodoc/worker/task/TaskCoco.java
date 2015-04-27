@@ -2,7 +2,7 @@ package sheepy.cocodoc.worker.task;
 
 import java.util.List;
 import java.util.function.Predicate;
-import sheepy.cocodoc.worker.error.CocoParseError;
+import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 
 public class TaskCoco extends Task {

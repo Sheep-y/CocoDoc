@@ -1,4 +1,4 @@
-package sheepy.cocodoc.worker.error;
+package sheepy.cocodoc;
 
 public class CocoRunError extends RuntimeException {
 

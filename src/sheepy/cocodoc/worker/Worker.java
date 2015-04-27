@@ -2,8 +2,8 @@ package sheepy.cocodoc.worker;
 
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Logger;
-import sheepy.cocodoc.worker.error.CocoParseError;
-import sheepy.cocodoc.worker.error.CocoRunError;
+import sheepy.cocodoc.CocoParseError;
+import sheepy.cocodoc.CocoRunError;
 
 /**
  * Get input and create block

@@ -2,8 +2,8 @@ package sheepy.cocodoc.worker.directive;
 
 import java.util.List;
 import java.util.logging.Level;
+import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
-import sheepy.cocodoc.worker.error.CocoParseError;
 import sheepy.cocodoc.worker.task.Task;
 
 public class DirOutput extends Directive {

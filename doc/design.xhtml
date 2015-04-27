@@ -1,15 +1,18 @@
 <!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta charset="UTF-8" />
 <title>CocoDoc Design Doc</title>
 </head><body>
-<h1>CocoDoc Design Doc v1</h1>
-<aside>Date: <time>2015-04-23</time>.</aside>
+<h3>CocoDoc v1 Design Doc</h3>
+<aside>
+   Date: <time>2015-04-23</time>. <br/>
+   All documents and source codes are embedded in the exe or jar like a zip.
+</aside>
 <section>
-   <h2>Purpose</h2>
+   <h4>Purpose</h4>
    <p>
       CocoDoc is a simple file processor specialise in merging text and binary files to build independent, single file web app.
       (It is <em>not</em> designed to replace Ant/Grunt/Gulp.)
    </p>
-   <h3>Aims</h3>
+   <h5>Aims</h5>
    <ol>
       <li>Simple setup, simple to build. (e.g. drop file on builder / default build file)</li>
       <li>Base (x)html file can be used both after build (single file) and before build (multi-file).</li>
@@ -19,29 +22,25 @@
    </ol>
 </section>
 <section>
-   <h2>Program</h2>
+   <h4>Program</h4>
    <p>
       CocoDoc is written in Java SE 1.8 and deployed in form of an executable, independent jar file.
       GUI is done in Java FX.
+      To comply with license, all source code, libraries, licenses, and documentations are included in the jar.
+      Documentations are accessible through command line arguments or GUI.
    </p>
-   <p>
-      All libraries (if any), licenses and documentations are included in the jar.
-      Licenses and user manual are accessible through command line arguments or GUI.
-   </p>
-   <h3>Program Structure</h3>
+   <h5>Program Structure</h5>
    <dl>
-      <dt>sheepy.cocodoc</dt><dd>Base package. Main application entry point.</dd>
+      <dt>sheepy.cocodoc</dt><dd>Base package. Main application, config, exception, and app utils are all here.</dd>
       <dt>sheepy.cocodoc.ui</dt><dd>User Interface package.</dd>
       <dt>sheepy.cocodoc.worker</dt><dd>Main processing logic package.</dd>
       <dt>sheepy.cocodoc.worker.directive</dt><dd>Processing directive. Represents major, structural CocoDoc commands, argumented by tasks.</dd>
-      <dt>sheepy.cocodoc.worker.error</dt><dd>Application specific exceptions. Most runtime errors are wrapped in these.</dd>
       <dt>sheepy.cocodoc.worker.parser</dt><dd>Parser package.  Parsers parse Coco tags, Html Tag, or trim JavaScript.</dd>
       <dt>sheepy.cocodoc.worker.task</dt><dd>Task package. A task modifies or parses data, such as converting to base64.</dd>
-      <dt>sheepy.cocodoc.worker.util</dt><dd>App specific utilities / helper classes.</dd>
       <dt>sheepy.util</dt><dd>Generic utilities / helper classes.</dd>
    </dl>
 
-   <h3>Process Flow</h3>
+   <h5>Process Flow</h5>
    <ol>
    <li>A job is initialised by selecting a file, through command line or GUI.</li>
    <li>A new <code>INLINE</code> <code>Directive</code> is created to read the file and do coco parsing.</li>
@@ -54,8 +53,7 @@
       <li> <code>DirOutput</code> will immediately run all its tasks, which should set the output target of containing block. </li>
       <li> <code>DirEnd</code> is handled by CocoParser. </li>
       </ul>
-      Worker runs a <code>Block</code> in a new Thread. <br/>
-      Thus for <code>INLINE</code> and <code>START</code>, trying to get result will block until the thread finish. <br/>
+      Worker runs a <code>Block</code> (<code>INLINE</code> and <code>START</code>) in a new thread.  Trying to get result will block until the thread finish. <br/>
       <code>OUTPUT</code> and <code>END</code> directives does not create new thread and would returns immediately.
    </li>
    <li> Each <code>INLINE</code> and <code>START</code> has a <code>Block</code>.  When a block runs it will:
@@ -63,7 +61,7 @@
       <li> Initiate each <code>Task</code> of the directive, which currently just validate parameters. </li>
       <li> Execute each <code>Task</code> one by one. </li>
       <li> If the block has an output target, the block will saves its content into the output and becomes empty. </li>
-      <li> Otherwise, the content can be retrieved by the parent block.  If there are not parent block they goes to <code>system.out</code>. </li>
+      <li> Otherwise, the content will be retrieved by the parent block.  If no parent block, they goes to <code>system.out</code>. </li>
       </ol>
    </li>
    <li> Different <code>Task</code> do different things:

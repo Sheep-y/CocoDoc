@@ -1,17 +1,12 @@
 package sheepy.cocodoc.worker.task;
 
-import java.time.Instant;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import java.util.stream.LongStream;
-import sheepy.cocodoc.worker.util.CocoUtils;
-import static sheepy.cocodoc.worker.util.CocoUtils.formatTime;
-import static sheepy.cocodoc.worker.util.CocoUtils.milliToZonedDateTime;
+import sheepy.cocodoc.CocoUtils;
+import static sheepy.cocodoc.CocoUtils.formatTime;
+import static sheepy.cocodoc.CocoUtils.milliToZonedDateTime;
 
 public class TaskVar extends Task {
 

@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.StreamSupport;
+import sheepy.cocodoc.CocoParseError;
+import sheepy.cocodoc.CocoRunError;
+import sheepy.cocodoc.CocoUtils;
 import sheepy.cocodoc.worker.Block;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
-import sheepy.cocodoc.worker.error.CocoParseError;
-import sheepy.cocodoc.worker.error.CocoRunError;
-import sheepy.cocodoc.worker.util.CocoUtils;
 
 public class TaskFile extends Task {
    @Override public Action getAction () { return Action.FILE; }

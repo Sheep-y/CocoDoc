@@ -3,7 +3,7 @@ package sheepy.cocodoc.worker.task;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import sheepy.cocodoc.worker.error.CocoRunError;
+import sheepy.cocodoc.CocoRunError;
 import static sheepy.cocodoc.worker.task.Task.log;
 
 public class TaskCData extends Task {

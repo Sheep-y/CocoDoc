@@ -1,7 +1,11 @@
-package sheepy.cocodoc.worker.util;
+package sheepy.cocodoc;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.Instant;
@@ -10,10 +14,10 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.Scanner;
 import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import sheepy.cocodoc.worker.task.TaskVar;
 import sheepy.util.concurrent.CacheMap;
 import sheepy.util.concurrent.ObjectPoolMap;
 
@@ -24,7 +28,7 @@ public class CocoUtils {
 
    /** Cache Pattern and Matcher for simple reuse. */
    private static final CacheMap<String, Pattern> patternPool = CacheMap.create(
-         (java.lang.String pattern) -> Pattern.compile(pattern, Pattern.UNICODE_CHARACTER_CLASS | Pattern.DOTALL)
+         (pattern) -> Pattern.compile(pattern, Pattern.UNICODE_CHARACTER_CLASS | Pattern.DOTALL)
    );
    public static final ObjectPoolMap<String, Matcher> tagPool = ObjectPoolMap.create(
          (key) -> patternPool.get(key).matcher(""), (v) -> v.reset("")
@@ -90,6 +94,21 @@ public class CocoUtils {
 
    public static String formatTime ( ZonedDateTime time ) {
       return time.truncatedTo( ChronoUnit.SECONDS ).format( DateTimeFormatter.ISO_INSTANT );
+   }
+
+   public static String getText ( String file ) throws IOException {
+      File f = new File( file );
+      InputStream is;
+      if ( f.exists() && f.isFile() && f.canRead() )
+         is = new BufferedInputStream( new FileInputStream( f ) );
+      else
+         is = CocoUtils.class.getResourceAsStream( file );
+      if ( is == null ) throw new FileNotFoundException( "Resource not found: " + file );
+      try {
+         return new Scanner(is).useDelimiter("\\A").next();
+      } finally {
+         is.close();
+      }
    }
 
 }

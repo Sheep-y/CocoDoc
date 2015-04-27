@@ -8,7 +8,7 @@ import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.zip.Deflater;
 import java.util.zip.DeflaterOutputStream;
-import sheepy.cocodoc.worker.error.CocoRunError;
+import sheepy.cocodoc.CocoRunError;
 import sheepy.util.collection.CollectionPredicate;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 

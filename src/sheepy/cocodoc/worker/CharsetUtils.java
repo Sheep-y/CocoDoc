@@ -1,4 +1,4 @@
-package sheepy.cocodoc.worker.util;
+package sheepy.cocodoc.worker;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;

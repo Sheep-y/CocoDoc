@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
-import sheepy.cocodoc.worker.error.CocoParseError;
-import sheepy.cocodoc.worker.util.CocoUtils;
+import sheepy.cocodoc.CocoParseError;
+import sheepy.cocodoc.CocoUtils;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 
 public class TaskTrim extends Task {

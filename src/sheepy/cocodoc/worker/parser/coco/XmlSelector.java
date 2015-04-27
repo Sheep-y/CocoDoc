@@ -1,7 +1,7 @@
 package sheepy.cocodoc.worker.parser.coco;
 
 import java.util.List;
-import sheepy.cocodoc.worker.error.CocoRunError;
+import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.parser.coco.XmlNode.NODE_TYPE;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.util.Text;

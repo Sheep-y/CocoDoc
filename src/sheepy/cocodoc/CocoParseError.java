@@ -1,4 +1,4 @@
-package sheepy.cocodoc.worker.error;
+package sheepy.cocodoc;
 
 public class CocoParseError extends RuntimeException {
 
