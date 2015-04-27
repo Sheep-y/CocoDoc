@@ -9,6 +9,7 @@ import sheepy.cocodoc.worker.task.Task;
 public class DirOutput extends Directive {
 
    public DirOutput() {
+      this( Action.OUTPUT, null );
    }
 
    public DirOutput(Action action, List<Task> tasks) {

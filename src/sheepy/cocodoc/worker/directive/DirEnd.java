@@ -7,6 +7,7 @@ import sheepy.cocodoc.worker.task.Task;
 public class DirEnd extends Directive {
 
    public DirEnd() {
+      this( Action.END, null );
    }
 
    public DirEnd(Action action, List<Task> tasks) {

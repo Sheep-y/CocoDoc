@@ -20,7 +20,7 @@ public class TaskDeflate extends Task {
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "deflate() task accepts 0-9 for compression level (default 9), and 'zlib' to include zlib header/checksum: {0}"; }
 
-   @Override public void run () {
+   @Override protected void run () {
       boolean zlib = getParams().contains( "zlib" );
       int level = getParams().stream().filter( p -> p.length() == 1 ).map( Integer::parseInt ).findFirst().orElse( Integer.valueOf( 9 ) );
 

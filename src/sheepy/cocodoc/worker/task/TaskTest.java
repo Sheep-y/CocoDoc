@@ -28,7 +28,7 @@ public class TaskTest extends Task {
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "test() task should have one or more of " + String.join( ",", validParams ) + " with no duplicate. Actual: {0}"; }
 
-   @Override public void run () {
+   @Override protected void run () {
       if ( ! hasParams() ) return;
       Block block = getBlock();
       for ( String e : getParams() ) {
@@ -55,7 +55,8 @@ public class TaskTest extends Task {
                   throwOrWarn( new CocoRunError( "Test failed: Invalid XML.", ex ) );
                }
                break;
-            default : throw new CocoParseError( "Unknown test parameter: " + e );
+            default :
+               throwOrWarn( new CocoParseError( "Unknown test parameter: " + e ) );
          }
       }
    }

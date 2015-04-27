@@ -1,7 +1,11 @@
 package sheepy.cocodoc;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -15,30 +19,6 @@ import sheepy.cocodoc.worker.task.TaskFile;
 
 public class CocoDoc extends Application {
    public static final CocoConfig config = new CocoConfig();
-
-   @Override public void start ( Stage stage ) {
-      try {
-
-         new MainStage( stage );
-
-         if ( config.runFiles.size() > 0 ) try {
-
-            Directive.create( INLINE,
-               Arrays.asList( new TaskFile().addParam( config.runFiles ), new TaskCoco() )
-            ).start( null ).get();
-
-         } catch ( RuntimeException ex ) {
-            ex.printStackTrace();
-
-         } catch ( InterruptedException ex ) {
-            System.err.println( "Interrupted" );
-            System.exit( -1 );
-         }
-
-      } catch ( Exception ex ) {
-         showHeadlessHelp( ex );
-      }
-   }
 
    public static void main ( String[] args ) {
       try {
@@ -54,6 +34,39 @@ public class CocoDoc extends Application {
          System.exit( ex.toString().hashCode() );
       }
    }
+
+   @Override public void start ( Stage stage ) {
+      try {
+
+         new MainStage( stage );
+         new Timer().schedule( new TimerTask () { @Override public void run() {
+            CocoDoc.run( config );
+         } }, 100 );
+
+      } catch ( Exception ex ) {
+         showHeadlessHelp( ex );
+      }
+   }
+
+   public static void run ( CocoConfig config ) {
+      if ( config.runFiles.size() > 0 ) try {
+
+         List<Directive> dirs = new ArrayList<>( config.runFiles.size() );
+         for ( String file : config.runFiles ) {
+            dirs.add( Directive.create( INLINE,
+               Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() )
+            ).start( null ) );
+         }
+         for ( Directive dir : dirs )try {
+            dir.get();
+         } catch ( InterruptedException ex ) {}
+
+      } catch ( RuntimeException ex ) {
+         ex.printStackTrace();
+
+      }
+   }
+
 
    public static void showHeadlessHelp ( Exception ex ) {
       if ( config.help != null ) {

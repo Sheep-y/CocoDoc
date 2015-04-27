@@ -7,6 +7,7 @@ import java.util.logging.Level;
 import sheepy.cocodoc.CocoUtils;
 import static sheepy.cocodoc.CocoUtils.formatTime;
 import static sheepy.cocodoc.CocoUtils.milliToZonedDateTime;
+import sheepy.cocodoc.worker.Block;
 
 public class TaskVar extends Task {
 
@@ -16,19 +17,18 @@ public class TaskVar extends Task {
    @Override protected String invalidParamMessage() { return "var() task should start with parameters mtime, btime, or cocotime."; }
 
    ZonedDateTime app_build_time;
-   @Override public void run () {
+   @Override protected void run () {
       if ( getParams().isEmpty() ) return;
 
       String varname = getParam( 0 );
       String value = "";
       switch ( varname.toLowerCase() ) {
          case "mtime":
-            // TODO: wait until second pass
-            value = formatTime( getBlock().getRoot().getModifiedTime() );
+            value = formatTime( getBlock().getRoot().stats().getModifiedTime() );
             break;
 
          case "btime":
-            value = formatTime( getBlock().getBuildTime() );
+            value = formatTime( getBlock().stats().getBuildTime() );
             break;
 
          case "now":
@@ -47,6 +47,6 @@ public class TaskVar extends Task {
             log.log( Level.WARNING, "Unknown variable {0}", varname );
             return;
       }
-      getBlock().getText().append( value );
+      getBlock().setText( value );
    }
 }

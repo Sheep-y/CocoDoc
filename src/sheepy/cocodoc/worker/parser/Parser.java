@@ -19,21 +19,19 @@ public abstract class Parser implements AutoCloseable {
 
    public Parser getParent() { return parent; }
 
-   public CharSequence parse ( Block context ) {
+   public void start ( Block context ) {
       String text = context.getText().toString();
-      if ( text.isEmpty() ) return null;
-      log.log( Level.INFO, "Parsing {1} characters with {0}. {2}", new Object[]{ this.getClass().getSimpleName(), text.length(), findFirstTag( text ) } ) ;
+      if ( text.isEmpty() ) return;
       Parser oldParser = context.getParser();
+      log.log( Level.INFO, "Parsing {1} characters with {0}. {2}", new Object[]{ this.getClass().getSimpleName(), text.length(), findFirstTag( text ) } );
       try {
          context.setParser( this );
          start( context, text );
-         return get();
       } finally {
          context.setParser( oldParser );
       }
    }
-   public void start( Block context ) { start( context, context.getText().toString() ); }
-   public abstract void start( Block context, String text );
+   protected abstract void start( Block context, String text );
    public abstract CharSequence get();
 
 

@@ -19,7 +19,7 @@ public class TaskWrap extends Task {
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "wrap() task accepts a number of characters (default 72), and 'crlf' or 'lf' to indicate line breaks (default same as platform)"; }
 
-   @Override public void run () {
+   @Override protected void run () {
       int width = 72, newLfCount = 0, oldLfCount = 0;
       String lf = System.lineSeparator();
       for ( String s : getParams() ) {

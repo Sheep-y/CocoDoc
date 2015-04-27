@@ -21,7 +21,7 @@ public class TaskEncode extends Task {
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "encode() task should have one or more of " + String.join( ",", validParams ) + ". Actual: {0}"; }
 
-   @Override public void run () {
+   @Override protected void run () {
       if ( ! hasParams() ) return;
       Block block = getBlock();
       for ( String e : getParams() ) {
@@ -55,7 +55,7 @@ public class TaskEncode extends Task {
                break;
 
             default :
-               throw new CocoParseError( "Unknown encode parameter: " + e );
+               throwOrWarn( new CocoParseError( "Unknown encode parameter: " + e ) );
          }
       }
    }

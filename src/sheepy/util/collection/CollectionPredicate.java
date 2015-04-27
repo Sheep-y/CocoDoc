@@ -16,6 +16,7 @@ public interface CollectionPredicate {
 
    public static <C extends Collection> Predicate<C> min ( int i ) { return e -> e != null && e.size() >= i; }
    public static <C extends Collection> Predicate<C> max ( int i ) { return e -> e == null || e.size() <= i; }
+   public static <C extends Collection> Predicate<C> size ( int size ) { return size( size, size ); }
    public static <C extends Collection> Predicate<C> size ( int min, int max ) {
       assert( min <= max );
       return e -> e == null ? min <= 0 : ( e.size() >= min && e.size() <= max );

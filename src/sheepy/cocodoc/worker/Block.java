@@ -6,12 +6,10 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Phaser;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import sheepy.cocodoc.CocoRunError;
@@ -35,39 +33,20 @@ public class Block extends AbstractFuture<Block> {
    private Task outputTarget;
 
    private String name = "";
-   private ZonedDateTime btime = null;
-   private ZonedDateTime mtime = null;
-   private ZonedDateTime child_mtime = null;
+   private BlockStats stats = new BlockStats(this);
 
    public Block ( Block parent, Directive directive ) {
       this.parent = parent;
       this.directive = directive;
-      if ( parent == null ) {
-         btime = ZonedDateTime.now();
-      } else {
+      if ( parent != null ) {
          basePath = parent.basePath;
+         stats.cloneParentStat( parent.stats() );
       }
       directive.setBlock( this ); // Do throw NPE if null
       if ( directive.getContent() != null ) {
          setText( directive.getContent() );
          directive.setContent( null );
       }
-   }
-
-   public Block getParent() {
-      return this.parent;
-   }
-
-   public Block getRoot() {
-      return parent == null ? this : parent;
-   }
-
-   public Directive getDirective() {
-      return directive;
-   }
-
-   public List<Task> getTasks() {
-      return directive.getTasks();
    }
 
    @Override protected Block implRun () {
@@ -98,6 +77,40 @@ public class Block extends AbstractFuture<Block> {
       }
 
       return this;
+   }
+
+   /**************************************************************************************************/
+
+   public Block getParent() {
+      return this.parent;
+   }
+
+   public Block getRoot() {
+      Block pos = this;
+      while ( pos.parent != null )
+         pos = pos.parent;
+      return pos;
+   }
+
+   public Directive getDirective() {
+      return directive;
+   }
+
+   public List<Task> getTasks() {
+      return directive.getTasks();
+   }
+
+   public Block setName( CharSequence name ) {
+      if ( name == null || name.length() <= 0 ) return this;
+      if ( this.name != null ) {
+         this.name += ',' + name.toString();
+      } else
+         this.name = name.toString();
+      return this;
+   }
+
+   public BlockStats stats() {
+      return stats;
    }
 
    /**************************************************************************************************/
@@ -217,82 +230,6 @@ public class Block extends AbstractFuture<Block> {
    /** Return last used binary / text encoding. */
    public Charset getCurrentCharset() {
       return currentCharset;
-   }
-
-   /************************************************************************************************/
-
-   public Block setName( CharSequence name ) {
-      if ( name == null || name.length() <= 0 ) return this;
-      if ( this.name != null ) {
-         this.name += ',' + name.toString();
-      } else
-         this.name = name.toString();
-      return this;
-   }
-
-   public Block setMTime ( ZonedDateTime mtime ) {
-      if ( mtime == null ) return this;
-      if ( this.mtime != null ) {
-         if ( this.mtime.isBefore( mtime ) )
-            setChildMTime( this.mtime = mtime );
-      } else
-         setChildMTime( this.mtime = mtime );
-      return this;
-   }
-
-   private void setChildMTime ( ZonedDateTime mtime ) {
-      if ( child_mtime == null || mtime.isAfter( child_mtime ) )
-         child_mtime = mtime;
-      if ( getParent() == null ) return;
-      getParent().setChildMTime( mtime );
-   }
-
-   public ZonedDateTime getBuildTime() {
-      return getParent() == null ? btime : getParent().getBuildTime();
-   }
-
-   public ZonedDateTime getModifiedTime() {
-      return child_mtime;
-   }
-
-   public ZonedDateTime getLocalModifiedTime() {
-      return mtime;
-   }
-
-   /************************************************************************************************/
-
-   private Phaser startCount;
-
-   public void regParse () {
-      if ( parent != null )
-         parent.regParse();
-      else synchronized ( this ) {
-         if ( startCount == null )
-            startCount = new Phaser( 1 );
-         else
-            startCount.register();
-      }
-   }
-
-   public void doneParse () {
-      if ( parent != null )
-         parent.doneParse();
-      else synchronized ( this ) {
-         if ( startCount != null )
-            throw new IllegalStateException( "doneStart() without regStart()" );
-         startCount.arrive();
-      }
-   }
-
-   public void waitForParse() {
-      if ( parent != null )
-         parent.waitForParse();
-      else synchronized ( this ) {
-         if ( startCount != null ) {
-            startCount.arriveAndAwaitAdvance();
-            startCount = null;
-         }
-      }
    }
 
    /************************************************************************************************/

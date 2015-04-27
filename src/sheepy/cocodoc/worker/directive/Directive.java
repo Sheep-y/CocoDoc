@@ -29,6 +29,7 @@ public abstract class Directive {
 
    public static Directive create ( String action, List<Task> tasks ) {
       action = action.trim().toUpperCase();
+      if ( action.isEmpty() ) action = "INLINE";
       try {
          return create( Action.valueOf( action ), tasks );
       } catch ( IllegalArgumentException ex ) {
@@ -71,8 +72,6 @@ public abstract class Directive {
          case "css" :
             tasks.add( Task.create( Task.Action.DELETE, "noerr", "the <link>[href][rel$=stylesheet] before this" ) );
             break;
-         case "" :
-            throw new UnsupportedOperationException("Not implemented, please use coco-image, coco-datauri, coco-script, or coco-css");
          default:
             throw new CocoParseError( "Unknown coco process: " + action );
       }
@@ -84,10 +83,6 @@ public abstract class Directive {
    private Action action;
    private Block block;
    private List<Task> tasks;
-
-   public Directive () {
-      this( Action.INLINE, null );
-   }
 
    public Directive ( Action action, List<Task> tasks ) {
       this.action = action;
@@ -114,6 +109,6 @@ public abstract class Directive {
    public Directive setContent ( CharSequence content ) { this.content = content; return this; }
 
    @Override public String toString() {
-      return "Coco:" + getAction().name().toLowerCase() + Text.toString( "(", " ", ")", getTasks() );
+      return "<?coco-" + getAction().name().toLowerCase() + Text.toString( " ", getTasks() ) + " ?>";
    }
 }

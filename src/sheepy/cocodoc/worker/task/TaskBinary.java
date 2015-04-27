@@ -11,7 +11,7 @@ public class TaskBinary extends Task {
 
    @Override protected Predicate<List<String>> validParam() { return null; }
 
-   @Override public void run () {
+   @Override protected void run () {
       List<Charset> charsets = getParams().stream().map( Charset::forName ).collect( Collectors.toList() );
       getBlock().toBinary( charsets.isEmpty() ? null : charsets );
    }

@@ -15,12 +15,12 @@
 </code></pre>
 <h4>Directives</h4>
 <dl>
+  <dt>&lt;?coco&gt;</dt>         <dd>Same as <code>coco-inline</code>, below.</dd>
   <dt>&lt;?coco-inline&gt;</dt>  <dd>Inline a file.</dd>
   <dt>&lt;?coco-image&gt;</dt>   <dd>Inline an image, i.e. <code>encode(base64) prefix(${auto-datauri}) position(noerr,replace src of &lt;img&gt; before this)</code>.</dd>
   <dt>&lt;?coco-script&gt;</dt>  <dd>Inline a js script, i.e. <code>delete(noerr,src of this)</code>.</dd>
   <dt>&lt;?coco-css&gt;</dt>     <dd>Inline a css, i.e. <code>delete(noerr,the &lt;link&gt;[href][rel$=stylesheet] before this)</code>.</dd>
   <dt>&lt;?coco-datauri&gt;</dt> <dd>Inline any file as data uri, i.e. <code>encode(base64) prefix(${auto-datauri})</code>.</dd>
-  <dt>&lt;?coco&gt;</dt>         <dd>Auto detect <code>coco-image</code>, <code>coco-script</code>, <code>coco-css</code>, and <code>coco-inline</code>(if (X)HTML).  Otherwise error.</dd>
   <dt>&lt;?coco-start&gt;</dt>   <dd>Start a process block. A block allows you to inline many files and deflate or encode all of them, for example.</dd>
   <dt>&lt;?coco-end&gt;</dt>     <dd>Ends a process block.</dd>
   <dt>&lt;?coco-output&gt;</dt>  <dd>Specify output file for current scope. Default output to upper scope, or to console when at top scope.</dd>

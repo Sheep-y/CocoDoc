@@ -1,33 +1,46 @@
 package sheepy.cocodoc.worker;
 
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
 
 /**
- * Get input and create block
+ * Creates and run block
  */
 public class Worker {
    static final Logger log = Logger.getLogger( Worker.class.getName() );
-   static final boolean isMulthThread = true;
-
-   public static Block startBlock( Block block ) {
-      return startBlock( block, isMulthThread );
+   static final ExecutorService thread_pool = Executors.newCachedThreadPool( Worker::newThread );
+   static {
+      log.setLevel( Level.ALL );
    }
 
-   public static Block startBlock( Block block, boolean multhThread ) {
-      run( block, multhThread );
-      return block;
+   /**
+    * Run a block.
+    * @param block
+    */
+   public static void run( Block block ) {
+      run( block, block );
    }
 
-   public static void run( Runnable task ) {
-      run( task, isMulthThread );
+   /**
+    * Run a job for a block.
+    * @param block
+    */
+   public static void run( Runnable job, Block context ) {
+      thread_pool.execute( job );
    }
 
-   public static void run( Runnable task, boolean multhThread ) {
-      if ( multhThread ) new Thread( task ).start();
-      else               task.run();
+   private static final AtomicInteger thread_count = new AtomicInteger(0);
+   private static Thread newThread ( Runnable r ) {
+      Thread result = new Thread( r, "Worker #" + thread_count.getAndIncrement() );
+      result.setPriority( 3 ); // Between min and normal
+      result.setDaemon( true );
+      return result;
    }
 
    public static Block getBlockResult( Block block ) throws InterruptedException {
@@ -43,20 +56,5 @@ public class Worker {
          throw new CocoRunError( e );
       }
    }
-
-   /*
-   public void processBlock ( Block block ) throws InterruptedException {
-      new Thread( block ).start();
-
-      if ( block.getOutputTarget() != null ) return; // Targeted block will handle its own output.
-
-      if ( block.hasText() || block.hasBinary() ) {
-         Block parent = block.getParent();
-         if ( parent == null ) System.out.println( block.getText() );
-      } else {
-         log.warning( "Block does not output any data" );
-      }
-   }
-      */
 
 }

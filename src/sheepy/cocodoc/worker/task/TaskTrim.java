@@ -28,7 +28,7 @@ public class TaskTrim extends Task {
    private static String JsTrim = "/\\*.*?\\*/|(?<=^|[\\s{};])(?<!:)//[^\n]*(?=\n|$)"; // TODO: Replace with a JS parser
    private static String HtmlTrim = "<!--.*?-->"; // TODO: Replace with HTML parser to avoid script, template etc
 
-   @Override public void run () {
+   @Override protected void run () {
       if ( ! hasParams() ) return;
       String text = getBlock().getText().toString();
       int startLen = text.length();
@@ -47,7 +47,8 @@ public class TaskTrim extends Task {
                text = replace( text, WsTrim  , WsReplace   ); // Line
                text = replace( text, "\r?\n" , "" ); // CRLF
                break;
-            default : throwOrWarn( new CocoParseError( "Unknown trim parameter: " + e ) );
+            default :
+               throwOrWarn( new CocoParseError( "Unknown trim parameter: " + e ) );
          }
       }
       log.log( Level.FINE, "Trimmed {1} characters to {2}: {0}", new Object[]{ getParamText(), startLen, text.length() } );

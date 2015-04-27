@@ -15,10 +15,11 @@ public class DirStart extends Directive {
    private final CountDownLatch countdown = new CountDownLatch(1);
 
    public DirStart() {
+      this( Action.START, null );
    }
 
-   public DirStart(Action action, List<Task> tasks) {
-      super(action, tasks);
+   public DirStart( Action action, List<Task> tasks ) {
+      super( action, tasks );
    }
 
    @Override public Directive start( Block context ) {
@@ -26,8 +27,8 @@ public class DirStart extends Directive {
       log.log( Level.FINEST, "Start start directive {0}", this );
 
       Block b = new Block( context, this );
-      final Parser parser = context.getParser().clone();
-      parser.start( b ); // By this time parsing has finished.
+      final Parser parser = context.getParser().clone(); // Must have a parser, because Start is created by a parser!
+      parser.start( b );  // By this time all subblock parsing has finished.
       Worker.run( () -> { // And this part is about running the start directive's tasks.
          try {
             b.setText( parser.get() );
@@ -36,7 +37,7 @@ public class DirStart extends Directive {
          } finally {
             countdown.countDown();
          }
-      } );
+      }, b );
 
       return this;
    }

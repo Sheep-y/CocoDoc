@@ -340,7 +340,7 @@ public class ParserCoco extends Parser {
                }
                deleteFromResult( insPos );
                insertToResult( block.getText(), insPos );
-            } catch ( CocoRunError ex ) {
+            } catch ( CocoParseError | CocoRunError ex ) {
                positionTask.throwOrWarn( ex );
             }
          }

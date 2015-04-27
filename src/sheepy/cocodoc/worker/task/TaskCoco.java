@@ -3,6 +3,7 @@ package sheepy.cocodoc.worker.task;
 import java.util.List;
 import java.util.function.Predicate;
 import sheepy.cocodoc.CocoParseError;
+import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 
 public class TaskCoco extends Task {
@@ -17,15 +18,17 @@ public class TaskCoco extends Task {
    @Override public void init() {
       super.init();
       if ( ! hasParams() ) return;
-      if ( params.size() > 2 ) throw new CocoParseError( "coco() task accepts up to three parameters: \"noerr\", start tag, and optional end tag. Given: " + getParamText() );
+      if ( params.size() > 2 ) throwOrWarn( new CocoParseError( "coco() task accepts up to three parameters: \"noerr\", start tag, and optional end tag. Given: " + getParamText() ) );
       setStartTag( params.get( 0 ) );
       setEndTag( params.get( params.size()-1 ) );
    }
 
-   @Override public void run () {
+   @Override protected void run () {
       try ( ParserCoco parser = new ParserCoco( startTag, endTag ) ) {
-         CharSequence result = parser.parse( getBlock() );
-         if ( result != null ) getBlock().setText( result );
+         parser.start( getBlock() );
+         getBlock().setText( parser.get() );
+      } catch ( CocoRunError | CocoParseError ex ) {
+         throwOrWarn( ex );
       }
    }
 

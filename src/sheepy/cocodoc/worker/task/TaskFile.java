@@ -44,7 +44,7 @@ public class TaskFile extends Task {
       return addParam( StreamSupport.stream( files.spliterator(), false ).map( Object::toString ).toArray( String[]::new ) );
    }
 
-   @Override public void run () {
+   @Override protected void run () {
       Block block = getBlock();
       if ( getDirective().getAction() == INLINE ) { // Read file and add to block
          File base = block.getBasePath();
@@ -59,10 +59,10 @@ public class TaskFile extends Task {
                log.log( Level.INFO, "Read {0} bytes from {1}.", new Object[]{ buffer.length, f } );
                block.appendBinary( buffer )
                     .setBasePath( f.getParentFile() ).setName( f.toString() )
-                    .setMTime( CocoUtils.milliToZonedDateTime( f.lastModified() ) );
+                    .stats().setMTime( CocoUtils.milliToZonedDateTime( f.lastModified() ) );
             }
          } catch ( IOException ex ) { // If not throwing, continue with next parameter
-            if ( throwError ) throw new CocoRunError( ex );
+            throwOrWarn( new CocoRunError( ex ) );
          }
       } else { // Set block output
          block.setOutputTarget( this );

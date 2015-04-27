@@ -9,6 +9,7 @@ import sheepy.cocodoc.worker.task.Task;
 public class DirInline extends Directive {
 
    public DirInline() {
+      this( Action.INLINE, null );
    }
 
    public DirInline(Action action, List<Task> tasks) {
@@ -17,7 +18,7 @@ public class DirInline extends Directive {
 
    @Override public Directive start( Block context ) {
       log.log( Level.FINEST, "Start inline directive {0}", this );
-      Worker.startBlock( new Block( context, this ) );
+      Worker.run( new Block( context, this ) );
       return this;
    }
 

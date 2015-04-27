@@ -12,7 +12,7 @@ public class TaskPostfix extends Task {
    @Override protected Predicate<List<String>> validParam() { return nonEmpty; }
    @Override protected String invalidParamMessage() { return "postfix() task should have parameter."; }
 
-   @Override public void run () {
+   @Override protected void run () {
       if ( ! hasParams() ) return;
       StringBuilder affix = new StringBuilder();
       for ( String s : getParams() ) affix.append( s );

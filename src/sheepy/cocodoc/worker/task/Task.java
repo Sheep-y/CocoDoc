@@ -105,7 +105,7 @@ public abstract class Task {
       try {
          run();
       } catch ( RuntimeException ex ) {
-         if ( throwError ) throw ex;
+         throwOrWarn( ex );
       }
    }
 
