@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import sheepy.cocodoc.CocoMonitor;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
 import static sheepy.cocodoc.worker.directive.Directive.Action.END;
@@ -22,6 +23,7 @@ public abstract class Directive {
 
    public enum Action {
       INLINE,
+      POSTPROCESS,
       OUTPUT,
       START,
       END,
@@ -41,6 +43,8 @@ public abstract class Directive {
       switch ( action ) {
          case INLINE:
             return new DirInline( action, tasks );
+         case POSTPROCESS:
+            return new DirPostProcess( action, tasks );
          case OUTPUT:
             return new DirOutput( action, tasks );
          case START:
@@ -53,11 +57,7 @@ public abstract class Directive {
    }
 
    private static Directive createMapped ( String action, List<Task> tasks ) {
-      Action act;
       if ( tasks == null ) tasks = new ArrayList<>(4);
-      if ( action.isEmpty() ) {
-         throw new UnsupportedOperationException("TODO: Auto-detect image, script, css");
-      }
       switch ( action ) {
          case "image"  :
             tasks.add( Task.create( Task.Action.POSITION, "noerr", "replace src of the <img> before this" ) );
@@ -83,6 +83,8 @@ public abstract class Directive {
    private Action action;
    private Block block;
    private List<Task> tasks;
+   private CocoMonitor monitor;
+   private CharSequence content;
 
    public Directive ( Action action, List<Task> tasks ) {
       this.action = action;
@@ -98,17 +100,30 @@ public abstract class Directive {
    public Block getBlock () { return block; }
    public void setBlock ( Block block ) { this.block = block; }
 
-   public abstract Directive start( Block context );
+   public CocoMonitor getMonitor () { return monitor; }
+   public Directive setMonitor ( CocoMonitor monitor ) { this.monitor = monitor; return this; }
 
-   public abstract Block get() throws InterruptedException;
-
-   /*****************************************************************************************************/
-
-   CharSequence content;
    public CharSequence getContent () { return content; }
    public Directive setContent ( CharSequence content ) { this.content = content; return this; }
 
    @Override public String toString() {
-      return "<?coco-" + getAction().name().toLowerCase() + Text.toString( " ", getTasks() ) + " ?>";
+      return "<?coco-" + getAction().name().toLowerCase() + " " + Text.toString( " ", getTasks() ) + " ?>";
+   }
+
+   /*****************************************************************************************************/
+
+   public abstract Directive start( Block context );
+
+   public abstract Block get() throws InterruptedException;
+
+   protected void branchMonitor( Block parent, String name ) {
+      if ( parent != null && getMonitor() == null ) {
+         CocoMonitor mon = parent.getDirective().getMonitor();
+         setMonitor( mon.newNode( name ) );
+      }
+   }
+
+   protected void done() {
+      if ( getMonitor() != null ) getMonitor().setDone( true );
    }
 }

@@ -7,7 +7,7 @@ import java.util.logging.Level;
 import sheepy.cocodoc.CocoUtils;
 import static sheepy.cocodoc.CocoUtils.formatTime;
 import static sheepy.cocodoc.CocoUtils.milliToZonedDateTime;
-import sheepy.cocodoc.worker.Block;
+import sheepy.cocodoc.worker.directive.Directive;
 
 public class TaskVar extends Task {
 
@@ -24,7 +24,10 @@ public class TaskVar extends Task {
       String value = "";
       switch ( varname.toLowerCase() ) {
          case "mtime":
-            value = formatTime( getBlock().getRoot().stats().getModifiedTime() );
+            if ( getDirective().getAction() == Directive.Action.POSTPROCESS )
+               value = formatTime( getBlock().getRoot().stats().getModifiedTime() );
+            else
+               value = "<?coco-postprocess " + toString() + " ?>";
             break;
 
          case "btime":

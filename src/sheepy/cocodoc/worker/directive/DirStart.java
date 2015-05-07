@@ -22,12 +22,13 @@ public class DirStart extends Directive {
       super( action, tasks );
    }
 
-   @Override public Directive start( Block context ) {
+   @Override public Directive start( Block parent ) {
       if ( countdown.getCount() <= 0 ) throw new IllegalStateException( "Start directive should not be started more than once." );
       log.log( Level.FINEST, "Start start directive {0}", this );
+      branchMonitor( parent, "Subblock" );
 
-      Block b = new Block( context, this );
-      final Parser parser = context.getParser().clone(); // Must have a parser, because Start is created by a parser!
+      Block b = new Block( parent, this );
+      final Parser parser = parent.getParser().clone(); // Must have a parser, because Start is created by a parser!
       parser.start( b );  // By this time all subblock parsing has finished.
       Worker.run( () -> { // And this part is about running the start directive's tasks.
          try {
@@ -46,6 +47,7 @@ public class DirStart extends Directive {
       if ( countdown.getCount() > 0 ) log.log( Level.FINEST, "Waiting for {0}", this );
       countdown.await();
       log.log( Level.FINEST, "End start directive {0}", this );
+      done();
       return getBlock();
    }
 

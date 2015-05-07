@@ -18,11 +18,12 @@ public class CocoConfig {
    public static final String LGPL_FILE   = DOC_PATH+ "license_lgpl.xhtml";
    public static final String GPL_FILE    = DOC_PATH+ "license_gpl.xhtml";
 
-
    public CocoConfig parseCommandLine( String[] args ) {
       if ( args == null || args.length <= 0 ) {
          if ( new File( "build.cocodoc.conf" ).exists() ) {
             args = new String[]{ "build.cocodoc.conf" };
+         } else {
+            help = HELP_FILE;
          }
       }
       List<String> arguments = Arrays.asList( args );

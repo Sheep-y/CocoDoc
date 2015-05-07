@@ -11,6 +11,7 @@ import sheepy.cocodoc.CocoUtils;
 import static sheepy.cocodoc.CocoUtils.tagPool;
 import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.directive.Directive;
+import sheepy.cocodoc.worker.directive.Directive.Action;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElement.PosElementAttr;
 import sheepy.cocodoc.worker.task.Task;
@@ -23,6 +24,7 @@ public class ParserCoco extends Parser {
    private String endTag = "\\?>"; // Dynamic; set on creation.
    private Matcher startMatcher;
    private Matcher endMatcher;
+   private boolean postprocess = false;
 
    public ParserCoco () {}
 
@@ -35,6 +37,10 @@ public class ParserCoco extends Parser {
       ParserCoco p = (ParserCoco) parent;
       this.startTag = p.startTag;
       this.endTag = p.endTag;
+   }
+
+   public ParserCoco ( boolean postprocess ) {
+      this.postprocess = postprocess;
    }
 
    @Override public ParserCoco clone() {
@@ -86,20 +92,28 @@ public class ParserCoco extends Parser {
                ++tagCount;
                addToResult( text.subSequence( 0, start.start() ) );
                log.log( Level.FINE, "Found coco tag {0}", dir );
-               switch ( dir.getAction() ) {
-                  case START:
-                     dir.setContent( text.substring( end.end() ) ); // Pass content to directive
-                     addToResult( dir.start( context ) );
-                     text = dir.getContent().toString(); // Get remaining (unparsed) content
-                     if ( text == null ) throw new CocoParseError( "Coco:start without Coco:end" );
-                     break;
-                  case END:
-                     if ( context.getParent() == null ) throw new CocoParseError( "Coco:end without Coco:start" );
-                     context.getDirective().setContent( text.substring( end.end() ) ); // Parse unparsed content back to upper level.
-                     return; // Terminate
-                  default:
-                     addToResult( dir.start( context ) );
-                     text = text.substring( end.end() );
+
+               if ( postprocess != ( dir.getAction() == Action.POSTPROCESS ) ) {
+                  // Copy directive text for: 1) POSTPROCESS in process
+                  //                          2) Non-POSTPROCESS in post-process
+                  addToResult( text.substring( start.start(), end.end() ) );
+                  text = text.substring( end.end() );
+
+               } else if ( dir.getAction() == Action.START ) {
+                  dir.setContent( text.substring( end.end() ) ); // Pass content to directive
+                  addToResult( dir.start( context ) );
+                  text = dir.getContent().toString(); // Get remaining (unparsed) content
+                  if ( text == null ) throw new CocoParseError( "Coco:start without Coco:end" );
+
+               } else if ( dir.getAction() == Action.END ) {
+                  if ( context.getParent() == null ) throw new CocoParseError( "Coco:end without Coco:start" );
+                  context.getDirective().setContent( text.substring( end.end() ) ); // Parse unparsed content back to upper level.
+                  return; // Terminate
+
+               } else {
+                  // Execute INLILE / OUTPUT in process, or POSTPROCESS in post-process
+                  addToResult( dir.start( context ) );
+                  text = text.substring( end.end() );
                }
             }
          } catch ( CocoParseError ex ) {

@@ -19,6 +19,7 @@ import sheepy.cocodoc.worker.task.TaskFile;
 
 public class CocoDoc extends Application {
    public static final CocoConfig config = new CocoConfig();
+   public static MainStage stage;
 
    public static void main ( String[] args ) {
       try {
@@ -38,9 +39,13 @@ public class CocoDoc extends Application {
    @Override public void start ( Stage stage ) {
       try {
 
-         new MainStage( stage );
+         this.stage = new MainStage( stage );
          new Timer().schedule( new TimerTask () { @Override public void run() {
-            CocoDoc.run( config );
+            List<String> files = config.runFiles;
+            if ( files.size() > 0 ) {
+               CocoDoc.run( files.toArray( new String[ files.size() ] ) );
+               CocoDoc.this.stage.autoClose();
+            }
          } }, 100 );
 
       } catch ( Exception ex ) {
@@ -48,25 +53,19 @@ public class CocoDoc extends Application {
       }
    }
 
-   public static void run ( CocoConfig config ) {
-      if ( config.runFiles.size() > 0 ) try {
-
-         List<Directive> dirs = new ArrayList<>( config.runFiles.size() );
-         for ( String file : config.runFiles ) {
-            dirs.add( Directive.create( INLINE,
-               Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() )
-            ).start( null ) );
-         }
-         for ( Directive dir : dirs )try {
-            dir.get();
-         } catch ( InterruptedException ex ) {}
-
+   public static void run ( String ... files ) {
+      List<Directive> dirs = new ArrayList<>( config.runFiles.size() );
+      for ( String file : files ) try {
+         dirs.add( Directive.create( INLINE,
+            Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() )
+         ).setMonitor( stage.getMonitor().newNode( file ) ).start( null ) );
       } catch ( RuntimeException ex ) {
          ex.printStackTrace();
-
       }
+      for ( Directive dir : dirs )try {
+         dir.get();
+      } catch ( InterruptedException ex ) {}
    }
-
 
    public static void showHeadlessHelp ( Exception ex ) {
       if ( config.help != null ) {

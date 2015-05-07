@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.parser.Parser;
+import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.util.concurrent.AbstractFuture;
 
@@ -57,6 +58,13 @@ public class Block extends AbstractFuture<Block> {
       }
 
       if ( hasData() ) {
+         if ( hasText() && getText().indexOf( "<?coco-postprocess " ) >= 0 ) {
+            log.log( Level.FINE, "Post processing {0}", this );
+            Parser postprocessor = new ParserCoco( true );
+            postprocessor.start( this );
+            setText( postprocessor.get() );
+         }
+
          if ( getOutputTarget() != null ) {
             String fname = getOutputTarget().getParam( 0 );
             if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
@@ -102,10 +110,12 @@ public class Block extends AbstractFuture<Block> {
 
    public Block setName( CharSequence name ) {
       if ( name == null || name.length() <= 0 ) return this;
-      if ( this.name != null ) {
-         this.name += ',' + name.toString();
-      } else
+      if ( this.name.isEmpty() )
          this.name = name.toString();
+      else
+         this.name += ',' + name.toString();
+      if ( getDirective().getMonitor() != null )
+         getDirective().getMonitor().setText( this.name );
       return this;
    }
 

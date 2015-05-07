@@ -16,9 +16,10 @@ public class DirInline extends Directive {
       super(action, tasks);
    }
 
-   @Override public Directive start( Block context ) {
+   @Override public Directive start( Block parent ) {
       log.log( Level.FINEST, "Start inline directive {0}", this );
-      Worker.run( new Block( context, this ) );
+      branchMonitor( parent, "Inline" );
+      Worker.run( new Block( parent, this ) );
       return this;
    }
 
@@ -27,6 +28,7 @@ public class DirInline extends Directive {
          return Worker.getBlockResult( getBlock() );
       } finally {
          log.log( Level.FINEST, "End inline directive {0}", this );
+         done();
       }
    }
 
