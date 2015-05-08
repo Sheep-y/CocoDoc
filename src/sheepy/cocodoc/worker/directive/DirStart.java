@@ -12,20 +12,17 @@ import sheepy.util.Text;
 
 public class DirStart extends Directive {
 
-   private final CountDownLatch countdown = new CountDownLatch(1);
+   private final CountDownLatch countdown = new CountDownLatch( 1 );
 
-   public DirStart() {
-      this( Action.START, null );
-   }
-
-   public DirStart( Action action, List<Task> tasks ) {
+   public DirStart ( Action action, List<Task> tasks ) {
       super( action, tasks );
    }
 
    @Override public Directive start( Block parent ) {
       if ( countdown.getCount() <= 0 ) throw new IllegalStateException( "Start directive should not be started more than once." );
       log.log( Level.FINEST, "Start start directive {0}", this );
-      branchMonitor( parent, "Subblock" );
+      if ( branchMonitor( parent, toString() ) != null )
+         getMonitor().start(); // Notice start before parsing (and before block start)
 
       Block b = new Block( parent, this );
       final Parser parser = parent.getParser().clone(); // Must have a parser, because Start is created by a parser!
@@ -43,11 +40,10 @@ public class DirStart extends Directive {
       return this;
    }
 
-   @Override public Block get() throws InterruptedException {
+   @Override public Block get () throws InterruptedException {
       if ( countdown.getCount() > 0 ) log.log( Level.FINEST, "Waiting for {0}", this );
       countdown.await();
       log.log( Level.FINEST, "End start directive {0}", this );
-      done();
       return getBlock();
    }
 

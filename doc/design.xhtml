@@ -43,12 +43,12 @@
    <h5>Process Flow</h5>
    <ol>
    <li>A job is initialised by selecting a file, through command line or GUI.</li>
-   <li>A new <code>INLINE</code> <code>Directive</code> is created to read the file and do coco parsing.</li>
+   <li>A new <code>Inline</code> <code>Directive</code> is created to read the file and do coco parsing.</li>
    <li>A directive do one of these things when ran (<code>Directive.start</code>):
       <ul>
       <li> <code>DirInline</code> creates a new, empty <code>Block</code>, and calls <code>Worker</code> to run it. </li>
       <li> <code>DirPostProcess</code> is same as <code>DirInline</code>. </li>
-      <li> <code>DirStart</code> create a new <code>Block</code> populated with directive content.
+      <li> <code>DirStart</code> creates a new <code>Block</code> populated with directive content.
            A clone of parent's parser will <code>start()</code> on the block.
            When done, <code>Worker</code> is called to run the block. </li>
       <li> <code>DirOutput</code> will immediately run all its tasks, which should set the output target of containing block. </li>
@@ -57,7 +57,7 @@
       Worker runs a <code>Block</code> (<code>INLINE</code> and <code>START</code>) in a new thread.  Trying to get result will block until the thread finish. <br/>
       <code>OUTPUT</code> and <code>END</code> directives does not create new thread and would returns immediately.
    </li>
-   <li> Each <code>INLINE</code> and <code>START</code> has a <code>Block</code>.  When a block runs it will:
+   <li> Each <code>Inline</code>, <code>Start</code>, and <code>PostProcess</code> directive has a <code>Block</code>.  When a block runs it will:
       <ol>
       <li> Initiate each <code>Task</code> of the directive, which currently just validate parameters. </li>
       <li> Execute each <code>Task</code> one by one. </li>

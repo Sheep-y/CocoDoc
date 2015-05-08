@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import sheepy.cocodoc.CocoMonitor;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.parser.Parser;
@@ -51,6 +52,8 @@ public class Block extends AbstractFuture<Block> {
    }
 
    @Override protected Block implRun () {
+      if ( hasMonitor() ) getMonitor().start();
+
       for ( Task task : getTasks() ) task.init();
       for ( Task task : getTasks() ) {
          if ( Thread.currentThread().isInterrupted() ) return this;
@@ -84,6 +87,7 @@ public class Block extends AbstractFuture<Block> {
          }
       }
 
+      if ( hasMonitor() ) getMonitor().done();
       return this;
    }
 
@@ -100,13 +104,10 @@ public class Block extends AbstractFuture<Block> {
       return pos;
    }
 
-   public Directive getDirective() {
-      return directive;
-   }
-
-   public List<Task> getTasks() {
-      return directive.getTasks();
-   }
+   public Directive getDirective () { return directive; }
+   public List<Task> getTasks ()    { return directive.getTasks(); }
+   public boolean hasMonitor ()     { return directive.getMonitor() != null; }
+   public CocoMonitor getMonitor () { return directive.getMonitor(); }
 
    public Block setName( CharSequence name ) {
       if ( name == null || name.length() <= 0 ) return this;
@@ -114,8 +115,8 @@ public class Block extends AbstractFuture<Block> {
          this.name = name.toString();
       else
          this.name += ',' + name.toString();
-      if ( getDirective().getMonitor() != null )
-         getDirective().getMonitor().setText( this.name );
+      if ( hasMonitor() )
+         getMonitor().setName( this.name );
       return this;
    }
 

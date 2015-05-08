@@ -8,11 +8,7 @@ import sheepy.cocodoc.worker.task.Task;
 
 public class DirOutput extends Directive {
 
-   public DirOutput() {
-      this( Action.OUTPUT, null );
-   }
-
-   public DirOutput(Action action, List<Task> tasks) {
+   public DirOutput ( Action action, List<Task> tasks ) {
       super(action, tasks);
       for ( Task t : tasks ) {
          switch ( t.getAction() ) {
@@ -25,9 +21,9 @@ public class DirOutput extends Directive {
       }
    }
 
-   @Override public Directive start( Block context ) {
+   @Override public Directive start ( Block parent ) {
       log.log( Level.FINEST, "Start output directive {0}", this );
-      setBlock( context );
+      setBlock( parent );
       // No point in starting a new Thread if we only have FILE and DELETE.
       for ( Task task : getTasks() )
          task.process();
@@ -35,7 +31,7 @@ public class DirOutput extends Directive {
       return this;
    }
 
-   @Override public Block get() throws InterruptedException {
+   @Override public Block get () throws InterruptedException {
       if ( getBlock() == null ) throw new IllegalStateException();
       return getBlock();
    }

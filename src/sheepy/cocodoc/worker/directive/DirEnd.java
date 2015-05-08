@@ -6,19 +6,15 @@ import sheepy.cocodoc.worker.task.Task;
 
 public class DirEnd extends Directive {
 
-   public DirEnd() {
-      this( Action.END, null );
-   }
-
-   public DirEnd(Action action, List<Task> tasks) {
+   public DirEnd ( Action action, List<Task> tasks ) {
       super(action, tasks);
    }
 
-   @Override public Directive start( Block context ) {
+   @Override public Directive start( Block parent ) {
       throw new UnsupportedOperationException();
    }
 
-   @Override public Block get() throws InterruptedException {
+   @Override public Block get () throws InterruptedException {
       throw new UnsupportedOperationException();
    }
 

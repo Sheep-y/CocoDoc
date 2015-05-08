@@ -22,6 +22,9 @@ public class TaskVar extends Task {
 
       String varname = getParam( 0 );
       String value = "";
+      if ( getDirective().getTasks().size() == 1 )
+         getBlock().setName( "var(" + varname + ")" );
+
       switch ( varname.toLowerCase() ) {
          case "mtime":
             if ( getDirective().getAction() == Directive.Action.POSTPROCESS )

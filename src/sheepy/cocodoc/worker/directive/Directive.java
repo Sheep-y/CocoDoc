@@ -112,18 +112,14 @@ public abstract class Directive {
 
    /*****************************************************************************************************/
 
-   public abstract Directive start( Block context );
+   public abstract Directive start( Block parent );
 
    public abstract Block get() throws InterruptedException;
 
-   protected void branchMonitor( Block parent, String name ) {
+   protected CocoMonitor branchMonitor( Block parent, String name ) {
       if ( parent != null && getMonitor() == null ) {
-         CocoMonitor mon = parent.getDirective().getMonitor();
-         setMonitor( mon.newNode( name ) );
+         setMonitor( parent.getDirective().getMonitor().newNode( name ) );
       }
-   }
-
-   protected void done() {
-      if ( getMonitor() != null ) getMonitor().setDone( true );
+      return getMonitor();
    }
 }

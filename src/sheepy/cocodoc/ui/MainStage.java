@@ -22,6 +22,7 @@ import sheepy.cocodoc.CocoConfig;
 import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoMonitor;
 import sheepy.cocodoc.CocoUtils;
+import sheepy.cocodoc.worker.Worker;
 
 public class MainStage {
 
@@ -40,6 +41,7 @@ public class MainStage {
       this.stage = stage;
       stage.setTitle( "ChocoDoc" );
       stage.setScene( new Scene( pnlC, 760, 580 ) );
+      stage.setOnCloseRequest( e -> Worker.stop() );
 
       pnlC.setCenter( tabs );
       pnlC.setBottom( btnRun );

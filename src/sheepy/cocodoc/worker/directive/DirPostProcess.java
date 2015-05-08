@@ -8,17 +8,13 @@ import sheepy.cocodoc.worker.task.Task;
 
 public class DirPostProcess extends Directive {
 
-   public DirPostProcess() {
-      this( Action.POSTPROCESS, null );
-   }
-
    public DirPostProcess(Action action, List<Task> tasks) {
       super(action, tasks);
    }
 
-   @Override public Directive start( Block context ) {
+   @Override public Directive start( Block parent ) {
       log.log( Level.FINEST, "Start postprocess directive {0}", this );
-      Worker.run( new Block( context, this ) );
+      Worker.run( new Block( parent, this ) );
       return this;
    }
 
