@@ -5,7 +5,7 @@ import sheepy.util.Text;
 /**
  * Represents a range in integer
  */
-class TextRange implements Comparable<TextRange> {
+public class TextRange implements Comparable<TextRange> {
    int start;
    int end;
    XmlNode context;

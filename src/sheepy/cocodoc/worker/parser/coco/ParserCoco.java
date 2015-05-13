@@ -90,7 +90,9 @@ public class ParserCoco extends Parser {
 
          try {
             Directive dir = parseDirective( tag, start );
-            if ( dir != null ) {
+            if ( dir == null ) {
+               addToResult( tag ); // Cannot parse as directive
+            } else {
                ++tagCount;
                addToResult( text.subSequence( 0, start.start() ) );
                log( Level.FINEST, "Found coco tag {0}", dir );
@@ -132,33 +134,43 @@ public class ParserCoco extends Parser {
    }
 
    private Directive parseDirective ( String tag, Matcher start ) {
-      String action = start.group( 1 );
-      String txt = tag.substring( start.group().length() ).trim();
-      List<Task> tasks = null;
+      try {
+         String action = start.group( 1 );
+         String txt = tag.substring( start.group().length() ).trim();
+         List<Task> tasks = null;
 
-      log( Level.FINEST, "Parsing coco directive: {0} {1}", action, txt );
-      if ( ! txt.isEmpty() ) {
-         tasks = new ArrayList<>();
-         String[] defaultCheck = checkDefaultParameter( txt );
-         if ( defaultCheck != null ) {
-            if ( logDetails ) log( Level.FINEST, "Matched parameter {1} for default task {0}", action, defaultCheck[0] );
-            tasks.add( new TaskFile().addParam( defaultCheck[0] ) );
-            txt = defaultCheck[1];
-         }
-         if ( ! txt.isEmpty() ) { // Match remaining parameters
-            Matcher attr = attributeMatcher;
-            if ( attr == null ) attr = attributeMatcher = CocoUtils.tagPool.get( attrRegx );
-            while ( ! txt.isEmpty() ) {
-               if ( ! attr.reset( txt ).find() || attr.start() != 0 )
-                  throw new CocoParseError( "Cannot parse tasks " + txt );
+         log( Level.FINEST, "Parsing coco directive: {0} {1}", action, txt );
+         if ( ! txt.isEmpty() ) {
+            tasks = new ArrayList<>();
+            String[] defaultCheck = checkDefaultParameter( txt );
+            if ( defaultCheck != null ) {
+               if ( logDetails ) log( Level.FINEST, "Matched parameter {1} for default task {0}", action, defaultCheck[0] );
+               tasks.add( new TaskFile().addParam( defaultCheck[0] ) );
+               txt = defaultCheck[1];
+            }
+            if ( ! txt.isEmpty() ) { // Match remaining parameters
+               Matcher attr = attributeMatcher;
+               if ( attr == null ) attr = attributeMatcher = CocoUtils.tagPool.get( attrRegx );
+               while ( ! txt.isEmpty() ) {
+                  if ( ! attr.reset( txt ).find() || attr.start() != 0 )
+                     throw new CocoParseError( "Cannot parse tasks " + txt );
 
-               tasks.add( parseTask( attr.group(1), attr.group(2) ) );
+                  tasks.add( parseTask( attr.group(1), attr.group(2) ) );
 
-               txt = txt.substring( attr.end() ).trim();
+                  txt = txt.substring( attr.end() ).trim();
+               }
             }
          }
+         return Directive.create( action, tasks );
+      } catch ( Exception ex ) {
+         if ( ex instanceof CocoRunError )
+            throwOrWarn( (CocoRunError) ex );
+         else if ( ex instanceof CocoParseError )
+            throwOrWarn( (CocoRunError) ex );
+         else
+            throwOrWarn( new CocoRunError( ex ) );
+         return null;
       }
-      return Directive.create( action, tasks );
    }
 
    private Task parseTask ( String taskname, String txt ) {

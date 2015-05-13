@@ -48,87 +48,57 @@ public class Block extends AbstractFuture<Block> {
    @Override protected Block implRun () {
       if ( hasObserver() ) getObserver().start();
 
-      log( Level.FINEST, "Initialising" );
-      for ( Task task : getTasks() ) task.init();
+      try {
+         log( Level.FINEST, "Initialising" );
+         for ( Task task : getTasks() ) task.init();
 
-      log( Level.FINER, "Running" );
-      for ( Task task : getTasks() ) {
-         if ( Thread.currentThread().isInterrupted() ) return this;
-         log( Level.FINEST, "Running {0}", task );
-         task.process();
-      }
-
-      if ( hasData() ) {
-         if ( hasText() && getText().indexOf( "<?coco-postprocess " ) >= 0 ) {
-            log( Level.FINEST, "Post processing" );
-            Parser postprocessor = new ParserCoco( true );
-            postprocessor.start( this );
-            setText( postprocessor.get() );
+         log( Level.FINER, "Running" );
+         for ( Task task : getTasks() ) {
+            if ( Thread.currentThread().isInterrupted() ) return this;
+            log( Level.FINEST, "Running {0}", task );
+            task.process();
          }
 
-         if ( getOutputTarget() != null ) {
-            String fname = getOutputTarget().getParam( 0 );
-            log( Level.FINEST, "Outputting to {0}", fname );
-            if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
-               File f = new File( getBasePath(), fname );
-               byte[] data = getBinary();
-               log( Level.FINE, "Writing {1} bytes to {0}.", f, data.length );
-               try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
-                  out.write( data );
-               } catch ( IOException ex ) {
-                  if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
-               }
+         if ( hasData() ) {
+            if ( hasText() && getText().indexOf( "<?coco-postprocess " ) >= 0 ) {
+               log( Level.FINEST, "Post processing" );
+               Parser postprocessor = new ParserCoco( true );
+               postprocessor.start( this );
+               setText( postprocessor.get() );
             }
-            setText( null );
-         } else {
-            log( Level.FINEST, "Outputting to stdout" );
-            if ( getParent() == null )
-               System.out.println( getText() );
+
+            if ( getOutputTarget() != null ) {
+               String fname = getOutputTarget().getParam( 0 );
+               log( Level.FINEST, "Outputting to {0}", fname );
+               if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
+                  File f = new File( getBasePath(), fname );
+                  if ( f.getParentFile() != null )
+                     f.getParentFile().mkdirs();
+                  byte[] data = getBinary();
+                  log( Level.FINE, "Writing {1} bytes to {0}.", f, data.length );
+                  try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
+                     out.write( data );
+                  } catch ( IOException ex ) {
+                     if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
+                  }
+               }
+               setText( null );
+            } else {
+               log( Level.FINEST, "Outputting to stdout" );
+               if ( getParent() == null )
+                  System.out.println( getText() );
+            }
          }
+
+         log( Level.FINER, "Finished" );
+      } finally {
+         if ( hasObserver() ) getObserver().done();
       }
-
-      log( Level.FINER, "Finished" );
-      if ( hasObserver() ) getObserver().done();
       return this;
    }
 
    /**************************************************************************************************/
-
-   public Block getParent() {
-      return this.parent;
-   }
-
-   public Block getRoot() {
-      Block pos = this;
-      while ( pos.parent != null )
-         pos = pos.parent;
-      return pos;
-   }
-
-   public Directive getDirective () { return directive; }
-   public List<Task> getTasks ()    { return directive.getTasks(); }
-   public boolean hasObserver ()     { return directive.getObserver() != null; }
-   public CocoObserver getObserver () { return directive.getObserver(); }
-   public void log ( Level level, String message, Object ... parameter ) {
-      getDirective().log( level, message, this, parameter );
-   }
-
-   public Block setName ( CharSequence name ) {
-      if ( name == null || name.length() <= 0 ) return this;
-      if ( this.name.isEmpty() )
-         this.name = name.toString();
-      else
-         this.name += ',' + name.toString();
-      if ( hasObserver() )
-         getObserver().setName( this.name );
-      return this;
-   }
-
-   public BlockStats stats() {
-      return stats;
-   }
-
-   /**************************************************************************************************/
+   // Block data
 
    // There are three output modes:
    //  1. Initial (no data): both null
@@ -247,7 +217,39 @@ public class Block extends AbstractFuture<Block> {
       return currentCharset;
    }
 
-   /************************************************************************************************/
+   /**************************************************************************************************/
+   // Attributes
+
+   public Block getParent() {
+      return this.parent;
+   }
+
+   public Block getRoot() {
+      Block pos = this;
+      while ( pos.parent != null )
+         pos = pos.parent;
+      return pos;
+   }
+
+   public BlockStats stats() { return stats; }
+   public Directive getDirective () { return directive; }
+   public List<Task> getTasks ()    { return directive.getTasks(); }
+   public boolean hasObserver ()     { return directive.getObserver() != null; }
+   public CocoObserver getObserver () { return directive.getObserver(); }
+   public void log ( Level level, String message, Object ... parameter ) {
+      getDirective().log( level, message, this, parameter );
+   }
+
+   public Block setName ( CharSequence name ) {
+      if ( name == null || name.length() <= 0 ) return this;
+      if ( this.name.isEmpty() )
+         this.name = name.toString();
+      else
+         this.name += ',' + name.toString();
+      if ( hasObserver() )
+         getObserver().setName( this.name );
+      return this;
+   }
 
    public File getBasePath() { return basePath; }
    public Block setBasePath( File basePath ) { this.basePath = basePath; return this; }

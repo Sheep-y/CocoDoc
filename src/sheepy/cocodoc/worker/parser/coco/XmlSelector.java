@@ -122,7 +122,7 @@ abstract class XmlSelector {
       @Override TextRange find ( CharSequence text, TextRange range ) {
          int howMany = count == null ? 1 : Integer.parseInt( count );
          if ( this.position.equals( "before" ) ) {
-            XmlNode pos = firstTag( range.context.root().findBefore( range.start ) );
+            XmlNode pos = firstTag( range.context.root().findChildrenBefore( range.start ) );
             do {
                pos = firstTag( pos.before() );
                if ( ! this.match( pos ) ) break;
@@ -167,7 +167,7 @@ abstract class XmlSelector {
       PosAttr(String attr) { this.attr = attr; }
 
       @Override TextRange find ( CharSequence text, TextRange range ) {
-         XmlNode base = firstTag( range.context.root().findBefore( range.start ) );
+         XmlNode base = firstTag( range.context.root().findChildrenBefore( range.start ) );
          for ( XmlNode child : base.children() )
             if ( match( child ) )
                return child.range;

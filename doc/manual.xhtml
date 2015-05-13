@@ -45,9 +45,16 @@
   <dt>deflate</dt>                  <dd>Deflate data at maximum compression. [Binary]</dd>
   <dt>decode(base64,xml)</dt>       <dd>Decode data from Base64 code / XML entities. [Text]</dd>
   <dt>encode(base64,xml,crlf)</dt>  <dd>Encode data into Base64 code / XML entities / JS string / URL / convert line breaks to lf/crlf. [Text]</dd>
+  <dt>html</dt>                     <dd>Run html parsing. [Text]</dd>
   <dt>prefix("prefix")</dt>         <dd>Add text to head of data. Use <kbd>${auto-datauri}</kbd> to auto set mime and charset. [Text]</dd>
   <dt>postfix("postfix")</dt>       <dd>Add text to tail of data. [Text]</dd>
   <dt>test(xml)</dt>                <dd>Test (validate) current data as xml. [Text or Binary]</dd>
   <dt>trim(xml,css,js,line,ws,crlf)</dt> <dd>Trim XML/CSS/JS comments, lines, multi spaces, and line breaks. "oneline" = "line,ws,crlf" [Text]</dd>
+  <dt>var(mtime,btime,now,cocotime)</dt> <dd>Dump file modified time (global), build time, current time, or compiler time. </dd>
 </dl>
+<h4>HTML Parsing</h4>
+<p>    An (X)HTML document can be parsed to yield various information: </p>
+<p><dfn>Headers (Table of Content)</dfn> are defined by <code>&lt;h1&gt;</code> to <code>&lt;h6&gt;</code>.</p>
+<p><dfn>Index terms </dfn> are defined by the attribute <code>data-coco-index[-name]="name"</code>, using first id that comes before as anchor.</p>
+<p><dfn>Glossary terms </dfn> are defined by the attribute <code>data-coco-glossary[-name]="name"</code>, with tag content as definition.</p>
 </body></html>

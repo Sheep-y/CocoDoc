@@ -6,6 +6,7 @@ import sheepy.cocodoc.worker.Block;
 public abstract class Parser implements AutoCloseable {
    private Parser parent;
    protected Block context;
+   protected boolean throwError = true;
 
    public Parser() {}
    public Parser(Parser parent) {
@@ -38,6 +39,14 @@ public abstract class Parser implements AutoCloseable {
    @Override public abstract Parser clone();
 
    @Override public void close() {}
+
+   public boolean isThrowError () { return throwError; }
+   public void setThrowError( boolean throwError ) { this.throwError = throwError; }
+   public <T extends Exception> void throwOrWarn ( T ex ) throws T {
+      log( Level.WARNING, ex.getMessage() );
+      if ( isThrowError() ) throw ex;
+      else log( Level.WARNING, ex.getLocalizedMessage() );
+   }
 
    protected  void log ( Level level, String message, Object ... parameter ) {
       context.log( level, message, parameter );

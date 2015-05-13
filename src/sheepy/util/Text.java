@@ -61,7 +61,15 @@ public class Text {
          return subject.toString();
       }
       String result = subject.subSequence( 1, len - 1 ).toString();
-      return strip == null ? result : strip.apply(result);
+      return strip == null ? result : strip.apply( result );
+   }
+   public static String unquote ( CharSequence subject, char[] start ) {
+      if ( subject == null ) return null;
+      for ( char chr : start ) {
+         String result = unquote( subject, chr );
+         if ( result.length() != subject.length() ) return result;
+      }
+      return subject.toString();
    }
 
    public static String ellipsis ( CharSequence text, int max ) {

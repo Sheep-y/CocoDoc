@@ -8,7 +8,7 @@ import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 
 public class TaskCoco extends Task {
-   private String startTag = null;
+   private String startTag = null; // Start/end tag support is included in code but *never* tested.
    private String endTag = null;
 
    public Action getAction () { return Action.COCO; }
@@ -19,7 +19,7 @@ public class TaskCoco extends Task {
    @Override public void init() {
       super.init();
       if ( ! hasParams() ) return;
-      if ( params.size() > 2 ) throwOrWarn( new CocoParseError( "coco() task accepts up to three parameters: \"noerr\", start tag, and optional end tag. Given: " + getParamText() ) );
+      //if ( params.size() > 2 ) throwOrWarn( new CocoParseError( "coco() task accepts up to three parameters: \"noerr\", start tag, and optional end tag. Given: " + getParamText() ) );
       setStartTag( params.get( 0 ) );
       setEndTag( params.get( params.size()-1 ) );
    }

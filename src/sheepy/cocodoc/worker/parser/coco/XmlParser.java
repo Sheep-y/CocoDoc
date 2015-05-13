@@ -144,11 +144,11 @@ public class XmlParser extends Parser {
             char leadChar = peek2();
             if ( leadChar == '!' ) {
                if ( nextIs( "<!--") )
-                  parent.add(new XmlNode( XmlNode.NODE_TYPE.COMMENT  , until( "-->", true, "End of comment not found in block: {0}" ), -1, pos ) );
+                  parent.add( new XmlNode( XmlNode.NODE_TYPE.COMMENT  , until( "-->", true, "End of comment not found in block: {0}" ), -1, pos ) );
                else if ( nextIs( "<![CDATA[") )
-                  parent.add(new XmlNode( XmlNode.NODE_TYPE.TEXT     , until( "]]>", true, "End of CDATA not found in block: {0}"   ), -1, pos ) );
+                  parent.add( new XmlNode( XmlNode.NODE_TYPE.TEXT     , until( "]]>", true, "End of CDATA not found in block: {0}"   ), -1, pos ) );
                else
-                  parent.add(new XmlNode( XmlNode.NODE_TYPE.DIRECTIVE, until( '>'  , true, "End of doctype not found in block: {0}" ), -1, pos ) );
+                  parent.add( new XmlNode( XmlNode.NODE_TYPE.DIRECTIVE, until( '>'  , true, "End of doctype not found in block: {0}" ), -1, pos ) );
             }
             else if ( leadChar == '?' )
                parent.add(new XmlNode( XmlNode.NODE_TYPE.DIRECTIVE, until( "?>", true, "End of xml directive not found in block: {0}" ), -1, pos ) );

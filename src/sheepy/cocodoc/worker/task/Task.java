@@ -38,6 +38,7 @@ public abstract class Task {
       DEFLATE,
       DECODE,
       ENCODE,
+      HTML,
       PREFIX,
       POSTFIX,
       TEST,
@@ -70,6 +71,7 @@ public abstract class Task {
          case DEFLATE : result = new TaskDeflate(); break;
          case ENCODE  : result = new TaskEncode(); break;
          case FILE    : result = new TaskFile(); break;
+         case HTML    : result = new TaskHtml(); break;
          case PREFIX  : result = new TaskPrefix(); break;
          case POSTFIX : result = new TaskPostfix(); break;
          case TEXT    : result = new TaskText(); break;
