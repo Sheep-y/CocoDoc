@@ -29,10 +29,16 @@ public class TaskTrim extends Task {
    private static String HtmlTrim = "<!--.*?-->"; // TODO: Replace with HTML parser to avoid script, template etc
 
    @Override protected void run () {
-      if ( ! hasParams() ) return;
+      if ( ! hasParams() ) {
+         log( Level.INFO, "Skipping, no parameter" );
+         return;
+      }
+      log( Level.FINER, "Trimming text" );
+
       String text = getBlock().getText().toString();
       int startLen = text.length();
       for ( String e : getParams() ) { // TODO: Rewrite and use this as general parser
+         log( Level.FINEST, "Trimming {0} text", e );
          switch ( e.toLowerCase() ) {
             case "css"  : text = replace( text, CssTrim , "" ); break;
             case "js"   : text = replace( text, JsTrim  , "" ); break;
@@ -43,16 +49,16 @@ public class TaskTrim extends Task {
             case "crlf" : text = replace( text, "\r?\n" , "" ); break; // See oneline
             case "lf"   : text = replace( text, "\n"    , "" ); break;
             case "oneline" :
-               text = replace( text, LineTrim, LineReplace ); // WS
-               text = replace( text, WsTrim  , WsReplace   ); // Line
+               text = replace( text, LineTrim, LineReplace ); // Line
+               text = replace( text, WsTrim  , WsReplace   ); // WS
                text = replace( text, "\r?\n" , "" ); // CRLF
                break;
             default :
                throwOrWarn( new CocoParseError( "Unknown trim parameter: " + e ) );
          }
       }
-      log.log( Level.FINE, "Trimmed {1} characters to {2}: {0}", new Object[]{ getParamText(), startLen, text.length() } );
       getBlock().setText( text );
+      log( Level.FINEST, "Trimmed {0} characters to {1}", startLen, text.length() );
    }
 
    private static String replace ( String text, String pattern, String replacement ) {

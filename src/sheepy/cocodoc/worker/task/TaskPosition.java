@@ -2,6 +2,7 @@ package sheepy.cocodoc.worker.task;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
 
 public class TaskPosition extends Task {
@@ -24,5 +25,6 @@ public class TaskPosition extends Task {
 
    @Override protected void run() {
       // Position task is handled by ParserCoco
+      log( Level.FINER, "Deferred to upper level parser" );
    }
 }

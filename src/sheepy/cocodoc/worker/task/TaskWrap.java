@@ -29,6 +29,7 @@ public class TaskWrap extends Task {
       }
       int lfWidth = lf.length();
 
+      log( Level.FINER, "Wrapping text to {0} characters", width );
       StringBuilder text = getBlock().getText();
       for ( int i = 0, counter = 0, len = text.length() ; i < len ; i++ ) {
          char c = text.charAt( i );
@@ -50,7 +51,7 @@ public class TaskWrap extends Task {
             }
          }
       }
-      log.log( Level.FINE, "Wrapped {1} lines into {2} lines of {0} char max.", new Object[]{ width, oldLfCount+1, newLfCount+oldLfCount } );
+      log( Level.FINEST, "Wrapped {1} lines into {2} lines of {0} char max.", width, oldLfCount+1, newLfCount+oldLfCount );
       getBlock().setText( text );
    }
 }

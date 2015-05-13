@@ -7,7 +7,6 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
-import static sheepy.cocodoc.worker.task.Task.log;
 import sheepy.util.Escape;
 import sheepy.util.Text;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
@@ -23,13 +22,15 @@ public class TaskEncode extends Task {
 
    @Override protected void run () {
       if ( ! hasParams() ) return;
+      log( Level.FINER, "Encoding data" );
+
       Block block = getBlock();
       for ( String e : getParams() ) {
+         log( Level.FINEST, "Encode to {0}", e.toLowerCase() );
          switch ( e.toLowerCase() ) {
             case "base64" :
                byte[] data = block.getBinary();
                block.setText( Base64.getEncoder().encodeToString( data ) );
-               log.log( Level.FINE, "Converted {0} bytes to Base64", data.length );
                break;
 
             case "crlf" :
@@ -58,5 +59,6 @@ public class TaskEncode extends Task {
                throwOrWarn( new CocoParseError( "Unknown encode parameter: " + e ) );
          }
       }
+      log( Level.FINEST, "Data Encoded." );
    }
 }

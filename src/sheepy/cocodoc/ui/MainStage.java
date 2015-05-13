@@ -20,7 +20,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import sheepy.cocodoc.CocoConfig;
 import sheepy.cocodoc.CocoDoc;
-import sheepy.cocodoc.CocoMonitor;
+import sheepy.cocodoc.CocoObserver;
 import sheepy.cocodoc.CocoUtils;
 import sheepy.cocodoc.worker.Worker;
 
@@ -106,10 +106,8 @@ public class MainStage {
       return tab;
    }
 
-   /*******************************************************************************************************************/
-
-   public CocoMonitor getMonitor () {
-      return progress;
+   public CocoObserver newNode( String name ) {
+      return progress.newNode( name );
    }
 
    /*******************************************************************************************************************/

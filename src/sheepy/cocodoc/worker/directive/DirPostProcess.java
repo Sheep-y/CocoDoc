@@ -13,17 +13,14 @@ public class DirPostProcess extends Directive {
    }
 
    @Override public Directive start( Block parent ) {
-      log.log( Level.FINEST, "Start postprocess directive {0}", this );
+      branchObserver( parent, toString() );
+      log( Level.FINEST, "Started", this );
       Worker.run( new Block( parent, this ) );
       return this;
    }
 
    @Override public Block get() throws InterruptedException {
-      try {
-         return Worker.getBlockResult( getBlock() );
-      } finally {
-         log.log( Level.FINEST, "End postprocess directive {0}", this );
-      }
+      return Worker.getBlockResult( getBlock() );
    }
 
 }

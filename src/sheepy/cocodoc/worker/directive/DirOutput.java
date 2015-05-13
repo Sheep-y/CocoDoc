@@ -1,7 +1,6 @@
 package sheepy.cocodoc.worker.directive;
 
 import java.util.List;
-import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.task.Task;
@@ -22,12 +21,10 @@ public class DirOutput extends Directive {
    }
 
    @Override public Directive start ( Block parent ) {
-      log.log( Level.FINEST, "Start output directive {0}", this );
       setBlock( parent );
       // No point in starting a new Thread if we only have FILE and DELETE.
       for ( Task task : getTasks() )
          task.process();
-      log.log( Level.FINEST, "End output directive {0}", this );
       return this;
    }
 

@@ -7,7 +7,6 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.activation.MimetypesFileTypeMap;
 import sheepy.cocodoc.worker.directive.Directive;
-import static sheepy.cocodoc.worker.task.Task.log;
 import sheepy.util.collection.NullData;
 
 public class TaskPrefix extends Task {
@@ -18,7 +17,12 @@ public class TaskPrefix extends Task {
    @Override protected String invalidParamMessage() { return "prefix() task should have parameter."; }
 
    @Override protected void run () {
-      if ( ! hasParams() ) return;
+      if ( ! hasParams() ) {
+         log( Level.INFO, "Skipping, no parameter" );
+         return;
+      }
+      log( Level.FINER, "Adding prefix" );
+
       StringBuilder affix = new StringBuilder();
       for ( String s : getParams() ) {
          if ( s.equals( "${auto-datauri}" ) ) {
@@ -26,10 +30,10 @@ public class TaskPrefix extends Task {
          }
          affix.append( s );
       }
-      log.log( Level.FINE, "Adding {0} characters as prefix", affix.length() );
       if ( affix.length() <= 0 ) return;
 
       getBlock().setText( getBlock().getText().insert( 0, affix ) );
+      log( Level.FINEST, "Added {0} characters as prefix", affix.length() );
    }
 
    private static MimetypesFileTypeMap mimeMap;
@@ -60,7 +64,7 @@ public class TaskPrefix extends Task {
          }
       }
       if ( lastFile == null ) {
-         log.log( Level.WARNING, "Auto-detect datauri failed because no file is found: {0}", getDirective() );
+         log( Level.WARNING, "Auto-detect datauri failed because no file is found: {0}", getDirective() );
          return "";
       }
 
@@ -70,7 +74,7 @@ public class TaskPrefix extends Task {
       if ( hasBase64 ) result.append( ";base64" );
       result.append( ',' );
 
-      log.log( Level.FINE, "Auto-detected datauri prefix of {0} as {1}", new Object[]{ f, result } );
+      log( Level.FINEST, "Auto-detected datauri prefix of {0} as {1}", f, result );
       return result.toString();
    }
 

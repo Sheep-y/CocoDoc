@@ -2,6 +2,7 @@ package sheepy.cocodoc.worker.task;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import static sheepy.util.collection.CollectionPredicate.notContains;
 
@@ -15,5 +16,6 @@ public class TaskDelete extends Task {
 
    @Override protected void run() {
       // Delete task is handled by ParserCoco
+      log( Level.FINER, "Deferred to upper level parser" );
    }
 }

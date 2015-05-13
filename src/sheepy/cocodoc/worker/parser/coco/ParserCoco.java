@@ -20,6 +20,8 @@ import sheepy.util.Text;
 import sheepy.util.collection.NullData;
 
 public class ParserCoco extends Parser {
+   private static final boolean logDetails = false;
+
    private String startTag = "<\\?coco(?:-(\\w*))?"; // Dynamic; first group must be the directive
    private String endTag = "\\?>"; // Dynamic; set on creation.
    private Matcher startMatcher;
@@ -49,7 +51,7 @@ public class ParserCoco extends Parser {
 
    @Override public void start ( Block context, String text ) {
       parseDocument( context, text );
-      log.log( Level.FINE, "Parsed {0} coco tags.", tagCount );
+      log( Level.FINEST, "Parsed {0} coco tags.", tagCount );
    }
 
    @Override public CharSequence get () {
@@ -91,7 +93,7 @@ public class ParserCoco extends Parser {
             if ( dir != null ) {
                ++tagCount;
                addToResult( text.subSequence( 0, start.start() ) );
-               log.log( Level.FINE, "Found coco tag {0}", dir );
+               log( Level.FINEST, "Found coco tag {0}", dir );
 
                if ( postprocess != ( dir.getAction() == Action.POSTPROCESS ) ) {
                   // Copy directive text for: 1) POSTPROCESS in process
@@ -117,7 +119,7 @@ public class ParserCoco extends Parser {
                }
             }
          } catch ( CocoParseError ex ) {
-            log.log( Level.WARNING, "Cannot parse coco tag {1}: {0}", new Object[]{ ex, tag } );
+            log( Level.WARNING, "Cannot parse coco tag {1}: {0}", ex, tag );
             if ( text == null ) return;
             addToResult( text.subSequence( 0, end.end() ) );
             text = text.substring( end.end() );
@@ -126,6 +128,7 @@ public class ParserCoco extends Parser {
       }
       if ( tagCount <= 0 ) resultStack = null;
       if ( ! text.isEmpty() ) addToResult( text );
+      log( Level.FINEST, "Coco direcitves parsed" );
    }
 
    private Directive parseDirective ( String tag, Matcher start ) {
@@ -133,12 +136,12 @@ public class ParserCoco extends Parser {
       String txt = tag.substring( start.group().length() ).trim();
       List<Task> tasks = null;
 
-      log.log( Level.FINER, "Parsing coco directive: {0} {1}", new Object[]{ action, txt } );
+      log( Level.FINEST, "Parsing coco directive: {0} {1}", action, txt );
       if ( ! txt.isEmpty() ) {
          tasks = new ArrayList<>();
          String[] defaultCheck = checkDefaultParameter( txt );
          if ( defaultCheck != null ) {
-            log.log( Level.FINEST, "Matched parameter {1} for default task {0}", new Object[]{ action, defaultCheck[0] } );
+            if ( logDetails ) log( Level.FINEST, "Matched parameter {1} for default task {0}", action, defaultCheck[0] );
             tasks.add( new TaskFile().addParam( defaultCheck[0] ) );
             txt = defaultCheck[1];
          }
@@ -162,7 +165,7 @@ public class ParserCoco extends Parser {
       List<String> params = new ArrayList<>(8);
       Matcher para = parameterMatcher;
       if ( para == null ) para = parameterMatcher = CocoUtils.tagPool.get( paramRegx );
-      log.log( Level.FINEST, "Parsing coco task: {0} {1}", new Object[]{ taskname, txt } );
+      if ( logDetails ) log( Level.FINEST, "Parsing coco task: {0} {1}", taskname, txt );
       if ( txt != null ) {
          txt = Text.unquote( txt, '(', ')' ).trim();
          while ( ! txt.isEmpty() ) {
@@ -347,17 +350,19 @@ public class ParserCoco extends Parser {
                if ( insPos.context != null && insPos.context.getType() == XmlNode.NODE_TYPE.ATTRIBUTE && insPos.context.range.equals( insPos ) ) {
                   XmlNode attr = insPos.context;
                   if ( attr.children().size() <= 0 ) {
-                     log.log( Level.WARNING, "Target position attribute has no value. Replacing attribute instead." );
+                     log( Level.WARNING, "Target position attribute has no value. Replacing attribute instead." );
                   } else {
                      insPos = attr.children().get(0).range;
                   }
                }
                deleteFromResult( insPos );
                insertToResult( block.getText(), insPos );
+               block.log( Level.FINEST, "Inserted to parent block" );
             } catch ( CocoParseError | CocoRunError ex ) {
                positionTask.throwOrWarn( ex );
             }
          }
+         log( Level.FINEST, "Coco direcitves executed" );
       } catch ( InterruptedException ex ) {
          Thread.currentThread().interrupt();
          return null;
@@ -367,7 +372,7 @@ public class ParserCoco extends Parser {
 
    private void deleteFromResult ( TextRange range ) {
       if ( range != null && range.isValid() && range.length() > 0 ) {
-         log.log( Level.FINER, "Delete: {0}", range.showInText( resultText ) );
+         if ( logDetails ) log( Level.FINEST, "Delete: {0}", range.showInText( resultText ) );
          resultText.delete( range.start, range.end );
          for ( Context c : resultStack )
             c.position.shiftDeleted( range, true );
@@ -378,7 +383,7 @@ public class ParserCoco extends Parser {
 
    private void insertToResult ( CharSequence txt, TextRange insPos ) {
       if ( insPos != null && insPos.isValid() ) {
-         log.log( Level.FINER, "Inserts {0} to {1}", new Object[]{ Text.ellipsisWithin( txt, 12 ), insPos.showInText( resultText ) } );
+         if ( logDetails ) log( Level.FINEST, "Inserts {0} to {1}", Text.ellipsisWithin( txt, 12 ), insPos.showInText( resultText ) );
          resultText.insert( insPos.start, txt );
          for ( Context c : resultStack )
             c.position.shiftInserted( insPos.start, txt.length() );
@@ -411,6 +416,7 @@ public class ParserCoco extends Parser {
       firstParameterMatcher = null;
       positionMatcher  = null;
       positionAttrMatcher   = null;
+      super.close();
    }
 
    public String getStartTag () { return startTag; }

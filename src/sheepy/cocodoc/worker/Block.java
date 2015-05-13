@@ -11,31 +11,25 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-import sheepy.cocodoc.CocoMonitor;
+import sheepy.cocodoc.CocoObserver;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 import sheepy.cocodoc.worker.task.Task;
+import sheepy.util.Text;
 import sheepy.util.concurrent.AbstractFuture;
 
 /**
  * A document processing block.
  */
 public class Block extends AbstractFuture<Block> {
-   static final Logger log = Logger.getLogger(Block.class.getName() );
-   static {
-      log.setLevel( Level.ALL );
-   }
-
    private final Block parent;
    private final Directive directive;
+   private final BlockStats stats = new BlockStats(this);
+   private String name = "";
    private File basePath;
    private Task outputTarget;
-
-   private String name = "";
-   private BlockStats stats = new BlockStats(this);
 
    public Block ( Block parent, Directive directive ) {
       this.parent = parent;
@@ -52,17 +46,21 @@ public class Block extends AbstractFuture<Block> {
    }
 
    @Override protected Block implRun () {
-      if ( hasMonitor() ) getMonitor().start();
+      if ( hasObserver() ) getObserver().start();
 
+      log( Level.FINEST, "Initialising" );
       for ( Task task : getTasks() ) task.init();
+
+      log( Level.FINER, "Running" );
       for ( Task task : getTasks() ) {
          if ( Thread.currentThread().isInterrupted() ) return this;
+         log( Level.FINEST, "Running {0}", task );
          task.process();
       }
 
       if ( hasData() ) {
          if ( hasText() && getText().indexOf( "<?coco-postprocess " ) >= 0 ) {
-            log.log( Level.FINE, "Post processing {0}", this );
+            log( Level.FINEST, "Post processing" );
             Parser postprocessor = new ParserCoco( true );
             postprocessor.start( this );
             setText( postprocessor.get() );
@@ -70,10 +68,11 @@ public class Block extends AbstractFuture<Block> {
 
          if ( getOutputTarget() != null ) {
             String fname = getOutputTarget().getParam( 0 );
+            log( Level.FINEST, "Outputting to {0}", fname );
             if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
                File f = new File( getBasePath(), fname );
                byte[] data = getBinary();
-               log.log( Level.INFO, "Writing {1} bytes to {0}.", new Object[]{ f, data.length } );
+               log( Level.FINE, "Writing {1} bytes to {0}.", f, data.length );
                try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
                   out.write( data );
                } catch ( IOException ex ) {
@@ -82,12 +81,14 @@ public class Block extends AbstractFuture<Block> {
             }
             setText( null );
          } else {
+            log( Level.FINEST, "Outputting to stdout" );
             if ( getParent() == null )
                System.out.println( getText() );
          }
       }
 
-      if ( hasMonitor() ) getMonitor().done();
+      log( Level.FINER, "Finished" );
+      if ( hasObserver() ) getObserver().done();
       return this;
    }
 
@@ -106,17 +107,20 @@ public class Block extends AbstractFuture<Block> {
 
    public Directive getDirective () { return directive; }
    public List<Task> getTasks ()    { return directive.getTasks(); }
-   public boolean hasMonitor ()     { return directive.getMonitor() != null; }
-   public CocoMonitor getMonitor () { return directive.getMonitor(); }
+   public boolean hasObserver ()     { return directive.getObserver() != null; }
+   public CocoObserver getObserver () { return directive.getObserver(); }
+   public void log ( Level level, String message, Object ... parameter ) {
+      getDirective().log( level, message, this, parameter );
+   }
 
-   public Block setName( CharSequence name ) {
+   public Block setName ( CharSequence name ) {
       if ( name == null || name.length() <= 0 ) return this;
       if ( this.name.isEmpty() )
          this.name = name.toString();
       else
          this.name += ',' + name.toString();
-      if ( hasMonitor() )
-         getMonitor().setName( this.name );
+      if ( hasObserver() )
+         getObserver().setName( this.name );
       return this;
    }
 
@@ -203,14 +207,14 @@ public class Block extends AbstractFuture<Block> {
    public void toBinary ( List<Charset> encoding ) {
       if ( encoding != null ) toBinaryCharset = new ArrayList<>( encoding );
       if ( hasBinary() || ! hasText() ) return;
-      if ( toBinaryCharset == null || toBinaryCharset.isEmpty() ) toBinaryCharset = Collections.singletonList( Task.UTF8 );
+      if ( toBinaryCharset == null || toBinaryCharset.isEmpty() ) toBinaryCharset = Collections.singletonList( Text.UTF8 );
 
       IOException error = null;
       int textLen = textResult.length();
       for ( Charset charset : toBinaryCharset ) try {
          setBinary( CharsetUtils.encode( textResult, CharsetUtils.strictEncoder( charset ) ) );
          currentCharset = charset;
-         log.log( Level.FINER, "Converted {1} {0} characters to {2} bytes.", new Object[]{ charset, textLen, binaryResult.size() } );
+         log( Level.FINEST, "Converted {0} characters to {1} binary.", textLen, charset );
          return;
       } catch ( IOException ex ) {
          error = ex;
@@ -222,14 +226,14 @@ public class Block extends AbstractFuture<Block> {
    public void toText ( List<Charset> encoding ) {
       if ( encoding != null ) toTextCharset = new ArrayList<>( encoding );
       if ( hasText() || ! hasBinary() ) return;
-      if ( toTextCharset == null || toTextCharset.isEmpty() ) toTextCharset = Arrays.asList( Task.UTF8, Task.UTF16 );
+      if ( toTextCharset == null || toTextCharset.isEmpty() ) toTextCharset = Arrays.asList( Text.UTF8, Text.UTF16 );
 
       byte[] buf = binaryResult.toByteArray();
       IOException error = null;
       for ( Charset charset : toTextCharset ) try {
-         setText(CharsetUtils.decode(buf, CharsetUtils.strictDecoder( charset ) ) );
+         setText( CharsetUtils.decode( buf, CharsetUtils.strictDecoder( charset ) ) );
          currentCharset = charset;
-         log.log( Level.FINER, "Converted {2} bytes to {1} {0} characters.", new Object[]{ charset, textResult.length(), buf.length } );
+         log( Level.FINEST, "Converted {0} bytes of {1} to text.", buf.length, charset );
          return;
       } catch ( CharacterCodingException ex ) {
          error = ex;
@@ -250,7 +254,6 @@ public class Block extends AbstractFuture<Block> {
 
    public Task getOutputTarget() { return outputTarget; }
    public void setOutputTarget( Task output ) {
-      log.log( Level.FINE, "Set output target to {0}", output == null ? null : output.getParam( 0 ) );
       this.outputTarget = output;
    }
 

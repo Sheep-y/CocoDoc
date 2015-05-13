@@ -1,5 +1,6 @@
 package sheepy.util;
 
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.StringJoiner;
 import java.util.function.Function;
@@ -7,6 +8,8 @@ import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
 public class Text {
+   public static final Charset UTF16 = Charset.forName("UTF-16");
+   public static final Charset UTF8 = Charset.forName("UTF-8");
 
    public static String toString ( IntStream in ) {
       return in.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
@@ -16,15 +19,18 @@ public class Text {
       if ( list == null || list.isEmpty() ) return "";
       return String.join( delimiter, list.stream().map( Object::toString ).toArray( String[]::new ) );
    }
+
    public static String toString ( CharSequence prefix, CharSequence delimiter, CharSequence suffix, Collection<?> list ) {
       return toString( prefix, delimiter, suffix, list, "" );
    }
+
    public static String toString ( CharSequence prefix, CharSequence delimiter, CharSequence suffix, Collection<?> list, CharSequence ifEmpty ) {
       if ( list == null || list.isEmpty() ) return ifEmpty == null ? null : ifEmpty.toString();
       StringJoiner joiner = new StringJoiner( delimiter, prefix, suffix );
       list.stream().map( Object::toString ).forEach( joiner::add );
       return joiner.toString();
    }
+
    public static <T> String toString ( CharSequence delimiter, Collection<T> list, Function<T,? extends CharSequence> map ) {
       if ( list == null || list.isEmpty() ) return "";
       StringJoiner joiner = new StringJoiner( delimiter );
@@ -32,7 +38,10 @@ public class Text {
       return joiner.toString();
    }
 
-   public static String nonNull( CharSequence s ) { return ifNull( s, "" ); }
+   public static String nonNull( CharSequence s ) {
+      return ifNull( s, "" );
+   }
+
    public static String ifNull( CharSequence s, String ifnull ) {
       return s == null ? ifnull: s.toString();
    }
@@ -42,11 +51,9 @@ public class Text {
    }
 
 
-   public static String unquote ( CharSequence subject, char start )           { return unquote( subject, start, start, null ); }
-   public static String unquote ( CharSequence subject, char start, char end ) { return unquote( subject, start, end, null ); }
-   public static String unquote ( CharSequence subject, char start, UnaryOperator<String> strip ) {
-      return unquote( subject, start, start, strip );
-   }
+   public static String unquote ( CharSequence subject, char start )                              { return unquote( subject, start, start, null  ); }
+   public static String unquote ( CharSequence subject, char start, char end )                    { return unquote( subject, start, end  , null  ); }
+   public static String unquote ( CharSequence subject, char start, UnaryOperator<String> strip ) { return unquote( subject, start, start, strip ); }
    public static String unquote ( CharSequence subject, char start, char end, UnaryOperator<String> strip ) {
       if ( subject == null ) return null;
       int len = subject.length();
@@ -60,29 +67,35 @@ public class Text {
    public static String ellipsis ( CharSequence text, int max ) {
       return ellipsisAfter( text, max );
    }
+
    public static String ellipsisBefore ( CharSequence text, int max ) {
       if ( text == null ) return null;
       if ( max <= 0 ) throw new IllegalArgumentException();
       String txt = text.toString().replaceAll( "[\r\n]+", " " ).trim();
       return txt.length() < max ? txt : '…' + txt.substring( txt.length()-max, txt.length() );
    }
+
    public static String ellipsisAfter ( CharSequence text, int max ) {
       if ( text == null ) return null;
       if ( max <= 0 ) throw new IllegalArgumentException();
       String txt = text.toString().replaceAll( "[\r\n]+", " " ).trim();
       return txt.length() < max ? txt : txt.substring( 0, max-1 ) + '…';
    }
+
    public static String ellipsisAround ( CharSequence text, int position, int around ) {
       return ellipsisAround( text, position, 'λ', around, around );
    }
+
    public static String ellipsisAround ( CharSequence text, int position, char infix, int before, int after ) {
       if ( text == null ) return null;
       position = Math.max( 0, Math.min( position, text.length() ) );
       return ellipsisBefore( text.subSequence( 0, position ), before ) + infix + ellipsisAfter( text.subSequence( position, text.length() ), after );
    }
+
    public static String ellipsisWithin ( CharSequence text, int size ) {
       return ellipsisWithin( text, size, size );
    }
+
    public static String ellipsisWithin ( CharSequence text, int head, int tail ) {
       if ( text == null ) return null;
       String txt = text.toString().replaceAll( "[\r\n]+", " " ).trim();

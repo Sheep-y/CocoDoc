@@ -27,7 +27,7 @@ public class TaskFile extends Task {
             break;
          case OUTPUT :
             if ( params.size() > 1 ) {
-               log.warning( "Only the last file() will be effective in <?coco-output?>" );
+               log( Level.WARNING, "Only the last file() will be effective in <?coco-output?>" );
                while ( params.size() > 1 ) params.remove( 0 );
             }
             break;
@@ -45,27 +45,36 @@ public class TaskFile extends Task {
    }
 
    @Override protected void run () {
+      if ( ! hasParams() ) {
+         log( Level.INFO, "Skipping, no parameter" );
+         return;
+      }
       Block block = getBlock();
+
       if ( getDirective().getAction() == INLINE ) { // Read file and add to block
          File base = block.getBasePath();
          for ( String s : getParams() ) try {
-            log.log( Level.FINE, "Reading {1} from base path {0}.", new Object[]{ base, s } );
+            log( Level.FINE, "Reading {1} from base path {0}.", base, s );
             File f = new File( base, s );
+            byte[] buffer;
             try ( FileInputStream in = new FileInputStream( f ) ) {
-               byte[] buffer = new byte[ (int) f.length() ];
+               buffer = new byte[ (int) f.length() ];
                int len = in.read( buffer );
-               if ( len < buffer.length ) buffer = Arrays.copyOfRange( buffer, 0, len );
-
-               log.log( Level.INFO, "Read {0} bytes from {1}.", new Object[]{ buffer.length, f } );
-               block.appendBinary( buffer )
-                    .setBasePath( f.getParentFile() ).setName( f.toString() )
-                    .stats().setMTime( CocoUtils.milliToZonedDateTime( f.lastModified() ) );
+               if ( len < buffer.length ) buffer = Arrays.copyOfRange( buffer, 0, len ); // In case file size changed
             }
+            block.stats().addInBytes( buffer.length );
+            log( Level.FINEST, "Read {0} bytes from {1}.", buffer.length, f );
+            block.appendBinary( buffer )
+                 .setBasePath( f.getParentFile() ).setName( f.toString() )
+                 .stats().setMTime( CocoUtils.milliToZonedDateTime( f.lastModified() ) );
          } catch ( IOException ex ) { // If not throwing, continue with next parameter
             throwOrWarn( new CocoRunError( ex ) );
          }
+         log( Level.FINEST, "Finished reading." );
+
       } else { // Set block output
          block.setOutputTarget( this );
+         log( Level.FINER, "Output target set." );
       }
    }
 }

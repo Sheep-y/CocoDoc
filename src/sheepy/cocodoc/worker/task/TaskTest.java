@@ -29,9 +29,15 @@ public class TaskTest extends Task {
    @Override protected String invalidParamMessage() { return "test() task should have one or more of " + String.join( ",", validParams ) + " with no duplicate. Actual: {0}"; }
 
    @Override protected void run () {
-      if ( ! hasParams() ) return;
+      if ( ! hasParams() ) {
+         log( Level.INFO, "Skipping, no parameter" );
+         return;
+      }
+      log( Level.FINER, "Validating data" );
+
       Block block = getBlock();
       for ( String e : getParams() ) {
+         log( Level.FINER, "Validating data as {0}", e );
          switch ( e ) {
             case "xml":
                try {
@@ -41,14 +47,14 @@ public class TaskTest extends Task {
                   DefaultHandler handler = new DefaultHandler();
                   InputSource source = new InputSource();
                   if ( block.hasText() ) {
-                     log.log( Level.FINE, "Validating text data as XML." );
+                     log( Level.FINEST, "Validating text data as XML." );
                      source.setCharacterStream( new StringReader( block.getText().toString() ) );
                   } else if ( block.hasBinary() ) {
-                     log.log( Level.FINE, "Validating binary data as XML." );
+                     log( Level.FINEST, "Validating binary data as XML." );
                      source.setByteStream( new ByteArrayInputStream( block.getBinary() ) );
                   }
                   parser.parse( source, handler );
-                  log.log( Level.FINER, "Data is valid XML." );
+                  log( Level.INFO, "Data is valid XML." );
                } catch ( IOException | ParserConfigurationException ex ) {
                   throwOrWarn( new CocoRunError( ex ) );
                } catch ( SAXException ex ) {
@@ -59,5 +65,6 @@ public class TaskTest extends Task {
                throwOrWarn( new CocoParseError( "Unknown test parameter: " + e ) );
          }
       }
+      log( Level.FINER, "Data validated." );
    }
 }

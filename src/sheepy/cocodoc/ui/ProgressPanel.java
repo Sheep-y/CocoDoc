@@ -14,9 +14,9 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.layout.BorderPane;
-import sheepy.cocodoc.CocoMonitor;
+import sheepy.cocodoc.CocoObserver;
 
-public class ProgressPanel implements CocoMonitor {
+public class ProgressPanel {
 
    private final TabPane tabPane = new TabPane();
 
@@ -34,7 +34,7 @@ public class ProgressPanel implements CocoMonitor {
 
    /*******************************************************************************************************************/
 
-   @Override public CocoMonitor newNode( String name ) {
+   public CocoObserver newNode( String name ) {
       ProgressTab result = new ProgressTab( name );
       Platform.runLater( () -> {
          if ( tabWelcome != null ) {
@@ -46,19 +46,12 @@ public class ProgressPanel implements CocoMonitor {
       return result;
    }
 
-   @Override public CocoMonitor setName( String name ) {
-      throw new UnsupportedOperationException("Cannot set text of workspace; please call newNode() to create new tree.");
-   }
-
-   @Override public void start () { setName( null ); } // Throw USOE
-   @Override public void done  () { setName( null ); } // Throw USOE
-
    /*******************************************************************************************************************/
 
    /**
     * Main job tab
     */
-   private class ProgressTab extends TreeItemMonitor {
+   private class ProgressTab extends ObserverTreeItem {
       final Tab tab = new Tab( "New Job" );
       private final ProgressBar progress = new ProgressBar( ProgressBar.INDETERMINATE_PROGRESS );
       private final AtomicInteger maxProgress = new AtomicInteger();
@@ -66,14 +59,17 @@ public class ProgressPanel implements CocoMonitor {
 
       public ProgressTab( String name ) {
          super( name );
-         TreeTableView<TreeItemMonitor> tree = new TreeTableView<>( node );
-         TreeTableColumn<TreeItemMonitor, String> colName   = new TreeTableColumn<>( "Name"   );
-         TreeTableColumn<TreeItemMonitor, String> colStatus = new TreeTableColumn<>( "Status" );
-         colName  .setCellValueFactory( new TreeItemPropertyValueFactory<>( "name"   ) );
-         colStatus.setCellValueFactory( new TreeItemPropertyValueFactory<>( "status" ) );
-         colName  .setPrefWidth( 600 );
+         TreeTableView<ObserverTreeItem> tree = new TreeTableView<>( node );
+         TreeTableColumn<ObserverTreeItem, String> colName   = new TreeTableColumn<>( "Name"   );
+         TreeTableColumn<ObserverTreeItem, String> colMsg    = new TreeTableColumn<>( "Log"    );
+         TreeTableColumn<ObserverTreeItem, String> colStatus = new TreeTableColumn<>( "Status" );
+         colName  .setCellValueFactory( new TreeItemPropertyValueFactory<>( "name"    ) );
+         colMsg   .setCellValueFactory( new TreeItemPropertyValueFactory<>( "message" ) );
+         colStatus.setCellValueFactory( new TreeItemPropertyValueFactory<>( "status"  ) );
+         colName  .setPrefWidth( 300 );
+         colMsg   .setPrefWidth( 350 );
          colStatus.setPrefWidth( 100 );
-         tree.getColumns().addAll( colName, colStatus );
+         tree.getColumns().addAll( colName, colMsg, colStatus );
          node.setExpanded( true );
 
          ScrollPane pnlCC = new ScrollPane( tree );
@@ -95,14 +91,14 @@ public class ProgressPanel implements CocoMonitor {
                curProgress.intValue() == 0
                   ? ProgressBar.INDETERMINATE_PROGRESS
                   : (double) curProgress.intValue() / maxProgress.intValue() );
-         });
+         } );
       }
 
-      @Override public CocoMonitor newNode ( String name ) {
+      @Override public CocoObserver newNode ( String name ) {
          return new ProgressNode( this, node, name );
       }
 
-      @Override public CocoMonitor setName ( String name ) {
+      @Override public CocoObserver setName ( String name ) {
          Platform.runLater( () -> {
             tab.setText( isDone() ? name : ( "*" + name + "*" ) );
          });
@@ -123,7 +119,7 @@ public class ProgressPanel implements CocoMonitor {
    /**
     * Child job node
     */
-   private class ProgressNode extends TreeItemMonitor {
+   private class ProgressNode extends ObserverTreeItem {
       final ProgressTab tab;
 
       public ProgressNode( ProgressTab tab, TreeItem parent, String name ) {
@@ -142,7 +138,7 @@ public class ProgressPanel implements CocoMonitor {
          } catch ( InterruptedException ignored ) {}
       }
 
-      @Override public CocoMonitor newNode ( String name ) {
+      @Override public CocoObserver newNode ( String name ) {
          return new ProgressNode( tab, node, name );
       }
 

@@ -14,6 +14,7 @@ import sheepy.cocodoc.CocoRunError;
  * Runs block in a thread pool
  */
 public class Worker {
+   // TODO: Use application log
    static final Logger log = Logger.getLogger( Worker.class.getName() );
    // Do not use fixed thread pool, because blocks will wait for sub blocks.  Limited thread = deadlock.
    static final ExecutorService thread_pool = Executors.newCachedThreadPool( Worker::newThread );
@@ -57,6 +58,8 @@ public class Worker {
          if ( e instanceof CocoParseError ) throw (CocoParseError) e;
          if ( e instanceof Error          ) throw (Error         ) e;
          throw new CocoRunError( e );
+      } finally {
+         block.log( Level.FINER, "Returned", block );
       }
    }
 

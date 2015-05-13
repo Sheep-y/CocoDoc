@@ -75,7 +75,7 @@ public class XmlParser extends Parser {
       }
       if ( warningIfNotFound != null ) {
          CharSequence result = remaining();
-         log.log( Level.WARNING, warningIfNotFound, Text.ellipsis( result, messageQuoteLimit ) );
+         log( Level.WARNING, warningIfNotFound, Text.ellipsis( result, messageQuoteLimit ) );
          return result;
       }
       return null;
@@ -86,7 +86,7 @@ public class XmlParser extends Parser {
       if ( i >= 0 ) return text.subSequence( start, pos += i + ( consume ? find.length() : 0 ) );
       if ( warningIfNotFound != null ) {
          CharSequence result = remaining();
-         log.log( Level.WARNING, warningIfNotFound, Text.ellipsis( result, messageQuoteLimit ) );
+         log( Level.WARNING, warningIfNotFound, Text.ellipsis( result, messageQuoteLimit ) );
          return result;
       }
       return null;
@@ -106,7 +106,7 @@ public class XmlParser extends Parser {
          }
       }
       if ( tagName == null ) {
-         log.log( Level.WARNING, "Unended identifier: {0}", ellipsis( oldPos ) );
+         log( Level.WARNING, "Unended identifier: {0}", ellipsis( oldPos ) );
          return remaining();
       }
       return tagName;
@@ -122,10 +122,10 @@ public class XmlParser extends Parser {
          if ( nextIs( "</" ) ) { // Must be close tag
             XmlNode outer = new XmlNode( XmlNode.NODE_TYPE.TAG, parseIdentifier(), 0, pos );
             if ( outer.value == null ) {
-               log.log( Level.WARNING, "Invalid tag: {0}", ellipsis( pos ) );
+               log( Level.WARNING, "Invalid tag: {0}", ellipsis( pos ) );
                root.add(new XmlNode( XmlNode.NODE_TYPE.TEXT, remaining(), -1, pos ) );
             } else {
-               log.log( Level.WARNING, "Close tag without open tag: {0}", Text.ellipsis( outer.value, messageQuoteLimit ) );
+               log( Level.WARNING, "Close tag without open tag: {0}", Text.ellipsis( outer.value, messageQuoteLimit ) );
                if ( root.child != null ) {
                   outer.makeList().addAll( root.child );
                   root.child.clear();
@@ -157,7 +157,7 @@ public class XmlParser extends Parser {
             else if ( isIdentifier( leadChar ) )
                parseTag( parent );
             else {
-               log.log( Level.WARNING, "Unescaped '<'" );
+               log( Level.WARNING, "Unescaped '<'" );
                parent.add(new XmlNode( XmlNode.NODE_TYPE.TEXT, "<", pos, ++pos ) );
             }
          } else if ( ! done() ) {
@@ -179,7 +179,7 @@ public class XmlParser extends Parser {
       skipWS();
       parseAttribute( tag );
       if ( done() ) {
-         log.log( Level.WARNING, "End tag not found in block: {0}", ellipsis( start ) );
+         log( Level.WARNING, "End tag not found in block: {0}", ellipsis( start ) );
          tag.range.end = pos;
          return;
       }
@@ -194,14 +194,14 @@ public class XmlParser extends Parser {
          }
          ++pos; // skip '>'
       } else {
-         log.log( Level.WARNING, "Open tag before end tag: {0}", ellipsis( start ) );
+         log( Level.WARNING, "Open tag before end tag: {0}", ellipsis( start ) );
       }
 
       parseTagContent( tag );
       char afterChar = peek( tag.value.length() + 2 );
       // Check that the matching close tag really match
       if ( done() || ! nextIs( "</" + tag.value ) || ( afterChar != '>' && ! isWS( afterChar ) ) ) {
-         log.log( Level.WARNING, "Unclosed tag: {0}", ellipsis( start ) );
+         log( Level.WARNING, "Unclosed tag: {0}", ellipsis( start ) );
          return;
       }
       until( '>', true, "Unclosed tag: {0}" );

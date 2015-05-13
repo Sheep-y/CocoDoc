@@ -21,6 +21,7 @@ public class TaskDeflate extends Task {
    @Override protected String invalidParamMessage() { return "deflate() task accepts 0-9 for compression level (default 9), and 'zlib' to include zlib header/checksum: {0}"; }
 
    @Override protected void run () {
+      log( Level.FINER, "Deflating data" );
       boolean zlib = getParams().contains( "zlib" );
       int level = getParams().stream().filter( p -> p.length() == 1 ).map( Integer::parseInt ).findFirst().orElse( Integer.valueOf( 9 ) );
 
@@ -30,7 +31,7 @@ public class TaskDeflate extends Task {
          os.write( data );
          os.finish();
          getBlock().setBinary( buffer );
-         log.log( Level.FINE, "Deflate({2},{3}) {0} bytes to {1}.", new Object[]{ data.length, buffer.size(), zlib ? "zlib" : "gz", level } );
+         log( Level.FINEST, "Deflated {0} bytes to {1}.", data.length, buffer.size() );
       } catch ( IOException ex ) {
          throwOrWarn( new CocoRunError( ex ) );
       }

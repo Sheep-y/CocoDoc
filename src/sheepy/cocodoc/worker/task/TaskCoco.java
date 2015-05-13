@@ -2,6 +2,7 @@ package sheepy.cocodoc.worker.task;
 
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
@@ -24,8 +25,10 @@ public class TaskCoco extends Task {
    }
 
    @Override protected void run () {
+      log( Level.FINER, "Parsing Coco direcitve" );
       try ( ParserCoco parser = new ParserCoco( startTag, endTag ) ) {
          parser.start( getBlock() );
+         log( Level.FINEST, "Executing Coco direcitves" );
          getBlock().setText( parser.get() );
       } catch ( CocoRunError | CocoParseError ex ) {
          throwOrWarn( ex );

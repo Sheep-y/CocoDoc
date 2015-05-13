@@ -18,10 +18,14 @@ public class TaskVar extends Task {
 
    ZonedDateTime app_build_time;
    @Override protected void run () {
-      if ( getParams().isEmpty() ) return;
+      if ( ! hasParams() ) {
+         log( Level.INFO, "Skipping, no parameter" );
+         return;
+      }
 
       String varname = getParam( 0 );
       String value = "";
+      log( Level.FINER, "Processing variable {0}", varname );
       if ( getDirective().getTasks().size() == 1 )
          getBlock().setName( "var(" + varname + ")" );
 
@@ -50,9 +54,14 @@ public class TaskVar extends Task {
             break;
 
          default:
-            log.log( Level.WARNING, "Unknown variable {0}", varname );
+            log( Level.WARNING, "Unknown variable {0}", varname );
             return;
       }
       getBlock().setText( value );
+
+      if ( value.startsWith( "<?coco-postprocess " ) )
+         log( Level.FINEST, "Deferred to post process", varname );
+      else
+         log( Level.FINEST, "Formatted var({0})", varname );
    }
 }

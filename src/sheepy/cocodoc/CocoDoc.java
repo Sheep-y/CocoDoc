@@ -26,7 +26,7 @@ public class CocoDoc extends Application {
          config.parseCommandLine( args );
 
          System.getProperties().setProperty( "java.util.logging.SimpleFormatter.format", "%5$s\n" );
-         Logger.getGlobal().getParent().getHandlers()[0].setLevel( Level.ALL );
+         Logger.getGlobal().getParent().getHandlers()[0].setLevel( Level.FINE );
 
          CocoDoc.launch( args );
 
@@ -58,7 +58,7 @@ public class CocoDoc extends Application {
       for ( String file : files ) try {
          dirs.add( Directive.create( INLINE,
             Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() )
-         ).setMonitor( stage.getMonitor().newNode( file ) ).start( null ) );
+         ).setObserver( stage.newNode( file ) ).start( null ) );
       } catch ( RuntimeException ex ) {
          ex.printStackTrace();
       }

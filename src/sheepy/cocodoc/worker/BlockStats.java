@@ -6,6 +6,7 @@
 package sheepy.cocodoc.worker;
 
 import java.time.ZonedDateTime;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class BlockStats {
 
@@ -14,6 +15,10 @@ public class BlockStats {
    private ZonedDateTime btime = null;
    private ZonedDateTime mtime = null;       // Last modified time of this block
    private ZonedDateTime child_mtime = null; // Last modified time of this block and all children
+   private final AtomicLong in_bytes = new AtomicLong(0);
+   private final AtomicLong out_bytes = new AtomicLong(0);
+   private final AtomicLong total_in_bytes = new AtomicLong(0);
+   private final AtomicLong total_out_bytes = new AtomicLong(0);
 
    public BlockStats(Block block) {
       this.block = block;
@@ -35,45 +40,58 @@ public class BlockStats {
       return parent.stats();
    }
 
-   public ZonedDateTime getBtime() {
-      return btime;
+   public long getInBytes () { return in_bytes.longValue(); }
+   public void addInBytes ( long bytes ) { in_bytes.addAndGet( bytes ); addTotalInBytes( bytes ); }
+
+   public long getTotalInBytes () { return total_in_bytes.longValue(); }
+   private void addTotalInBytes  ( long bytes ) {
+      BlockStats parent = getParent();
+      if ( parent == null ) return;
+      parent.in_bytes.addAndGet( bytes );
+      parent.addTotalInBytes( bytes );
    }
 
-   public ZonedDateTime getMtime() {
-      return mtime;
+   public long getOutBytes () { return out_bytes.longValue(); }
+   public void addOutBytes ( long bytes ) { out_bytes.addAndGet( bytes ); addTotalOutBytes( bytes ); }
+
+   public long getTotalOutBytes () { return total_out_bytes.longValue(); }
+   private void addTotalOutBytes  ( long bytes ) {
+      BlockStats parent = getParent();
+      if ( parent == null ) return;
+      parent.out_bytes.addAndGet( bytes );
+      parent.addTotalOutBytes( bytes );
    }
 
-   public ZonedDateTime getChildMtime() {
-      return child_mtime;
+   public synchronized ZonedDateTime getBtime() { return btime; }
+   public synchronized ZonedDateTime getMtime() { return mtime; }
+   public synchronized ZonedDateTime getChildMtime() { return child_mtime; }
+
+   public void setMTime ( ZonedDateTime time ) {
+      if ( time == null ) return;
+      synchronized( this ) {
+         if ( mtime == null || time.isAfter( mtime ) )
+            mtime = time;
+      }
+      setChildMTime( time );
    }
 
-   public void setMTime ( ZonedDateTime mtime ) {
-      if ( mtime == null ) return;
-      if ( this.mtime == null || mtime.isAfter( this.mtime ) )
-         this.mtime = mtime;
-      setChildMTime( mtime );
-   }
-
-   private void setChildMTime ( ZonedDateTime mtime ) {
-      if ( mtime == null ) return;
-      if ( child_mtime == null || mtime.isAfter( child_mtime ) )
-         child_mtime = mtime;
+   private void setChildMTime ( ZonedDateTime time ) {
+      if ( time == null ) return;
+      synchronized( this ) {
+         if ( child_mtime == null || time.isAfter( child_mtime ) )
+            child_mtime = time;
+      }
       if ( getParent() == null ) return;
-      getParent().setChildMTime( mtime );
+      getParent().setChildMTime( time );
    }
 
    public ZonedDateTime getBuildTime() {
-      return getParent() == null
-         ? btime
-         : block.getRoot().stats().getBuildTime();
+      if ( getParent() == null ) synchronized( this ) {
+         return btime;
+      } else
+         return block.getRoot().stats().getBuildTime();
    }
-
-   public ZonedDateTime getModifiedTime() {
-      return child_mtime;
-   }
-
-   public ZonedDateTime getLocalModifiedTime() {
-      return mtime;
-   }
+   public synchronized ZonedDateTime getModifiedTime() { return child_mtime; }
+   public synchronized ZonedDateTime getLocalModifiedTime() { return mtime; }
 
 }

@@ -1,6 +1,5 @@
 package sheepy.cocodoc.worker.task;
 
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,15 +15,16 @@ import sheepy.util.collection.NullData;
 
 /* A normalised action, e.g. prefix({auto-datauri}), encode(base64), or position(src of the img before) */
 public abstract class Task {
-   protected static final Logger log = Logger.getLogger( Task.class.getSimpleName() );
+   private static final Logger log = Logger.getLogger( Task.class.getSimpleName() );
    static {
       log.setLevel( Level.ALL );
+   }
+   public void log ( Level level, String message, Object ... parameter ) {
+      log.log( getDirective().observe( level, message, this, parameter ) );
    }
 
    protected static final Predicate<List<String>> isEmpty = CollectionPredicate.isEmpty();
    protected static final Predicate<List<String>> nonEmpty = CollectionPredicate.hasItem();
-   public static final Charset UTF16 = Charset.forName("UTF-16");
-   public static final Charset UTF8 = Charset.forName("UTF-8");
 
    public enum Action {
       FILE,
@@ -123,6 +123,7 @@ public abstract class Task {
    public boolean isThrowError () { return throwError; }
    public void setThrowError( boolean throwError ) { this.throwError = throwError; }
    public <T extends Exception> void throwOrWarn ( T ex ) throws T {
+      log( Level.WARNING, ex.getMessage() );
       if ( isThrowError() ) throw ex;
       else log.warning( ex.getLocalizedMessage() );
    }
