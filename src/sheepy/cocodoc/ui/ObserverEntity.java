@@ -12,7 +12,7 @@ import sheepy.cocodoc.CocoObserver;
 /**
  * CocoObserver entity for JavFX (e.g. TreeTableView)
  */
-public abstract class ObserverTreeItem implements CocoObserver {
+public abstract class ObserverEntity implements CocoObserver {
 
    public class Log {
       public final long time;
@@ -21,6 +21,8 @@ public abstract class ObserverTreeItem implements CocoObserver {
          time = System.nanoTime();
          this.message = message;
       }
+      public long getTime() { return Math.round( time - startTime ) / 1000_000; }
+      public String getMessage() { return message; }
    }
 
    private final List<Log> logList = new ArrayList<>();
@@ -37,6 +39,8 @@ public abstract class ObserverTreeItem implements CocoObserver {
    private final StringProperty message = new SimpleStringProperty( this, "" );
    public StringProperty messageProperty() { return message; }
 
+   public List<Log> getLogs () { return new ArrayList<>( logList ); }
+
    @Override public CocoObserver log ( String value ) {
       synchronized ( logList ) { logList.add( new Log( value ) ); }
       if ( error == null ) messageProperty().set( value );
@@ -49,14 +53,14 @@ public abstract class ObserverTreeItem implements CocoObserver {
       return this;
    }
 
-   protected final TreeItem<ObserverTreeItem> node = new TreeItem( this );
+   protected final TreeItem<ObserverEntity> node = new TreeItem( this );
    protected volatile long startTime;
    protected volatile long endTime;
 
    protected boolean isStarted() { return startTime != 0; }
    protected boolean isDone() { return endTime != 0; }
 
-   public ObserverTreeItem ( String name ) {
+   public ObserverEntity ( String name ) {
       this.name.set( name );
    }
 

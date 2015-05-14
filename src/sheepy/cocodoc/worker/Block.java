@@ -70,7 +70,6 @@ public class Block extends AbstractFuture<Block> {
             } else if ( getParent() == null ) {
                log( Level.FINEST, "Outputting to stdout" );
                postprocess();
-               System.out.println( getText() );
             }
          }
 

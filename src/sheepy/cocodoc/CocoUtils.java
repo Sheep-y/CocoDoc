@@ -102,7 +102,7 @@ public class CocoUtils {
       if ( f.exists() && f.isFile() && f.canRead() )
          is = new BufferedInputStream( new FileInputStream( f ) );
       else
-         is = CocoUtils.class.getResourceAsStream( file );
+         is = CocoUtils.class.getResourceAsStream( '/' + file );
       if ( is == null ) throw new FileNotFoundException( "Resource not found: " + file );
       try {
          return new Scanner(is).useDelimiter("\\A").next();

@@ -19,6 +19,7 @@ import sheepy.cocodoc.worker.task.TaskFile;
 
 public class CocoDoc extends Application {
    public static final CocoConfig config = new CocoConfig();
+   public static final CocoOption option = new CocoOption();
    public static MainStage stage;
 
    public static void main ( String[] args ) {

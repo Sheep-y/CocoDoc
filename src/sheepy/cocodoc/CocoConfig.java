@@ -7,11 +7,15 @@ import java.util.List;
 import java.util.regex.Pattern;
 import static sheepy.util.collection.CollectionPredicate.contains;
 
+/**
+ * Fixed configs, like file location, or command line parameters.
+ */
 public class CocoConfig {
 
    public String help;
    public List<String> runFiles = new ArrayList<>(0);
 
+   public static final String DEFAULT_BUILD    = "build.cocodoc.conf";
    public static final String DOC_PATH    = "doc/";
    public static final String HELP_FILE   = DOC_PATH+ "manual.xhtml";
    public static final String DESIGN_FILE = DOC_PATH+ "design.xhtml";
@@ -20,8 +24,8 @@ public class CocoConfig {
 
    public CocoConfig parseCommandLine( String[] args ) {
       if ( args == null || args.length <= 0 ) {
-         if ( new File( "build.cocodoc.conf" ).exists() ) {
-            args = new String[]{ "build.cocodoc.conf" };
+         if ( new File( DEFAULT_BUILD ).exists() ) {
+            args = new String[]{ DEFAULT_BUILD };
          } else {
             help = HELP_FILE;
          }

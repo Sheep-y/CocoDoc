@@ -90,7 +90,13 @@ public class MainStage {
             try {
                web.getEngine().loadContent( CocoUtils.getText( file ) );
             } catch (IOException ex ) {
-               web.getEngine().loadContent( ex.getMessage() );
+               if ( file == CocoConfig.LGPL_FILE || file == CocoConfig.GPL_FILE ) {
+                  web.getEngine().loadContent( "This program is free software: you can redistribute it and/or modify " +
+                        "it under the terms of the <a href='http://www.gnu.org/licenses/lgpl.html'>Lesser GNU General Public License</a> " +
+                        "as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.");
+               } else {
+                  web.getEngine().loadContent( ex.getMessage() );
+               }
             }
          }
       } );
@@ -132,9 +138,13 @@ public class MainStage {
    Timer autoClose;
    int countdown = 0;
    public synchronized void autoClose() {
-      if ( autoClose != null ) autoClose.cancel();
+      if ( autoClose != null ) {
+         autoClose.cancel();
+         autoClose = null;
+      }
 
-      countdown= 5;
+      countdown= CocoDoc.option.auto_close_second;
+      if ( countdown < 0 ) return;
       autoClose = new Timer( "AutoClose", true );
 
       Platform.runLater( () -> {

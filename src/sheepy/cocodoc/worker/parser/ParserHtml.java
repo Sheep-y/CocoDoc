@@ -1,14 +1,13 @@
 package sheepy.cocodoc.worker.parser;
 
-import java.nio.charset.CodingErrorAction;
-import sheepy.cocodoc.worker.parser.coco.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.Block;
-import sheepy.util.Escape;
+import sheepy.cocodoc.worker.parser.coco.XmlNode;
+import sheepy.cocodoc.worker.parser.coco.XmlParser;
 import sheepy.util.Text;
 
 public class ParserHtml extends Parser {

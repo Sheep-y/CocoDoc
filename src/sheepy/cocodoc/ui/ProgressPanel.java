@@ -2,19 +2,32 @@ package sheepy.cocodoc.ui;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Region;
+import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoObserver;
 import sheepy.util.ui.JavaFX;
+import sheepy.util.ui.ObservableArrayList;
 
 public class ProgressPanel {
 
@@ -51,18 +64,37 @@ public class ProgressPanel {
    /**
     * Main job tab
     */
-   private static class ProgressTab extends ObserverTreeItem {
+   private static class ProgressTab extends ObserverEntity {
       final Tab tab = new Tab( "New Job" );
+      private final TreeTableView<ObserverEntity> tree = new TreeTableView<>( node );
+      private final ObservableList<ObserverEntity.Log> log = new ObservableArrayList<>();
+      private final TableView<ObserverEntity.Log> tblLog = new TableView<>();
       private final ProgressBar progress = new ProgressBar( ProgressBar.INDETERMINATE_PROGRESS );
+      private final Button btnCloseLog = new Button();
+      private final SplitPane pnlC = new SplitPane();
+
       private final AtomicInteger maxProgress = new AtomicInteger();
       private final AtomicInteger curProgress = new AtomicInteger();
 
       public ProgressTab( String name ) {
          super( name );
-         TreeTableView<ObserverTreeItem> tree = new TreeTableView<>( node );
-         TreeTableColumn<ObserverTreeItem, String> colName   = new TreeTableColumn<>( "Name"   );
-         TreeTableColumn<ObserverTreeItem, String> colMsg    = new TreeTableColumn<>( "Log"    );
-         TreeTableColumn<ObserverTreeItem, String> colStatus = new TreeTableColumn<>( "Status" );
+         Region pnlTree = createTreePane();
+         Region pnlLog = createLogPane();
+
+         pnlC.getItems().addAll( pnlLog, pnlTree );
+         pnlC.setOrientation( Orientation.VERTICAL );
+
+         node.setExpanded( true );
+         tab.setContent( pnlC );
+         tab.setClosable( false );
+         collapseLog( null );
+         updateLog();
+      }
+
+      private Region createTreePane() {
+         TreeTableColumn<ObserverEntity, String> colName   = new TreeTableColumn<>( "Name"   );
+         TreeTableColumn<ObserverEntity, String> colMsg    = new TreeTableColumn<>( "Log"    );
+         TreeTableColumn<ObserverEntity, String> colStatus = new TreeTableColumn<>( "Status" );
          colName  .setCellValueFactory( new TreeItemPropertyValueFactory<>( "name"    ) );
          colMsg   .setCellValueFactory( new TreeItemPropertyValueFactory<>( "message" ) );
          colStatus.setCellValueFactory( new TreeItemPropertyValueFactory<>( "status"  ) );
@@ -70,17 +102,72 @@ public class ProgressPanel {
          colMsg   .setPrefWidth( 350 );
          colStatus.setPrefWidth( 100 );
          tree.getColumns().addAll( colName, colMsg, colStatus );
-         node.setExpanded( true );
+         tree.getSelectionModel().selectedItemProperty().addListener( this::updateLog );
+         tree.setOnMouseClicked( evt -> {
+            if ( evt.getButton() == MouseButton.PRIMARY && evt.getClickCount() == 2 )
+               expandLog( null );
+         });
 
-         ScrollPane pnlCC = new ScrollPane( tree );
-         pnlCC.setFitToWidth ( true );
-         pnlCC.setFitToHeight( true );
+         ScrollPane result = new ScrollPane( tree );
+         result.setFitToWidth ( true );
+         result.setFitToHeight( true );
+         return result;
+      }
 
-         BorderPane pnlC = new BorderPane( pnlCC, progress, null, null, null );
+      private Region createLogPane() {
+         BorderPane pnlT = new BorderPane( progress );
+         pnlT.setLeft( btnCloseLog );
          progress.setMaxWidth( Double.MAX_VALUE );
 
-         tab.setContent( pnlC );
-         tab.setClosable( false );
+         TableColumn<ObserverEntity.Log, String> colTime    = new TableColumn<>( "Time (ms)" );
+         TableColumn<ObserverEntity.Log, String> colMessage = new TableColumn<>( "Message"   );
+         colTime   .setCellValueFactory( new PropertyValueFactory<>( "time"    ) );
+         colMessage.setCellValueFactory( new PropertyValueFactory<>( "message" ) );
+         colTime   .setPrefWidth( 100 );
+         colMessage.setPrefWidth( 650 );
+         tblLog.getColumns().addAll( colTime, colMessage );
+         ScrollPane pnlLogScroll = new ScrollPane( tblLog );
+         pnlLogScroll.setFitToWidth ( true );
+         pnlLogScroll.setFitToHeight( true );
+         pnlLogScroll.setMinHeight( 0 );
+         tblLog.setItems( log );
+
+         BorderPane pnlC = new BorderPane( pnlLogScroll );
+         pnlC.setTop( pnlT );
+         return pnlC;
+      }
+
+      private double minSplitPos = 0.0;
+      private double splitPos = 0.5;
+
+      private void expandLog ( ActionEvent evt ) {
+         if ( minSplitPos > 0 && pnlC.getDividerPositions()[0] > minSplitPos ) return;
+         pnlC.setDividerPosition( 0, splitPos );
+         splitPos = pnlC.getDividerPositions()[0];
+         btnCloseLog.setText( "▲" );
+         btnCloseLog.setOnAction( this::collapseLog );
+         int i = tree.getSelectionModel().getSelectedIndex();
+         if ( i >= 0 ) tree.scrollTo( i );
+      }
+
+      private void collapseLog ( ActionEvent evt ) {
+         splitPos = pnlC.getDividerPositions()[0];
+         pnlC.setDividerPosition( 0, 0 );
+         minSplitPos = pnlC.getDividerPositions()[0];
+         btnCloseLog.setText( "▼" );
+         btnCloseLog.setOnAction( this::expandLog );
+      }
+
+      private void updateLog() { updateLog( null, null, tree.getSelectionModel().getSelectedItem() ); }
+      private void updateLog( ObservableValue<? extends TreeItem<ObserverEntity>> observable, TreeItem<ObserverEntity> oldValue, TreeItem<ObserverEntity> newValue ) {
+         log.clear();
+         if ( newValue == null ) {
+            log.add( new Log( "Select a process to see message log" ) );
+         } else {
+            expandLog( null );
+            log.addAll( newValue.getValue().getLogs() );
+            tblLog.scrollTo( 0 );
+         }
       }
 
       void register       () { maxProgress.incrementAndGet(); updateProgress(); }
@@ -112,6 +199,8 @@ public class ProgressPanel {
             progress.setProgress( 1 );
             tab.setText( nameProperty().get() );
             tab.setClosable( true );
+            if ( CocoDoc.option.auto_collapse_level <= 0 )
+               node.setExpanded( false );
          } );
       }
    }
@@ -119,7 +208,7 @@ public class ProgressPanel {
    /**
     * Child job node
     */
-   private static class ProgressNode extends ObserverTreeItem {
+   private static class ProgressNode extends ObserverEntity {
       final ProgressTab tab;
 
       public ProgressNode( ProgressTab tab, TreeItem parent, String name ) {
@@ -139,9 +228,23 @@ public class ProgressPanel {
 
       @Override public void done () {
          super.done();
-         if ( tab.node == node.getParent() || node.getParent().getParent() == tab.node )
+         int level = findLevel( node );
+         if ( level <= 2 ) // Count progress of first two levels
             tab.arrive();
-         Platform.runLater( () -> node.setExpanded( false ) );
+         Platform.runLater( () -> {
+            if ( level >= CocoDoc.option.auto_collapse_level )
+               node.setExpanded( false );
+         } );
+      }
+
+      /** Tree root is 0, top visible nodes are 1. */
+      private static int findLevel( TreeItem t ) {
+         int level = -1;
+         while ( t != null ) {
+            t = t.getParent();
+            ++level;
+         }
+         return level;
       }
    }
 }
