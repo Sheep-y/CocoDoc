@@ -10,7 +10,7 @@ import javafx.scene.control.TreeItem;
 import sheepy.cocodoc.CocoObserver;
 
 /**
- * Bridge between CocoObserver and TreeTableView
+ * CocoObserver entity for JavFX (e.g. TreeTableView)
  */
 public abstract class ObserverTreeItem implements CocoObserver {
 

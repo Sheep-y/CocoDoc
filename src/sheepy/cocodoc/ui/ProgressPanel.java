@@ -1,6 +1,5 @@
 package sheepy.cocodoc.ui;
 
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import javafx.application.Platform;
 import javafx.scene.Node;
@@ -15,6 +14,7 @@ import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.layout.BorderPane;
 import sheepy.cocodoc.CocoObserver;
+import sheepy.util.ui.JavaFX;
 
 public class ProgressPanel {
 
@@ -51,7 +51,7 @@ public class ProgressPanel {
    /**
     * Main job tab
     */
-   private class ProgressTab extends ObserverTreeItem {
+   private static class ProgressTab extends ObserverTreeItem {
       final Tab tab = new Tab( "New Job" );
       private final ProgressBar progress = new ProgressBar( ProgressBar.INDETERMINATE_PROGRESS );
       private final AtomicInteger maxProgress = new AtomicInteger();
@@ -119,7 +119,7 @@ public class ProgressPanel {
    /**
     * Child job node
     */
-   private class ProgressNode extends ObserverTreeItem {
+   private static class ProgressNode extends ObserverTreeItem {
       final ProgressTab tab;
 
       public ProgressNode( ProgressTab tab, TreeItem parent, String name ) {
@@ -127,15 +127,10 @@ public class ProgressPanel {
          this.tab = tab;
          if ( parent == tab.node || parent.getParent() == tab.node ) // Count progress of first two levels
             tab.register();
-         CountDownLatch latch = new CountDownLatch(1);
-         Platform.runLater( () -> {
+         JavaFX.runNow( () -> {
             node.setExpanded( true );
             parent.getChildren().add( node );
-            latch.countDown();
-         });
-         try {
-            latch.await();
-         } catch ( InterruptedException ignored ) {}
+         } );
       }
 
       @Override public CocoObserver newNode ( String name ) {

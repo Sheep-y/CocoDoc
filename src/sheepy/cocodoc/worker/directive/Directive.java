@@ -34,6 +34,7 @@ public abstract class Directive {
    };
 
    public static Directive create ( String action, List<Task> tasks ) {
+      if ( action == null ) action = "";
       action = action.trim().toUpperCase();
       if ( action.isEmpty() ) action = "INLINE";
       try {

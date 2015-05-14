@@ -4,9 +4,12 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
 import static sheepy.cocodoc.CocoUtils.formatTime;
 import static sheepy.cocodoc.CocoUtils.milliToZonedDateTime;
+import sheepy.cocodoc.worker.Block;
+import sheepy.cocodoc.worker.BlockStats;
 import sheepy.cocodoc.worker.directive.Directive;
 
 public class TaskVar extends Task {
@@ -23,45 +26,49 @@ public class TaskVar extends Task {
          return;
       }
 
+      Block block = getBlock();
       String varname = getParam( 0 );
-      String value = "";
+      Object value = null;
       log( Level.FINER, "Processing variable {0}", varname );
       if ( getDirective().getTasks().size() == 1 )
-         getBlock().setName( "var(" + varname + ")" );
+         block.setName( "var(" + varname + ")" );
 
-      switch ( varname.toLowerCase() ) {
-         case "mtime":
-            if ( getDirective().getAction() == Directive.Action.POSTPROCESS )
-               value = formatTime( getBlock().getRoot().stats().getModifiedTime() );
-            else
-               value = "<?coco-postprocess " + toString() + " ?>";
+      switch ( varname ) {
+         case BlockStats.TIME_NOW:
+            value = ZonedDateTime.now();
             break;
 
-         case "btime":
-            value = formatTime( getBlock().stats().getBuildTime() );
-            break;
-
-         case "now":
-            value = formatTime( ZonedDateTime.now() );
-            break;
-
-         case "cocotime":
+         case BlockStats.TIME_COCO:
             if ( app_build_time == null ) {
                long epoch = CocoUtils.getBuildTime().orElse( 0l );
                if ( epoch > 0 )
-                  value = formatTime( milliToZonedDateTime( epoch ) );
+                  value = milliToZonedDateTime( epoch );
             }
             break;
 
-         default:
-            log( Level.WARNING, "Unknown variable {0}", varname );
-            return;
-      }
-      getBlock().setText( value );
+         case BlockStats.TIME_LAST_MOD :
+            if ( getDirective().getAction() != Directive.Action.POSTPROCESS ) {
+               value = "<?coco-postprocess " + toString() + " ?>";
+               break;
+            } // Otherwise fallthrough
 
-      if ( value.startsWith( "<?coco-postprocess " ) )
-         log( Level.FINEST, "Deferred to post process", varname );
+         default:
+            if ( ! block.stats().hasVar( varname ) )
+               throwOrWarn( new CocoRunError( "Variable not found: " + varname ) );
+            value = block.stats().getVar( varname );
+      }
+
+      if ( value == null ) {
+         value = "";
+      } else if ( value instanceof ZonedDateTime ) {
+         value = formatTime( (ZonedDateTime) value );
+      }
+
+      if ( value.toString().startsWith( "<?coco-postprocess " ) )
+         log( Level.FINEST, "Deferred variable {0} to post-process", varname );
       else
-         log( Level.FINEST, "Formatted var({0})", varname );
+         log( Level.FINEST, "Found variable {0}: {1}", varname, value );
+
+      getBlock().setText( value.toString() );
    }
 }

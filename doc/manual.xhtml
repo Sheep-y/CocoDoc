@@ -40,17 +40,19 @@
 <p>    These process may modify data in binary or text form.  If conversion is necessary, it will be done using last used encoding.</p>
 <dl>
   <dt>binary(utf-8)</dt>            <dd>Explictly convert text data to binary using the first encoding that works. Default utf-8. </dd>
+  <dt>define(name,value)</dt>       <dd>Define variable.</dd>
   <dt>text(utf-8)</dt>              <dd>Explictly convert binary data to text using the first encoding that works. Default utf-8,utf-16.</dd>
   <dt>coco</dt>                     <dd>Run coco parsing. [Text]</dd>
   <dt>deflate</dt>                  <dd>Deflate data at maximum compression. [Binary]</dd>
   <dt>decode(base64,xml)</dt>       <dd>Decode data from Base64 code / XML entities. [Text]</dd>
   <dt>encode(base64,xml,crlf)</dt>  <dd>Encode data into Base64 code / XML entities / JS string / URL / convert line breaks to lf/crlf. [Text]</dd>
-  <dt>html</dt>                     <dd>Run html parsing. [Text]</dd>
+  <dt>html(toc)</dt>                <dd>Run html parsing (no parameter), or output TOC. [Text]</dd>
   <dt>prefix("prefix")</dt>         <dd>Add text to head of data. Use <kbd>${auto-datauri}</kbd> to auto set mime and charset. [Text]</dd>
   <dt>postfix("postfix")</dt>       <dd>Add text to tail of data. [Text]</dd>
+  <dt>postprocess</dt>              <dd>Immediately post process data, instead of waiting until output. [Text]</dd>
   <dt>test(xml)</dt>                <dd>Test (validate) current data as xml. [Text or Binary]</dd>
   <dt>trim(xml,css,js,line,ws,crlf)</dt> <dd>Trim XML/CSS/JS comments, lines, multi spaces, and line breaks. "oneline" = "line,ws,crlf" [Text]</dd>
-  <dt>var(mtime,btime,now,cocotime)</dt> <dd>Dump file modified time (global), build time, current time, or compiler time. </dd>
+  <dt>var(name)</dt>                <dd>Replace with variable value (e.g. <code>time.build</code> for build time). </dd>
 </dl>
 <h4>HTML Parsing</h4>
 <p>    An (X)HTML document can be parsed to yield various information: </p>

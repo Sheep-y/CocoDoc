@@ -4,11 +4,11 @@ import java.util.logging.Level;
 import sheepy.cocodoc.worker.Block;
 
 public abstract class Parser implements AutoCloseable {
-   private Parser parent;
-   protected Block context;
-   protected boolean throwError = true;
+   private final Parser parent;
+   protected volatile Block context;
+   protected volatile boolean throwError = true;
 
-   public Parser() {}
+   public Parser() { parent = null; }
    public Parser(Parser parent) {
       this.parent = parent;
    }

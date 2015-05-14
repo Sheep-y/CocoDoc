@@ -8,7 +8,7 @@ import sheepy.util.Escape;
 import sheepy.util.Text;
 import sheepy.util.collection.NullData;
 
-public class XmlNode {
+public class XmlNode implements Cloneable {
 
    public static enum NODE_TYPE {
       TAG,
@@ -38,6 +38,12 @@ public class XmlNode {
 
    public CharSequence getValue() { return value; }
 
+   public CharSequence getAttributeValue() {
+      assert( type == NODE_TYPE.ATTRIBUTE );
+      if ( ! hasChildren() ) return getValue();
+      return Escape.unHtml( Text.unquote( children(0).getValue(), new char[]{ '\'', '"' } ) );
+   }
+
    public XmlNode getParent() { return parent; }
 
    public TextRange getRange() { return range; }
@@ -54,13 +60,27 @@ public class XmlNode {
 
    public boolean isValid() { return range.isValid(); }
 
-   public List<XmlNode> children() {
-      return NullData.nonNull(child);
-   }
+   public boolean hasChildren () { return child != null && ! child.isEmpty(); }
+   public XmlNode children ( int i ) { return child.get( i ); }
+   public List<XmlNode> children () { return NullData.nonNull(child); }
 
    @Override public String toString() {
       String typeStr = type == null ? "XmlNode" : type.name().toLowerCase();
       return typeStr + '[' + range.start + ',' + range.end + "]: " + Text.ellipsisWithin(value, 8);
+   }
+
+   @Override public XmlNode clone() {
+      try {
+         XmlNode result = (XmlNode) super.clone();
+         if ( child != null ) {
+            result.child = new ArrayList<>( child.size() );
+            for ( XmlNode node : child )
+               result.child.add( node.clone() );
+         }
+         return result;
+      } catch ( CloneNotSupportedException ex ) {
+         return null;
+      }
    }
 
    static StringBuilder prefix = new StringBuilder();
@@ -84,7 +104,7 @@ public class XmlNode {
          case TEXT     :
             return result.append( Escape.unHtml( getValue() ) );
          case VALUE    :
-            return result.append( Escape.unHtml( Text.unquote( getValue(), new char[]{ '"', '\'' } ) ) );
+            return result.append( getAttributeValue() );
          case ATTRIBUTE:
          case TAG      :
             for ( XmlNode child : children() ) {
@@ -110,8 +130,8 @@ public class XmlNode {
 
          case ATTRIBUTE:
             result.append( getValue() );
-            if ( ! children().isEmpty() )
-               result.append( '=' ).append( children().get(0).getValue().toString() );
+            if ( hasChildren() )
+               result.append( '=' ).append( children(0).getValue().toString() );
             break;
 
          case TAG      :

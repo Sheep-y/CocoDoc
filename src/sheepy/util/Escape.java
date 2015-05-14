@@ -44,7 +44,11 @@ public class Escape {
 
    public static CharSequence unHtml( CharSequence input ) { return unHtml( input, false, CodingErrorAction.IGNORE ); }
    public static CharSequence unHtml( CharSequence input, boolean requireSemiColon, CodingErrorAction onerror  ) {
-      if ( input == null || input.length() <= 0 || input.toString().indexOf( '&' ) < 0 ) return input;
+      if ( input == null || input.length() <= 0 ) return input;
+      String test = input.toString();
+      if ( test.indexOf( '&' ) < 0 ) return input;
+      else if ( test.startsWith( "<![CDATA[" ) && test.endsWith( "]]>" ) ) return test.substring( 9, test.length()-3 );
+
       final StringBuilder result = new StringBuilder( input.length() );
       final Matcher m = numeric_entity_regx.matcher( input );
       for ( int pos = 0, len = input.length(), codepoint ; pos < len ; ) {

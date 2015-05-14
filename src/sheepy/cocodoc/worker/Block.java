@@ -26,7 +26,7 @@ import sheepy.util.concurrent.AbstractFuture;
 public class Block extends AbstractFuture<Block> {
    private final Block parent;
    private final Directive directive;
-   private final BlockStats stats = new BlockStats(this);
+   private final BlockStats stats;
    private String name = "";
    private File basePath;
    private Task outputTarget;
@@ -34,10 +34,9 @@ public class Block extends AbstractFuture<Block> {
    public Block ( Block parent, Directive directive ) {
       this.parent = parent;
       this.directive = directive;
-      if ( parent != null ) {
+      if ( parent != null )
          basePath = parent.basePath;
-         stats.cloneParentStat( parent.stats() );
-      }
+      stats = new BlockStats( this );
       directive.setBlock( this ); // Do throw NPE if null
       if ( directive.getContent() != null ) {
          setText( directive.getContent() );
@@ -60,33 +59,18 @@ public class Block extends AbstractFuture<Block> {
          }
 
          if ( hasData() ) {
-            if ( hasText() && getText().indexOf( "<?coco-postprocess " ) >= 0 ) {
-               log( Level.FINEST, "Post processing" );
-               Parser postprocessor = new ParserCoco( true );
-               postprocessor.start( this );
-               setText( postprocessor.get() );
-            }
-
             if ( getOutputTarget() != null ) {
                String fname = getOutputTarget().getParam( 0 );
                log( Level.FINEST, "Outputting to {0}", fname );
                if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
-                  File f = new File( getBasePath(), fname );
-                  if ( f.getParentFile() != null )
-                     f.getParentFile().mkdirs();
-                  byte[] data = getBinary();
-                  log( Level.FINE, "Writing {1} bytes to {0}.", f, data.length );
-                  try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
-                     out.write( data );
-                  } catch ( IOException ex ) {
-                     if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
-                  }
+                  postprocess();
+                  outputToFile(fname);
                }
                setText( null );
-            } else {
+            } else if ( getParent() == null ) {
                log( Level.FINEST, "Outputting to stdout" );
-               if ( getParent() == null )
-                  System.out.println( getText() );
+               postprocess();
+               System.out.println( getText() );
             }
          }
 
@@ -95,6 +79,29 @@ public class Block extends AbstractFuture<Block> {
          if ( hasObserver() ) getObserver().done();
       }
       return this;
+   }
+
+   public void postprocess() {
+      if ( hasText() && getText().indexOf( "<?coco-postprocess " ) >= 0 ) {
+         log( Level.FINEST, "Post processing" );
+         Parser postprocessor = new ParserCoco( true );
+         postprocessor.start( this );
+         setText( postprocessor.get() );
+      }
+   }
+
+   public void outputToFile(String fname) throws CocoRunError {
+      File f = new File( getBasePath(), fname );
+      if ( f.getParentFile() != null )
+         f.getParentFile().mkdirs();
+      byte[] data = getBinary();
+      log( Level.FINE, "Writing {1} bytes to {0}.", f, data.length );
+
+      try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
+         out.write( data );
+      } catch ( IOException ex ) {
+         if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
+      }
    }
 
    /**************************************************************************************************/

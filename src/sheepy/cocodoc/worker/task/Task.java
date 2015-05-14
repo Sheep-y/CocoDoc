@@ -32,6 +32,7 @@ public abstract class Task {
       POSITION,
 
       BINARY,
+      DEFINE,
       TEXT,
       CDATA,
       COCO,
@@ -41,6 +42,7 @@ public abstract class Task {
       HTML,
       PREFIX,
       POSTFIX,
+      POSTPROCESS,
       TEST,
       TRIM,
       VAR
@@ -64,21 +66,23 @@ public abstract class Task {
    public static Task create ( Action task, String ... params ) {
       Task result = null;
       switch ( task ) {
-         case DELETE  : result = new TaskDelete(); break;
-         case POSITION: result = new TaskPosition(); break;
-         case COCO    : result = new TaskCoco(); break;
-         case CDATA   : result = new TaskCData(); break;
-         case DEFLATE : result = new TaskDeflate(); break;
-         case ENCODE  : result = new TaskEncode(); break;
-         case FILE    : result = new TaskFile(); break;
-         case HTML    : result = new TaskHtml(); break;
-         case PREFIX  : result = new TaskPrefix(); break;
-         case POSTFIX : result = new TaskPostfix(); break;
-         case TEXT    : result = new TaskText(); break;
-         case TEST    : result = new TaskTest(); break;
-         case TRIM    : result = new TaskTrim(); break;
-         case VAR     : result = new TaskVar(); break;
-         default      : throw new UnsupportedOperationException( "Unimplemented task: " + task );
+         case COCO       : result = new TaskCoco(); break;
+         case CDATA      : result = new TaskCData(); break;
+         case DEFINE     : result = new TaskDefine(); break;
+         case DELETE     : result = new TaskDelete(); break;
+         case DEFLATE    : result = new TaskDeflate(); break;
+         case ENCODE     : result = new TaskEncode(); break;
+         case FILE       : result = new TaskFile(); break;
+         case HTML       : result = new TaskHtml(); break;
+         case PREFIX     : result = new TaskPrefix(); break;
+         case POSITION   : result = new TaskPosition(); break;
+         case POSTFIX    : result = new TaskPostfix(); break;
+         case POSTPROCESS: result = new TaskPostProcess(); break;
+         case TEXT       : result = new TaskText(); break;
+         case TEST       : result = new TaskTest(); break;
+         case TRIM       : result = new TaskTrim(); break;
+         case VAR        : result = new TaskVar(); break;
+         default         : throw new UnsupportedOperationException( "Unimplemented task: " + task );
       }
       return result.addParam( params );
    }

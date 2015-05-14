@@ -130,7 +130,7 @@ public class ParserCoco extends Parser {
       }
       if ( tagCount <= 0 ) resultStack = null;
       if ( ! text.isEmpty() ) addToResult( text );
-      log( Level.FINEST, "Coco direcitves parsed" );
+      log( Level.FINEST, "Coco directives parsed" );
    }
 
    private Directive parseDirective ( String tag, Matcher start ) {
@@ -166,7 +166,7 @@ public class ParserCoco extends Parser {
          if ( ex instanceof CocoRunError )
             throwOrWarn( (CocoRunError) ex );
          else if ( ex instanceof CocoParseError )
-            throwOrWarn( (CocoRunError) ex );
+            throwOrWarn( (CocoParseError) ex );
          else
             throwOrWarn( new CocoRunError( ex ) );
          return null;
@@ -337,7 +337,7 @@ public class ParserCoco extends Parser {
             for ( Task task : e.dir.getTasks() ) try {
                switch ( task.getAction() ) {
                   case DELETE:
-                     if ( document == null ) document = new XmlParser().parse( resultText );
+                     if ( document == null ) document = new XmlParser( context ).parse( resultText );
                      for ( String param : task.getParams() )
                         deleteFromResult( parseSelector( param ).locate( resultText, document.range( e.position ) ).clone() );
                      break;
@@ -354,17 +354,17 @@ public class ParserCoco extends Parser {
             if ( e.dir.getAction() == Directive.Action.OUTPUT ) continue;
             final Block block = e.dir.get();
             if ( block != null && block.hasData() && e.position.isValid() ) try {
-               if ( document == null && positionTask != null ) document = new XmlParser().parse( resultText );
+               if ( document == null && positionTask != null ) document = new XmlParser( context ).parse( resultText );
                TextRange insPos = positionTask == null
                      ? e.position
                      : parseSelector( positionTask.getParam( 0 ) ).locate( resultText, document.range( e.position ) ).clone();
                // If range is an attribute, target its value instead.
                if ( insPos.context != null && insPos.context.getType() == XmlNode.NODE_TYPE.ATTRIBUTE && insPos.context.range.equals( insPos ) ) {
                   XmlNode attr = insPos.context;
-                  if ( attr.children().size() <= 0 ) {
+                  if ( ! attr.hasChildren() ) {
                      log( Level.WARNING, "Target position attribute has no value. Replacing attribute instead." );
                   } else {
-                     insPos = attr.children().get(0).range;
+                     insPos = attr.children(0).range;
                   }
                }
                deleteFromResult( insPos );
@@ -374,7 +374,7 @@ public class ParserCoco extends Parser {
                positionTask.throwOrWarn( ex );
             }
          }
-         log( Level.FINEST, "Coco direcitves executed" );
+         log( Level.FINEST, "Coco directives executed" );
       } catch ( InterruptedException ex ) {
          Thread.currentThread().interrupt();
          return null;

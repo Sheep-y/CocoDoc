@@ -28,7 +28,7 @@ public class TaskCoco extends Task {
       log( Level.FINER, "Parsing Coco direcitve" );
       try ( ParserCoco parser = new ParserCoco( startTag, endTag ) ) {
          parser.start( getBlock() );
-         log( Level.FINEST, "Executing Coco direcitves" );
+         log( Level.FINEST, "Executing Coco directives" );
          getBlock().setText( parser.get() );
       } catch ( CocoRunError | CocoParseError ex ) {
          throwOrWarn( ex );
