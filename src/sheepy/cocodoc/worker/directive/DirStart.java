@@ -7,7 +7,7 @@ import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.Worker;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.task.Task;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 
 public class DirStart extends Directive {
 

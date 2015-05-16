@@ -9,7 +9,7 @@ import java.util.logging.Logger;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.directive.Directive;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 import sheepy.util.collection.CollectionPredicate;
 import sheepy.util.collection.NullData;
 

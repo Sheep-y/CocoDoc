@@ -1,4 +1,4 @@
-package sheepy.util;
+package sheepy.util.text;
 
 import java.nio.charset.Charset;
 import java.util.Collection;

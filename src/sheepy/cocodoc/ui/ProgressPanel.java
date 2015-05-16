@@ -99,7 +99,7 @@ public class ProgressPanel {
          colMsg   .setCellValueFactory( new TreeItemPropertyValueFactory<>( "message" ) );
          colStatus.setCellValueFactory( new TreeItemPropertyValueFactory<>( "status"  ) );
          colName  .setPrefWidth( 300 );
-         colMsg   .setPrefWidth( 350 );
+         colMsg   .setPrefWidth( 330 );
          colStatus.setPrefWidth( 100 );
          tree.getColumns().addAll( colName, colMsg, colStatus );
          tree.getSelectionModel().selectedItemProperty().addListener( this::updateLog );
@@ -124,7 +124,7 @@ public class ProgressPanel {
          colTime   .setCellValueFactory( new PropertyValueFactory<>( "time"    ) );
          colMessage.setCellValueFactory( new PropertyValueFactory<>( "message" ) );
          colTime   .setPrefWidth( 100 );
-         colMessage.setPrefWidth( 650 );
+         colMessage.setPrefWidth( 630 );
          tblLog.getColumns().addAll( colTime, colMessage );
          ScrollPane pnlLogScroll = new ScrollPane( tblLog );
          pnlLogScroll.setFitToWidth ( true );

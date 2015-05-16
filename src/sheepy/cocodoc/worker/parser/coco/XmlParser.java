@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.logging.Level;
 import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.parser.Parser;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 
 /**
  * Given a string, parse it into XmlNodes.
@@ -143,7 +143,7 @@ public class XmlParser extends Parser {
 
    private void parseTagContent ( XmlNode parent ) {
       while ( ! done() ) {
-         parent.add(new XmlNode( XmlNode.NODE_TYPE.TEXT, until( '<', false, null ), -1, pos ) );
+         parent.add( new XmlNode( XmlNode.NODE_TYPE.TEXT, until( '<', false, null ), -1, pos ) );
          if ( peek() == '<' ) {
             char leadChar = peek2();
             if ( leadChar == '!' ) {

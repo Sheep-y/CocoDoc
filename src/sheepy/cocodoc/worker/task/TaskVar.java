@@ -4,6 +4,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
 import static sheepy.cocodoc.CocoUtils.formatTime;
@@ -48,6 +49,8 @@ public class TaskVar extends Task {
 
          case BlockStats.TIME_LAST_MOD :
             if ( getDirective().getAction() != Directive.Action.POSTPROCESS ) {
+               if ( getDirective().getTasks().size() > 1 )
+                  throw new CocoParseError( "Last modified time must be used alone to be deferred for post process." );
                value = "<?coco-postprocess " + toString() + " ?>";
                break;
             } // Otherwise fallthrough
@@ -69,6 +72,6 @@ public class TaskVar extends Task {
       else
          log( Level.FINEST, "Found variable {0}: {1}", varname, value );
 
-      getBlock().setText( value.toString() );
+      getBlock().getText().append( value.toString() );
    }
 }

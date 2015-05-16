@@ -16,7 +16,7 @@ import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import static sheepy.cocodoc.worker.directive.Directive.Action.OUTPUT;
 import static sheepy.cocodoc.worker.directive.Directive.Action.START;
 import sheepy.cocodoc.worker.task.Task;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 import sheepy.util.collection.NullData;
 
 public abstract class Directive {

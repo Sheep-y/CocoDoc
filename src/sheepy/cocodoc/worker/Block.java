@@ -17,8 +17,9 @@ import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 import sheepy.cocodoc.worker.task.Task;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 import sheepy.util.concurrent.AbstractFuture;
+import sheepy.util.text.I18n;
 
 /**
  * A document processing block.
@@ -188,7 +189,7 @@ public class Block extends AbstractFuture<Block> {
       IOException error = null;
       int textLen = textResult.length();
       for ( Charset charset : toBinaryCharset ) try {
-         setBinary( CharsetUtils.encode( textResult, CharsetUtils.strictEncoder( charset ) ) );
+         setBinary(I18n.encode(textResult, I18n.strictEncoder( charset ) ) );
          currentCharset = charset;
          log( Level.FINEST, "Converted {0} characters to {1} binary.", textLen, charset );
          return;
@@ -207,7 +208,7 @@ public class Block extends AbstractFuture<Block> {
       byte[] buf = binaryResult.toByteArray();
       IOException error = null;
       for ( Charset charset : toTextCharset ) try {
-         setText( CharsetUtils.decode( buf, CharsetUtils.strictDecoder( charset ) ) );
+         setText(I18n.decode(buf, I18n.strictDecoder( charset ) ) );
          currentCharset = charset;
          log( Level.FINEST, "Converted {0} bytes of {1} to text.", buf.length, charset );
          return;

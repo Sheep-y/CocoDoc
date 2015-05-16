@@ -1,4 +1,4 @@
-package sheepy.util;
+package sheepy.util.text;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -18,7 +18,7 @@ public class Escape {
 
    public static String xml ( CharSequence text ) {
       if (text == null) return null;
-      return text.toString().replaceAll("&", "&#38;").replaceAll("/", "&#34;").replaceAll("'", "&#39;").replaceAll("\"", "&#47;").replaceAll("<", "&lt;").replaceAll("<", "&gt;");
+      return text.toString().replaceAll("&", "&amp;").replaceAll("/", "&#34;").replaceAll("'", "&#39;").replaceAll("\"", "&#47;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
    }
 
    @SuppressWarnings("deprecation")

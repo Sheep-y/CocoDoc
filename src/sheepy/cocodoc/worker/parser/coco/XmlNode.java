@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
-import sheepy.util.Escape;
-import sheepy.util.Text;
+import sheepy.util.text.Escape;
+import sheepy.util.text.Text;
 import sheepy.util.collection.NullData;
 
 public class XmlNode implements Cloneable {
@@ -25,7 +25,7 @@ public class XmlNode implements Cloneable {
    List<XmlNode> child;
    XmlNode parent;
 
-   XmlNode ( NODE_TYPE type, CharSequence value, int start, int end ) {
+   public XmlNode ( NODE_TYPE type, CharSequence value, int start, int end ) {
       this.type = type;
       this.value = value != null && value.length() > 0 ? value : null;
       if (start < 0 && value != null) {
@@ -38,13 +38,19 @@ public class XmlNode implements Cloneable {
 
    public CharSequence getValue() { return value; }
 
+   public boolean hasAttribute ( CharSequence attr ) {
+      return getAttribute( attr ) != null;
+   }
+   public XmlNode getAttribute ( CharSequence attr ) {
+      if ( child == null ) return null;
+      return child.stream().filter( e -> e.getType() == NODE_TYPE.ATTRIBUTE && e.getValue().equals( attr ) ).findFirst().orElse( null );
+   }
+
    public CharSequence getAttributeValue() {
       assert( type == NODE_TYPE.ATTRIBUTE );
       if ( ! hasChildren() ) return getValue();
       return Escape.unHtml( Text.unquote( children(0).getValue(), new char[]{ '\'', '"' } ) );
    }
-
-   public XmlNode getParent() { return parent; }
 
    public TextRange getRange() { return range; }
 
@@ -58,7 +64,7 @@ public class XmlNode implements Cloneable {
       return new TextRange( start, end ).setContext( this );
    }
 
-   public boolean isValid() { return range.isValid(); }
+   public boolean isValid() { return range != null && range.isValid(); }
 
    public boolean hasChildren () { return child != null && ! child.isEmpty(); }
    public XmlNode children ( int i ) { return child.get( i ); }
@@ -74,13 +80,15 @@ public class XmlNode implements Cloneable {
          XmlNode result = (XmlNode) super.clone();
          if ( child != null ) {
             result.child = new ArrayList<>( child.size() );
-            for ( XmlNode node : child )
-               result.child.add( node.clone() );
+            for ( XmlNode node : child ) {
+               node = node.clone();
+               result.child.add( node );
+               node.parent = this;
+            }
          }
+         result.parent = null;
          return result;
-      } catch ( CloneNotSupportedException ex ) {
-         return null;
-      }
+      } catch ( CloneNotSupportedException ignored ) { return null; }
    }
 
    static StringBuilder prefix = new StringBuilder();
@@ -169,40 +177,71 @@ public class XmlNode implements Cloneable {
    /*******************************************************************/
    // Modification
 
-   List<XmlNode> makeList() {
+   List<XmlNode> makeList () {
       if (child == null) {
          child = new ArrayList<>(4);
       }
       return child;
    }
 
-   void add(XmlNode node) {
-      if (node.value == null || node.range == null || node.range.start == node.range.end) {
+   public void add ( XmlNode node ) {
+      if ( node.value == null || ! node.isValid() || node.range.length() <= 0 ) {
          return;
       }
-      if (node.parent != null) {
-         node.parent.child.remove(node);
+      if ( node.parent != null ) {
+         node.parent.child.remove( node );
       }
-      makeList().add(node);
+      makeList().add( node );
       node.parent = this;
    }
 
-   void shiftInserted(int atPosition, int deviation) {
+   public void remove ( XmlNode node ) {
+      if ( child == null || ! child.remove( node ) ) throw new IndexOutOfBoundsException();
+   }
+
+   public void setAttribute ( CharSequence attr, CharSequence value ) {
+      // TODO: Adjust range
+      XmlNode node = getAttribute( attr );
+      if ( node != null ) {
+         if ( value == null ) { // Exists and delete
+            remove( node );
+            return;
+         } else if ( node.hasChildren() ) // Exists and set
+            node.child.clear();
+      } else {
+         if ( value == null ) return; // Non exists and delete
+         add( node = new XmlNode( NODE_TYPE.ATTRIBUTE, attr, 0, attr.length() ) ); // Non exists and set
+      }
+      // Set
+      if ( value != null )
+         node.add( new XmlNode( NODE_TYPE.VALUE, '"' + Escape.xml( value ) + '"', 0, value.length()+2 ) );
+   }
+
+   void shiftInserted (int atPosition, int deviation) {
       range.shiftInserted(atPosition, deviation);
       for (XmlNode c : children() ) {
          c.shiftInserted(atPosition, deviation);
       }
    }
 
-   void shiftDeleted(TextRange range, boolean stayWhenDeleted) {
+   void shiftDeleted (TextRange range, boolean stayWhenDeleted) {
       range.shiftDeleted(range, stayWhenDeleted);
       for (XmlNode c : children() ) {
          c.shiftDeleted(range, stayWhenDeleted);
       }
    }
 
+   public XmlNode striptAttribute ( String ... attr ) {
+      this.stream( XmlNode.NODE_TYPE.TAG ).forEach( e -> {
+         for ( String a : attr ) e.setAttribute( a, null );
+      });
+      return this;
+   }
+
    /*******************************************************************/
    // Navigation
+
+   public XmlNode getParent() { return parent; }
 
    public XmlNode root () {
       return parent != null ? parent : this;
@@ -223,11 +262,11 @@ public class XmlNode implements Cloneable {
    }
 
    XmlNode findChildrenOver ( int position ) {
-      if (!range.isValid() || range.start > position || range.end < position) {
+      if ( !range.isValid() || range.start > position || range.end < position ) {
          return null;
       }
-      if (child != null) {
-         for (XmlNode c : child) {
+      if ( child != null ) {
+         for ( XmlNode c : child ) {
             XmlNode result = c.findChildrenOver(position);
             if (result != null) {
                return result;
@@ -260,5 +299,20 @@ public class XmlNode implements Cloneable {
       List<XmlNode> child = parent.child;
       if ( child.get( child.size()-1 ) == this ) return parent;
       return child.get( child.indexOf( this ) + 1 );
+   }
+
+   public int index () {
+      if ( parent == null ) return -1;
+      return parent.children().indexOf( this );
+   }
+
+   public XmlNode nextElement () {
+      if ( parent == null ) return null;
+      List<XmlNode> child = parent.child;
+      for ( int i = index()+1 ; i < child.size() ; i++ ) {
+         if ( child.get( i ).getType() == NODE_TYPE.TAG )
+            return child.get( i );
+      }
+      return null;
    }
 }

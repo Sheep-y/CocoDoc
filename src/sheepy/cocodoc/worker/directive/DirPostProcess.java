@@ -14,7 +14,7 @@ public class DirPostProcess extends Directive {
 
    @Override public Directive start( Block parent ) {
       branchObserver( parent, toString() );
-      log( Level.FINEST, "Started", this );
+      log( Level.FINEST, "Created postprocess job.", this );
       Worker.run( new Block( parent, this ) );
       return this;
    }

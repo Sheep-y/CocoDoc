@@ -59,7 +59,7 @@ public class Worker {
          if ( e instanceof Error          ) throw (Error         ) e;
          throw new CocoRunError( e );
       } finally {
-         block.log( Level.FINER, "Returned", block );
+         block.log( Level.FINER, "Returned result", block );
       }
    }
 

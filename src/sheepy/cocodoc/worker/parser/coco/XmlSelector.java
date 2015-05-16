@@ -4,7 +4,7 @@ import java.util.List;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.parser.coco.XmlNode.NODE_TYPE;
 import sheepy.cocodoc.worker.task.Task;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 import sheepy.util.collection.NullData;
 
 /**

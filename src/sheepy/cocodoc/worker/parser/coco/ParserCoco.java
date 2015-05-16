@@ -16,7 +16,7 @@ import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElement.PosElementAttr;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.cocodoc.worker.task.TaskFile;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 import sheepy.util.collection.NullData;
 
 public class ParserCoco extends Parser {

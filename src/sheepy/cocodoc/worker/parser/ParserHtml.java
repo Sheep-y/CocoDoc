@@ -1,19 +1,24 @@
 package sheepy.cocodoc.worker.parser;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.Block;
+import sheepy.cocodoc.worker.BlockStats;
 import sheepy.cocodoc.worker.parser.coco.XmlNode;
 import sheepy.cocodoc.worker.parser.coco.XmlParser;
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 
 public class ParserHtml extends Parser {
    private static final boolean logDetails = false;
 
-   private String latestId = null;
+   private String lastId = null;
 
    public ParserHtml () {}
    public ParserHtml ( Parser parent ) {
@@ -43,13 +48,16 @@ public class ParserHtml extends Parser {
                   break;
 
                case ATTRIBUTE :
-                  String cocoName = getCocoAttr( node.getValue() );
-                  if ( cocoName != null )
-                     handleCocoDataAttr( cocoName, node );
-                  else if ( isId( node.getValue() ) && node.hasChildren() )
-                     latestId = node.getAttributeValue().toString();
+                  if ( node.hasChildren() ) {
+                     String cocoName = getCocoAttr( node.getValue() );
+                     if ( cocoName != null )
+                        handleCocoDataAttr( cocoName, node.getAttributeValue().toString(), node.getParent() );
+                     else if ( isId( node.getValue() ) )
+                        lastId = node.getAttributeValue().toString();
+                  }
             }
          });
+         context.stats().setVar( VAR_HEADER, title );
       } catch ( CocoRunError | CocoParseError ex ) {
          throwOrWarn( ex );
       } finally {
@@ -68,34 +76,57 @@ public class ParserHtml extends Parser {
             && tagName.toString().toLowerCase().equals( "id" );
    }
 
+   private void updateId ( XmlNode node ) {
+      XmlNode id = node.getAttribute( "id" );
+      if ( id != null && id.hasChildren() )
+         lastId = id.getAttributeValue().toString();
+   }
    /*******************************************************************************************************************/
    // Headers
+
+   public static String VAR_HEADER = "__html.headers__";
 
    public class Header {
       public final Header parent;
       public final XmlNode tag;
-      public final String html;
       public final String id;
       public final byte level;
       public volatile List<Header> children;
 
-      private Header () { this( null, null, null, (byte) 0 ); }
-      private Header ( Header parent, XmlNode tag, CharSequence html, byte level ) {
+      private Header () { this( null, null, (byte) 0 ); }
+      private Header ( Header parent, XmlNode tag, byte level ) {
          this.parent = parent;
          this.tag = tag;
-         this.html = Text.nonNull( html );
-         this.id = Text.nonNull( latestId );
+         this.id = Text.nonNull( lastId );
          this.level = level;
       }
 
-      @Override public String toString() { return html == null ? "" : html.toString(); }
+      private int index () {
+         if ( parent == null ) return -1;
+         return parent.children.indexOf( this ) + 1;
+      }
+
+      private StringBuilder indexString ( StringBuilder buf ) {
+         if ( parent == null )
+            return buf == null ? new StringBuilder( "0" ) : buf;
+
+         if ( buf == null )
+            buf = new StringBuilder();
+         else
+            buf.insert( 0, '.' );
+         buf.insert( 0, index() );
+         if ( parent != null ) parent.indexString( buf );
+
+         return buf;
+      }
+
+      @Override public String toString() { return tag.getXml().toString(); }
    }
 
    private Header title = new Header();
    private Header lastHeader = title;
    private int headerCount = 0;
 
-   public Header getHeaders () { return title; }
    public int getHeaderCount () { return headerCount; }
 
    public static boolean isHeader ( CharSequence tagName ) {
@@ -117,12 +148,11 @@ public class ParserHtml extends Parser {
          throw new CocoParseError( "Recursive headers are ignored (" + content + ")" );
 
       // Identify id
-      node.stream( XmlNode.NODE_TYPE.ATTRIBUTE ).filter( e -> isId( e.getValue() ) && e.hasChildren() )
-            .findFirst().ifPresent( e -> latestId = e.getAttributeValue().toString() );
-      if ( latestId == null || latestId.isEmpty() )
+      updateId( node );
+      if ( lastId == null || lastId.isEmpty() )
          throw new CocoRunError( "No anchor found for header " + content );
-      if ( lastHeader != null && latestId.equals( lastHeader.id )  )
-         throw new CocoRunError( "Duplicate anchor " + latestId + " found for header " + content );
+      if ( lastHeader != null && lastId.equals( lastHeader.id )  )
+         throw new CocoRunError( "Duplicate anchor " + lastId + " found for header " + content );
 
       // Moves to correct position in header tree
       byte level = Byte.parseByte( node.getValue().subSequence( 1, 2 ).toString() );
@@ -138,7 +168,7 @@ public class ParserHtml extends Parser {
       }
 
       // Insert to header tree
-      Header h = new Header( lastHeader, node.clone(), content, level );
+      Header h = new Header( lastHeader, node.clone().striptAttribute( "id" ), level );
       if ( lastHeader.children == null )
          lastHeader.children = new ArrayList<>();
       lastHeader.children.add( h );
@@ -147,16 +177,33 @@ public class ParserHtml extends Parser {
    }
 
    public void handleTitle ( XmlNode node ) {
-      CharSequence content = node.getXml();
-      if ( logDetails ) log( Level.FINEST, "Found title {0}", content );
+      if ( logDetails ) log(Level.FINEST, "Found title {0}", node.getXml());
       Header orig = title;
-      title = new Header( null, node.clone(), content, (byte) 0 );
+      title = new Header( null, node.clone().striptAttribute( "id" ), (byte) 0 );
       title.children = orig.children;
       if ( lastHeader == orig ) lastHeader = title;
    }
 
    /*******************************************************************************************************************/
    // Attributes
+
+   private int indexCount = 0;
+   private int glossaryCount = 0;
+
+   public int getIndexCount () { return indexCount; }
+   public int getGlossaryCount () { return glossaryCount; }
+
+   public static String VAR_INDEX ( CharSequence name ) {
+      if ( name == null || name.length() <= 0 )
+         return "__html.index__";
+      return "__html.index." + name + "__";
+   }
+
+   public static String VAR_GLOSSARY ( CharSequence name ) {
+      if ( name == null || name.length() <= 0 )
+         return "__html.glossary__";
+      return "__html.glossary." + name + "__";
+   }
 
    public static String getCocoAttr ( CharSequence tagName ) {
       if ( tagName.length() > 10 // "data-coco-"
@@ -168,14 +215,97 @@ public class ParserHtml extends Parser {
       return null;
    }
 
-   private void handleCocoDataAttr ( String name, XmlNode node ) {
-      if ( name.startsWith( "index" ) ) {
-         if ( logDetails ) log( Level.FINEST, "Found index attribute {0} on {1}", node, node.getParent() );
-      } else if ( name.startsWith( "glossary" ) ) {
-         if ( logDetails ) log( Level.FINEST, "Found glossary attribute {0} on {1}", node, node.getParent() );
+   private void handleCocoDataAttr ( String type, String key, XmlNode node ) {
+      String full_type = type;
+      String name = "";
+      int pos = type.indexOf( '-' );
+      if ( pos > 0 ) {
+         name = type.substring( pos + 1 );
+         type = type.substring( 0, pos );
+      }
+
+      if ( type.equals( "index" ) || type.equals( "glossary" ) ) {
+         if ( logDetails ) log( Level.FINEST, "Found {0} attribute on {1}", type, node );
+
+         String varKey = type.equals( "index" ) ? VAR_INDEX( name ) : VAR_GLOSSARY( name );
+         BlockStats stats = context.getRoot().stats();
+         Map<String,List<XmlNode>> data = null;
+
+         // Get or create the named index / glossary dataset
+         try ( Closeable lock = stats.lockVar() ) {
+            if ( ! stats.hasVar( varKey ) )
+               stats.setVar( varKey, data = new HashMap<>() );
+            else
+               data = (Map<String,List<XmlNode>>) stats.getVar( varKey );
+         } catch ( IOException ignored ) {}
+
+         // Get or set value list
+         List<XmlNode> list = data.get( key );
+         if ( list == null ) data.put( key, list = new ArrayList<>(4) );
+
+         if ( type.equals( "index" ) )
+            handleIndexData( list, full_type, node );
+         else
+            handleGlossaryData( list, full_type, node );
+
       } else {
-         throw new CocoParseError( "Unknown HTML attribute: " + node.getValue() );
+         throw new CocoParseError( "Unknown HTML attribute: data-coco-" + type );
       }
    }
 
+   /** Return index link */
+   private void handleIndexData ( List<XmlNode> list, String name, XmlNode node ) {
+      // Identify id
+      updateId( node );
+      if ( lastId == null || lastId.isEmpty() )
+         throw new CocoRunError( "No anchor found for index " + node.getXml() );
+
+      // Create and return an index link
+      XmlNode result = new XmlNode( XmlNode.NODE_TYPE.TAG, "a", 0, 1 );
+      if ( node.hasAttribute( "id" ) ) lastId = node.getAttribute( "id" ).getAttributeValue().toString();
+      result.setAttribute( "href", '#' + lastId );
+      CharSequence text = lastHeader.indexString( null ) + ". " + lastHeader.tag.getTextContent().toString().trim();
+      result.add( new XmlNode( XmlNode.NODE_TYPE.TEXT, text, 0, 5 ) );
+
+      ++ indexCount;
+      if ( logDetails ) log( Level.FINEST, "Saved index {0}", result.getXml() );
+      list.add( result );
+   }
+
+   /** Return glossary definition */
+   private void handleGlossaryData ( List<XmlNode> list, String name, XmlNode node ) {
+      //while ( node.getParent() != null ) {
+         assert( node.getType() == XmlNode.NODE_TYPE.ATTRIBUTE );
+      /************************************************************** Disabled so that *any* tag can be glossary
+         String tagName = node.getValue().toString().toLowerCase();
+         switch ( tagName ) {
+            case "p":
+            case "dd":
+            case "article": case "aside": case "nav": case "section":
+      */
+               node = node.clone().striptAttribute( "id", "data-coco-" + name );
+               list.add( node );
+               ++glossaryCount;
+               if ( logDetails ) log( Level.FINEST, "Saved glossary {0}", node );
+      /*
+               return;
+
+            case "dt":
+               do {
+                  node = node.nextElement();
+                  if ( node != null && node.getType() == XmlNode.NODE_TYPE.ATTRIBUTE ) {
+                     if ( node.getValue().toString().toLowerCase().equals( "dd" ) ) {
+                        XmlNode item = node.striptAttribute( "id", "data-coco-" + name );
+                        list.add( item );
+                        ++glossaryCount;
+                        if ( logDetails ) log( Level.FINEST, "Saved glossary {0}", item );
+                     } else
+                        return;
+                  }
+               } while ( node != null );
+         }
+         node = node.getParent();
+      }
+      */
+   }
 }

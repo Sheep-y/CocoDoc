@@ -1,6 +1,6 @@
 package sheepy.cocodoc.worker.parser.coco;
 
-import sheepy.util.Text;
+import sheepy.util.text.Text;
 
 /**
  * Represents a range in integer

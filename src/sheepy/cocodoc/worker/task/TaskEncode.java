@@ -7,8 +7,8 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
-import sheepy.util.Escape;
-import sheepy.util.Text;
+import sheepy.util.text.Escape;
+import sheepy.util.text.Text;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 
 public class TaskEncode extends Task {
