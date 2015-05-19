@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoObserver;
 import sheepy.cocodoc.CocoRunError;
@@ -17,6 +18,7 @@ import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 import sheepy.cocodoc.worker.task.Task;
+import sheepy.util.collection.NullData;
 import sheepy.util.text.Text;
 import sheepy.util.concurrent.AbstractFuture;
 import sheepy.util.text.I18n;
@@ -31,6 +33,9 @@ public class Block extends AbstractFuture<Block> {
    private String name = "";
    private File basePath;
    private Task outputTarget;
+
+   private static final String VAR_OUTPUT_LIST   = "__io.output__";
+   private static final String VAR_ONDONE        = "__block.ondone__";
 
    public Block ( Block parent, Directive directive ) {
       this.parent = parent;
@@ -74,6 +79,14 @@ public class Block extends AbstractFuture<Block> {
             }
          }
 
+         if ( getParent() == null && stats().hasVar( VAR_ONDONE ) ) {
+            log( Level.FINER, "Dispatching ondone" );
+            List<Consumer<? super Block>> list = (List<Consumer<? super Block>>) stats().getVar( VAR_ONDONE );
+            for ( Consumer<? super Block> func : list ) {
+               func.accept( this );
+            }
+         }
+
          log( Level.FINER, "Finished" );
       } finally {
          if ( hasObserver() ) getObserver().done();
@@ -99,6 +112,7 @@ public class Block extends AbstractFuture<Block> {
 
       try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
          out.write( data );
+         stats().createVar( VAR_OUTPUT_LIST, new ArrayList<>() ).add( f );
       } catch ( IOException ex ) {
          if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
       }
@@ -268,6 +282,14 @@ public class Block extends AbstractFuture<Block> {
    public Task getOutputTarget() { return outputTarget; }
    public void setOutputTarget( Task output ) {
       this.outputTarget = output;
+   }
+   public List<File> getOutputList() {
+      return new ArrayList<>( NullData.nonNull( (List<File>) stats().getVar( VAR_OUTPUT_LIST ) ) );
+   }
+
+   public Block addOnDone( Consumer<? super Block> task ) {
+      stats.createVar( VAR_ONDONE, new ArrayList<>() ).add( task );
+      return this;
    }
 
    private Parser parser;

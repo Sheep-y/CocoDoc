@@ -1,11 +1,9 @@
 package sheepy.cocodoc.worker.task;
 
 import java.awt.Desktop;
-import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
-import java.util.Vector;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.worker.BlockStats;
@@ -14,8 +12,6 @@ import sheepy.cocodoc.worker.BlockStats;
  * Call OS to open specified file or last file in same directive.
  */
 public class TaskOpen extends Task {
-
-   private static final String VAR_OPEN_LIST = "__open.list__";
 
    @Override public Action getAction () { return Action.OPEN; }
 
@@ -48,37 +44,16 @@ public class TaskOpen extends Task {
    /** Add file to open queue.  Start opener thread if this is the first file. */
    private void open ( String ... files ) {
       final BlockStats stats = getBlock().stats();
-      List<File> list = (List<File>) stats.getVar( VAR_OPEN_LIST );
-      if ( list == null ) try ( Closeable lock = stats.lockVar() ) {
-         if ( ! stats.hasVar( VAR_OPEN_LIST ) ) {
-            stats.setVar( VAR_OPEN_LIST, list = new Vector<>() );
-            Thread opener = new Thread( this::open );
-            opener.setPriority( Thread.MIN_PRIORITY );
-            opener.setDaemon( true );
-            opener.start();
+      getBlock().addOnDone( (b) -> {
+         log( Level.FINE, "Opens {0} files", files.length );
+         File base = getBlock().getBasePath();
+         for ( String f : files ) try {
+            log( Level.FINEST, "Opening {0}", f );
+            Desktop.getDesktop().open( new File( base, f ) );
+            log( Level.FINEST, "Opened {0}", f );
+         } catch (IOException ex ) {
+            log( Level.WARNING, "Cannot open {0}: {1}", f, ex );
          }
-      } catch ( IOException ignored ) {}
-      File base = getBlock().getBasePath();
-      for ( String f : files )
-         list.add( new File( base, f ) );
-   }
-
-   /** Body of daemon opener thread.  Wait until main block done than call open */
-   private void open () {
-      log( Level.FINE, "Opener thread waiting" );
-      while ( getBlock().getRoot().isRunning() ) try { // Should not exit as long as run() has not returned.
-         Thread.sleep( 100 );
-      } catch ( InterruptedException ex ) {
-         return;
-      }
-      List<File> list = (List<File>) getBlock().stats().getVar( VAR_OPEN_LIST );
-      log( Level.FINE, "Opens {0} files", list.size() );
-      for ( File f : list ) try {
-         log( Level.FINEST, "Opening {0}", f );
-         Desktop.getDesktop().open( f );
-         log( Level.FINEST, "Opened {0}", f );
-      } catch (IOException ex) {
-         log( Level.WARNING, "Cannot open {0}: {1}", f, ex );
-      }
+      });
    }
 }

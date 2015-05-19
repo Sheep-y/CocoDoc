@@ -229,19 +229,14 @@ public class ParserHtml extends Parser {
 
          String varKey = type.equals( "index" ) ? VAR_INDEX( name ) : VAR_GLOSSARY( name );
          BlockStats stats = context.getRoot().stats();
-         Map<String,List<XmlNode>> data = null;
 
-         // Get or create the named index / glossary dataset
+         // Get or create the index / glossary list
+         List<XmlNode> list = null;
          try ( Closeable lock = stats.lockVar() ) {
-            if ( ! stats.hasVar( varKey ) )
-               stats.setVar( varKey, data = new HashMap<>() );
-            else
-               data = (Map<String,List<XmlNode>>) stats.getVar( varKey );
+            Map<String,List<XmlNode>> data = stats.createVar( varKey, new HashMap<>() ) ;
+            list = data.get( key );
+            if ( list == null ) data.put( key, list = new ArrayList<>(4) );
          } catch ( IOException ignored ) {}
-
-         // Get or set value list
-         List<XmlNode> list = data.get( key );
-         if ( list == null ) data.put( key, list = new ArrayList<>(4) );
 
          if ( type.equals( "index" ) )
             handleIndexData( list, full_type, node );

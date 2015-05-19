@@ -15,7 +15,8 @@ public class DirInline extends Directive {
    @Override public Directive start ( Block parent ) {
       branchObserver( parent, toString() );
       log( Level.FINEST, "Created inline job.", this );
-      Worker.run( new Block( parent, this ) );
+      if ( getBlock() == null ) setBlock( new Block( parent, this ) );
+      Worker.run( getBlock() );
       return this;
    }
 

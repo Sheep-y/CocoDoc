@@ -75,6 +75,15 @@ public class BlockStats {
       } catch ( IOException ignore ) { }
    }
 
+   public <T> T createVar( String name, T ifnew ) {
+      assert( ifnew != null );
+      try ( Closeable lock = lockVar() ) {
+         if ( hasVar( name ) ) return (T) root.variables.get( name );
+         root.variables.put( name, ifnew );
+         return ifnew;
+      } catch ( IOException ignore ) { return null; }
+   }
+
    private AtomicLong getLong( String name ) { return (AtomicLong) getVar( name ); }
    private ZonedDateTime getTime( String name ) { return (ZonedDateTime) getVar( name ); }
 

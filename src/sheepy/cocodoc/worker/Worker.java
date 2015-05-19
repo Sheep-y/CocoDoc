@@ -23,14 +23,14 @@ public class Worker {
    }
 
    public static void run( Block block ) {
-      run( block, block );
+      run( (Runnable) block );
    }
 
    public static void stop () {
       thread_pool.shutdownNow();
    }
 
-   public static void run( Runnable job, Block context ) {
+   public static void run( Runnable job ) {
       try {
          thread_pool.execute( job );
       } catch ( RejectedExecutionException ex ) {

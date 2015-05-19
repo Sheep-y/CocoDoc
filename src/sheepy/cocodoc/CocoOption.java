@@ -11,4 +11,7 @@ public class CocoOption {
    /** Collapse to which level. 2 = shows two level, 0 = collapse all, Integer.MAX = do not collapse */
    public static int auto_collapse_level = 2;
 
+   /** Auto open created files? */
+   public static boolean auto_open = false;
+
 }

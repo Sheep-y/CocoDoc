@@ -1,5 +1,7 @@
 package sheepy.cocodoc;
 
+import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,6 +14,7 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import static sheepy.cocodoc.CocoUtils.stripHtml;
 import sheepy.cocodoc.ui.MainStage;
+import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.directive.Directive;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import sheepy.cocodoc.worker.task.TaskCoco;
@@ -57,9 +60,18 @@ public class CocoDoc extends Application {
    public static void run ( String ... files ) {
       List<Directive> dirs = new ArrayList<>( config.runFiles.size() );
       for ( String file : files ) try {
-         dirs.add( Directive.create( INLINE,
-            Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() )
-         ).setObserver( stage.newNode( file ) ).start( null ) );
+         Directive dir = Directive.create( INLINE, Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() ) );
+         dir.setObserver( stage.newNode( file ) );
+         dir.setBlock( new Block( null, dir ).addOnDone( (b) -> {
+            if ( CocoOption.auto_open )
+               for ( File f : b.getOutputList() ) try {
+                  Desktop.getDesktop().open( f );
+               } catch ( IOException ex ) {
+                  b.log( Level.WARNING, ex.getMessage() );
+               }
+         } ) );
+         dirs.add( dir );
+         dir.start( null );
       } catch ( RuntimeException ex ) {
          ex.printStackTrace();
       }

@@ -118,6 +118,9 @@ public class MainStage {
 
    /*******************************************************************************************************************/
 
+   /** Set to true to temporary disable autoclose, e.g. when file dialog is open */
+   private boolean noAutoClose = false;
+
    private void resetBtnRun() {
       btnRun.setText( "New Build" );
       btnRun.setOnAction( this::btnRunOnAction );
@@ -129,10 +132,11 @@ public class MainStage {
          dlgOpen = new FileChooser();
          dlgOpen.setTitle( "Run CocoDoc on..." );
       }
+      noAutoClose = true;
       File file = dlgOpen.showOpenDialog( stage );
-      if ( file != null ) {
-         CocoDoc.run( file.toString() );
-      }
+      noAutoClose = false;
+      if ( file != null )
+         Worker.run( () -> CocoDoc.run( file.toString() ) );
    }
 
    Timer autoClose;
@@ -142,6 +146,7 @@ public class MainStage {
          autoClose.cancel();
          autoClose = null;
       }
+      if ( noAutoClose ) return;
 
       countdown= CocoDoc.option.auto_close_second;
       if ( countdown < 0 ) return;

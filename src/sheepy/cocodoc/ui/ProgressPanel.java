@@ -1,6 +1,8 @@
 package sheepy.cocodoc.ui;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -26,6 +28,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoObserver;
+import sheepy.util.Time;
 import sheepy.util.ui.JavaFX;
 import sheepy.util.ui.ObservableArrayList;
 
@@ -55,6 +58,7 @@ public class ProgressPanel {
             tabWelcome = null;
          }
          tabPane.getTabs().add( result.tab );
+         tabPane.getSelectionModel().select( result.tab );
       });
       return result;
    }
@@ -117,7 +121,7 @@ public class ProgressPanel {
       private Region createLogPane() {
          BorderPane pnlT = new BorderPane( progress );
          pnlT.setLeft( btnCloseLog );
-         progress.setMaxWidth( Double.MAX_VALUE );
+         progress.setMaxSize( Double.MAX_VALUE, Double.MAX_VALUE );
 
          TableColumn<ObserverEntity.Log, String> colTime    = new TableColumn<>( "Time (ms)" );
          TableColumn<ObserverEntity.Log, String> colMessage = new TableColumn<>( "Message"   );
@@ -137,11 +141,11 @@ public class ProgressPanel {
          return pnlC;
       }
 
-      private double minSplitPos = 0.0;
       private double splitPos = 0.5;
 
       private void expandLog ( ActionEvent evt ) {
-         if ( minSplitPos > 0 && pnlC.getDividerPositions()[0] > minSplitPos ) return;
+         if ( ( progress.getHeight() + 5 ) <= (int) Math.round( pnlC.getHeight() * pnlC.getDividerPositions()[0] ) )
+            return;
          pnlC.setDividerPosition( 0, splitPos );
          splitPos = pnlC.getDividerPositions()[0];
          btnCloseLog.setText( "▲" );
@@ -153,7 +157,6 @@ public class ProgressPanel {
       private void collapseLog ( ActionEvent evt ) {
          splitPos = pnlC.getDividerPositions()[0];
          pnlC.setDividerPosition( 0, 0 );
-         minSplitPos = pnlC.getDividerPositions()[0];
          btnCloseLog.setText( "▼" );
          btnCloseLog.setOnAction( this::expandLog );
       }
