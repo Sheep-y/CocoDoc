@@ -35,8 +35,8 @@ public class Block extends AbstractFuture<Block> {
    public Block ( Block parent, Directive directive ) {
       this.parent = parent;
       this.directive = directive;
-      if ( parent != null )
-         basePath = parent.basePath;
+      if ( parent != null && parent.basePath != null )
+         setBasePath( parent.basePath );
       stats = new BlockStats( this );
       directive.setBlock( this ); // Do throw NPE if null
       if ( directive.getContent() != null ) {
@@ -259,7 +259,11 @@ public class Block extends AbstractFuture<Block> {
    }
 
    public File getBasePath() { return basePath; }
-   public Block setBasePath( File basePath ) { this.basePath = basePath; return this; }
+   public Block setBasePath( File basePath ) {
+      log( Level.FINER, "Block base path set to {0}", basePath );
+      this.basePath = basePath;
+      return this;
+   }
 
    public Task getOutputTarget() { return outputTarget; }
    public void setOutputTarget( Task output ) {

@@ -17,7 +17,6 @@ import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElement.PosElementAttr;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.cocodoc.worker.task.TaskFile;
 import sheepy.util.text.Text;
-import sheepy.util.collection.NullData;
 
 public class ParserCoco extends Parser {
    private static final boolean logDetails = false;
@@ -153,7 +152,7 @@ public class ParserCoco extends Parser {
                if ( attr == null ) attr = attributeMatcher = CocoUtils.tagPool.get( attrRegx );
                while ( ! txt.isEmpty() ) {
                   if ( ! attr.reset( txt ).find() || attr.start() != 0 )
-                     throw new CocoParseError( "Cannot parse tasks " + txt );
+                     throw new CocoParseError( "Cannot parse tasks \"" + txt + "\"" );
 
                   tasks.add( parseTask( attr.group(1), attr.group(2) ) );
 
@@ -191,7 +190,7 @@ public class ParserCoco extends Parser {
             if ( txt.startsWith( "," ) ) txt = txt.substring( 1 ).trim();
          }
       }
-      return Task.create( taskname, NullData.nullIfEmpty( params ) );
+      return Task.create( taskname, params );
    }
 
    /**

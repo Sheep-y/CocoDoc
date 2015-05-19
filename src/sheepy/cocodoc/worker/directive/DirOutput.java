@@ -12,6 +12,7 @@ public class DirOutput extends Directive {
       for ( Task t : tasks ) {
          switch ( t.getAction() ) {
             case FILE:
+            case OPEN:
             case DELETE:
                break;
             default:
@@ -22,6 +23,8 @@ public class DirOutput extends Directive {
 
    @Override public Directive start ( Block parent ) {
       setBlock( parent );
+      if ( getObserver() == null )
+         setObserver( parent.getObserver() );
       // No point in starting a new Thread if we only have FILE and DELETE.
       for ( Task task : getTasks() )
          task.process();

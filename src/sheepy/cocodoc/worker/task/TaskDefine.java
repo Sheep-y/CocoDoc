@@ -18,8 +18,14 @@ public class TaskDefine extends Task {
    @Override protected void run () {
       if ( ! hasParams() ) return;
       String varname = getParam( 0 );
-      if ( BlockStats.predefined.contains( varname ) )
-         throwOrWarn( new CocoRunError( "Cannot override predefined variable " + varname ) );
+      if ( BlockStats.predefined.contains( varname ) ) {
+         throwOrWarn( new CocoRunError( "Cannot override predefined variable \"" + varname + '"' ) );
+         return;
+      }
+      if ( varname.length() >= 5 && varname.startsWith( "__" ) && varname.endsWith( "__" ) ) {
+         throwOrWarn( new CocoRunError( "Cannot set or override internal variable \"" + varname + '"' ) );
+         return;
+      }
       if ( getParams().size() == 1 ) {
          log( Level.FINER, "Delete variable {0}", varname );
          getBlock().stats().setVar( varname, null );
