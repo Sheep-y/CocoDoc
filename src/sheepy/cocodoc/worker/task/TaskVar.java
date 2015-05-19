@@ -48,16 +48,19 @@ public class TaskVar extends Task {
             break;
 
          case BlockStats.TIME_LAST_MOD :
-            if ( getDirective().getAction() != Directive.Action.POSTPROCESS ) {
-               if ( getDirective().getTasks().size() > 1 )
-                  throw new CocoParseError( "Last modified time must be used alone to be deferred for post process." );
-               value = "<?coco-postprocess " + toString() + " ?>";
-               break;
+            if ( ! isPostProcess() ) {
+               setPostProcess( "Last modified time" );
+               return;
             } // Otherwise fallthrough
 
          default:
-            if ( ! block.stats().hasVar( varname ) )
-               throwOrWarn( new CocoRunError( "Variable not found: " + varname ) );
+            if ( ! block.stats().hasVar( varname ) ) {
+               if ( ! isPostProcess() ) {
+                  setPostProcess( "Variable" );
+                  return;
+               } else // Otherwise fallthrough
+                  throwOrWarn( new CocoRunError( "Variable not found: " + varname ) );
+            }
             value = block.stats().getVar( varname );
       }
 

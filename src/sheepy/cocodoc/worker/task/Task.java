@@ -132,6 +132,13 @@ public abstract class Task {
       return this;
    }
 
+   protected boolean isPostProcess () { return getDirective().getAction() == Directive.Action.POSTPROCESS; }
+   protected void setPostProcess( String name ) {
+      if ( getDirective().getTasks().size() > 1 )
+         throw new CocoParseError( name + " must be used alone to be deferred for post process." );
+      getBlock().setText( "<?coco-postprocess " + toString() + " ?>" );
+   }
+
    public boolean isThrowError () { return throwError; }
    public void setThrowError( boolean throwError ) { this.throwError = throwError; }
    public <T extends Exception> void throwOrWarn ( T ex ) throws T {

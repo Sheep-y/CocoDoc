@@ -22,7 +22,7 @@ public class Worker {
       log.setLevel( Level.ALL );
    }
 
-   public static void run( Block block ) {
+   public static void run ( Block block ) {
       run( (Runnable) block );
    }
 
@@ -30,7 +30,7 @@ public class Worker {
       thread_pool.shutdownNow();
    }
 
-   public static void run( Runnable job ) {
+   public static void run ( Runnable job ) {
       try {
          thread_pool.execute( job );
       } catch ( RejectedExecutionException ex ) {
@@ -47,7 +47,7 @@ public class Worker {
       return result;
    }
 
-   public static Block getBlockResult( Block block ) throws InterruptedException {
+   public static Block getBlockResult ( Block block ) throws InterruptedException {
       try {
          return block.get();
       } catch ( ExecutionException ex ) {
@@ -62,5 +62,4 @@ public class Worker {
          block.log( Level.FINER, "Returned result", block );
       }
    }
-
 }

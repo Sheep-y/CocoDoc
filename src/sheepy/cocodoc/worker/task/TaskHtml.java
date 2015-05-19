@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import sheepy.cocodoc.CocoParseError;
-import sheepy.cocodoc.worker.directive.Directive;
 import sheepy.cocodoc.worker.parser.ParserHtml;
 import sheepy.cocodoc.worker.parser.coco.XmlNode;
 import sheepy.util.text.Escape;
@@ -24,10 +22,8 @@ public class TaskHtml extends Task {
       if ( ! hasParams() ) {
          parse();
       } else {
-         if ( getDirective().getAction() != Directive.Action.POSTPROCESS ) {
-            if ( getDirective().getTasks().size() > 1 )
-               throw new CocoParseError( "HTML structure must be used alone to be deferred for post process." );
-            getBlock().setText( "<?coco-postprocess " + toString() + " ?>" );
+         if ( ! isPostProcess() ) {
+            setPostProcess( "HTML structure" );
             return;
          }
          switch ( getParam( 0 ).toLowerCase() ) {
