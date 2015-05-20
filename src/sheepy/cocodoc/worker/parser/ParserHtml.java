@@ -52,7 +52,7 @@ public class ParserHtml extends Parser {
                      String cocoName = getCocoAttr( node.getValue() );
                      if ( cocoName != null )
                         handleCocoDataAttr( cocoName, node.getAttributeValue().toString(), node.getParent() );
-                     else if ( isId( node.getValue() ) )
+                     else if ( isId( node.getValue() ) && ! isDisabled( node.getParent() ) )
                         lastId = node.getAttributeValue().toString();
                   }
             }
@@ -71,6 +71,9 @@ public class ParserHtml extends Parser {
 
    @Override public CharSequence get () { throw new UnsupportedOperationException(); }
 
+   /*******************************************************************************************************************/
+   // Generic checkers
+
    public static boolean isId ( CharSequence tagName ) {
       return tagName.length() == 2
             && tagName.toString().toLowerCase().equals( "id" );
@@ -81,6 +84,12 @@ public class ParserHtml extends Parser {
       if ( id != null && id.hasChildren() )
          lastId = id.getAttributeValue().toString();
    }
+
+   private boolean isDisabled ( XmlNode node ) {
+      assert( node.getType() == XmlNode.NODE_TYPE.TAG );
+      return node.hasAttribute( "data-coco-disabled" );
+   }
+
    /*******************************************************************************************************************/
    // Headers
 
@@ -142,6 +151,7 @@ public class ParserHtml extends Parser {
    }
 
    private void handleHeader ( XmlNode node ) {
+      if ( isDisabled( node ) ) return;
       CharSequence content = node.getXml();
       if ( logDetails ) log( Level.FINEST, "Found header {0}", content );
       if ( node.stream( XmlNode.NODE_TYPE.TAG ).skip( 1 ).map( XmlNode::getValue ).anyMatch( ParserHtml::isHeader ) )
@@ -177,6 +187,7 @@ public class ParserHtml extends Parser {
    }
 
    public void handleTitle ( XmlNode node ) {
+      if ( isDisabled( node ) ) return;
       if ( logDetails ) log(Level.FINEST, "Found title {0}", node.getXml());
       Header orig = title;
       title = new Header( null, node.clone().striptAttribute( "id" ), (byte) 0 );
@@ -216,6 +227,8 @@ public class ParserHtml extends Parser {
    }
 
    private void handleCocoDataAttr ( String type, String key, XmlNode node ) {
+      if ( isDisabled( node ) ) return;
+
       String full_type = type;
       String name = "";
       int pos = type.indexOf( '-' );
