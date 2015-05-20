@@ -94,27 +94,30 @@ public class ParserCoco extends Parser {
             } else {
                ++tagCount;
                addToResult( text.subSequence( 0, start.start() ) );
-               log( Level.FINEST, "Found coco tag {0}", dir );
 
                if ( postprocess != ( dir.getAction() == Action.POSTPROCESS ) ) {
                   // Copy directive text for: 1) POSTPROCESS in process
                   //                          2) Non-POSTPROCESS in post-process
+                  log( Level.FINEST, "Copy coco tag {0}", dir );
                   addToResult( text.substring( start.start(), end.end() ) );
                   text = text.substring( end.end() );
 
                } else if ( dir.getAction() == Action.START ) {
+                  log( Level.FINEST, "Start coco block {0}", dir );
                   dir.setContent( text.substring( end.end() ) ); // Pass content to directive
                   addToResult( dir.start( context ) );
                   text = dir.getContent().toString(); // Get remaining (unparsed) content
                   if ( text == null ) throw new CocoParseError( "Coco:start without Coco:end" );
 
                } else if ( dir.getAction() == Action.END ) {
+                  log( Level.FINEST, "Ends coco block {0}", dir );
                   if ( context.getParent() == null ) throw new CocoParseError( "Coco:end without Coco:start" );
                   context.getDirective().setContent( text.substring( end.end() ) ); // Parse unparsed content back to upper level.
                   return; // Terminate
 
                } else {
                   // Execute INLILE / OUTPUT in process, or POSTPROCESS in post-process
+                  log( Level.FINEST, "Initiate coco tag {0}", dir );
                   addToResult( dir.start( context ) );
                   text = text.substring( end.end() );
                }

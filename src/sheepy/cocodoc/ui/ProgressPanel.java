@@ -1,8 +1,6 @@
 package sheepy.cocodoc.ui;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -28,7 +26,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoObserver;
-import sheepy.util.Time;
 import sheepy.util.ui.JavaFX;
 import sheepy.util.ui.ObservableArrayList;
 
@@ -51,15 +48,15 @@ public class ProgressPanel {
    /*******************************************************************************************************************/
 
    public CocoObserver newNode( String name ) {
-      ProgressTab result = new ProgressTab( name );
-      Platform.runLater( () -> {
+      final ProgressTab result = new ProgressTab( name );
+      JavaFX.runNow( () -> {
          if ( tabWelcome != null ) {
             tabPane.getTabs().remove( tabWelcome );
             tabWelcome = null;
          }
          tabPane.getTabs().add( result.tab );
          tabPane.getSelectionModel().select( result.tab );
-      });
+      } );
       return result;
    }
 

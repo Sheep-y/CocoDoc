@@ -16,8 +16,8 @@ import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import static sheepy.cocodoc.worker.directive.Directive.Action.OUTPUT;
 import static sheepy.cocodoc.worker.directive.Directive.Action.START;
 import sheepy.cocodoc.worker.task.Task;
-import sheepy.util.text.Text;
 import sheepy.util.collection.NullData;
+import sheepy.util.text.Text;
 
 public abstract class Directive {
    private static final Logger log = Logger.getLogger( Directive.class.getName() );

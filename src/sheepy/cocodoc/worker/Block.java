@@ -19,9 +19,9 @@ import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.ParserCoco;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.util.collection.NullData;
-import sheepy.util.text.Text;
 import sheepy.util.concurrent.AbstractFuture;
 import sheepy.util.text.I18n;
+import sheepy.util.text.Text;
 
 /**
  * A document processing block.
@@ -71,6 +71,7 @@ public class Block extends AbstractFuture<Block> {
                if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
                   postprocess();
                   outputToFile(fname);
+                  log( Level.FINEST, "Outputted to {0}", fname );
                }
                setText( null );
             } else if ( getParent() == null ) {
@@ -85,9 +86,9 @@ public class Block extends AbstractFuture<Block> {
             for ( Consumer<? super Block> func : list ) {
                func.accept( this );
             }
+            log( Level.FINER, "Finished" );
          }
 
-         log( Level.FINER, "Finished" );
       } finally {
          if ( hasObserver() ) getObserver().done();
       }

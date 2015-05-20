@@ -49,7 +49,10 @@ public class Worker {
 
    public static Block getBlockResult ( Block block ) throws InterruptedException {
       try {
-         return block.get();
+         block.get();
+         if ( block.hasData() )
+            block.log( Level.FINER, "Returned result", block );
+         return block;
       } catch ( ExecutionException ex ) {
          Throwable e = ex;
          while ( e != null && e instanceof ExecutionException ) e = e.getCause();
@@ -58,8 +61,6 @@ public class Worker {
          if ( e instanceof CocoParseError ) throw (CocoParseError) e;
          if ( e instanceof Error          ) throw (Error         ) e;
          throw new CocoRunError( e );
-      } finally {
-         block.log( Level.FINER, "Returned result", block );
       }
    }
 }

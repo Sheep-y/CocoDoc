@@ -23,7 +23,7 @@ Major features:
   2. Replace tag content or property with data, like replacing relative img src with base64 data uri.
   3. Parse HTML to generate Table of Content, Index, and/or Glossary.
   4. A modern GUI that shows instant progress and let you drill down the build process.
-  
+
 License: <a href='http://www.gnu.org/licenses/lgpl.html'>Lesser GPL v3</a>
 
 Quick Start
@@ -53,7 +53,7 @@ You can also split the code into many small files.  Like a real program.
 &lt;body&gt;<b>&lt;?coco "body.html" coco ?&gt;</b>
 <b>&lt;?coco-output "myapp.html" ?&gt;</b></code></pre></dd>
    <dt>body.html</dt>
-   <dd><pre><code><b>&lt;?coco-start coco trim(line) ?&gt;</b>
+   <dd><pre><code><b>&lt;?coco-start trim(line) ?&gt;</b>
    &lt;h1&gt; Part 1 &lt;/h1&gt;
    <b>&lt;?coco "part1.html" ?&gt;</b>
    &lt;h1&gt; Part 2 &lt;/h1&gt;
@@ -62,7 +62,7 @@ You can also split the code into many small files.  Like a real program.
 </dl>
 
 In the above example, master.html includes both <code>jquery.min.js</code> and <code>body.html</code>, the later containing the <code>coco</code> <i>task</i> which means it will run contained coco directives.
-body.html, in turn, includes two other files by declaring a block that runs contained coco directives and then be line-trimmed (Task <code>trim(line)</code>).
+body.html, in turn, includes two other files by declaring a block that will be line-trimmed (Task <code>trim(line)</code>).
 
 
 ### Variables / Replace ###

@@ -7,8 +7,8 @@ import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.worker.parser.ParserHtml;
 import sheepy.cocodoc.worker.parser.coco.XmlNode;
-import sheepy.util.text.Escape;
 import sheepy.util.collection.CollectionPredicate;
+import sheepy.util.text.Escape;
 import sheepy.util.text.I18n;
 
 public class TaskHtml extends Task {

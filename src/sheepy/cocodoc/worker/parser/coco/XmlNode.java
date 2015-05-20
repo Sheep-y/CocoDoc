@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
+import sheepy.util.collection.NullData;
 import sheepy.util.text.Escape;
 import sheepy.util.text.Text;
-import sheepy.util.collection.NullData;
 
 public class XmlNode implements Cloneable {
 
