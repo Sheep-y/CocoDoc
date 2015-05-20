@@ -12,6 +12,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -74,6 +75,9 @@ public class MainStage {
          }
       }
 
+      try {
+         stage.getIcons().add( new Image( CocoUtils.getStream( "doc/favicon.gif" ) ) );
+      } catch ( Exception ignored ) {}
       stage.addEventFilter( MouseEvent.MOUSE_RELEASED, this::stopAutoClose );
       stage.addEventFilter( KeyEvent.KEY_RELEASED, this::stopAutoClose );
       stage.show();

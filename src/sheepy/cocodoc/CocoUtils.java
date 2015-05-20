@@ -97,17 +97,24 @@ public class CocoUtils {
    }
 
    public static String getText ( String file ) throws IOException {
-      File f = new File( file );
-      InputStream is;
-      if ( f.exists() && f.isFile() && f.canRead() )
-         is = new BufferedInputStream( new FileInputStream( f ) );
-      else
-         is = CocoUtils.class.getResourceAsStream( '/' + file );
+      InputStream is = getStream(file);
       if ( is == null ) throw new FileNotFoundException( "Resource not found: " + file );
       try {
          return new Scanner(is).useDelimiter("\\A").next();
       } finally {
          is.close();
+      }
+   }
+
+   public static InputStream getStream(String file) {
+      try {
+         File f = new File( file );
+         if ( f.exists() && f.isFile() && f.canRead() )
+            return new BufferedInputStream( new FileInputStream( f ) );
+         else
+            return CocoUtils.class.getResourceAsStream( '/' + file );
+      } catch (FileNotFoundException ex) {
+         return null;
       }
    }
 
