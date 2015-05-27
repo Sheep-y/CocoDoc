@@ -24,6 +24,7 @@ public class DirStart extends Directive {
       log( Level.FINEST, "Started parsing", this );
 
       Block b = new Block( parent, this );
+      b.setBasePath( parent.getBasePath() ); // Make sure base path is always same as parent.
       final Parser parser = parent.getParser().clone(); // Must have a parser, because Start is created by a parser!
       parser.start( b );
       log( Level.FINEST, "Block parsed", this );
