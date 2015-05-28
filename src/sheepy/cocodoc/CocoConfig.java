@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import static sheepy.util.collection.CollectionPredicate.contains;
 
@@ -21,6 +22,9 @@ public class CocoConfig {
    public static final String DESIGN_FILE = DOC_PATH+ "design.xhtml";
    public static final String LGPL_FILE   = DOC_PATH+ "license_lgpl.xhtml";
    public static final String GPL_FILE    = DOC_PATH+ "license_gpl.xhtml";
+
+   public static final Level MICRO = new Level( "MICRO", 200 ){};
+   public static final Level NANO  = new Level( "NANO", 100 ){};
 
    public CocoConfig parseCommandLine( String[] args ) {
       if ( args == null || args.length <= 0 ) {

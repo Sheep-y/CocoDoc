@@ -9,6 +9,7 @@ import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import sheepy.cocodoc.CocoObserver;
+import sheepy.cocodoc.CocoOption;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
 import static sheepy.cocodoc.worker.directive.Directive.Action.END;
@@ -121,7 +122,7 @@ public abstract class Directive {
 
       LogRecord rec = new LogRecord( level, message );
       rec.setParameters( param );
-      if ( getObserver() != null ) {
+      if ( getObserver() != null && level.intValue() >= CocoOption.log_level_gui ) {
          if ( rec.getLevel().intValue() < Level.WARNING.intValue() )
             getObserver().log( logFormatter.formatMessage( rec ) );
          else

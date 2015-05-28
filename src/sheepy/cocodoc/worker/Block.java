@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.logging.Level;
+import sheepy.cocodoc.CocoConfig;
 import sheepy.cocodoc.CocoObserver;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.directive.Directive;
@@ -55,17 +56,16 @@ public class Block extends AbstractFuture<Block> {
          log( Level.FINEST, "Initialising" );
          for ( Task task : getTasks() ) task.init();
 
-         log( Level.FINER, "Running" );
          for ( Task task : getTasks() ) {
             if ( Thread.currentThread().isInterrupted() ) return this;
-            log( Level.FINEST, "Running {0}", task );
+            log( CocoConfig.MICRO, "Running {0}", task );
             task.process();
          }
 
          if ( hasData() ) {
             if ( getOutputTarget() != null ) {
                String fname = getOutputTarget().getParam( 0 );
-               log( Level.FINEST, "Outputting to {0}", fname );
+               log( CocoConfig.MICRO, "Outputting to {0}", fname );
                if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
                   postprocess();
                   outputToFile(fname);
@@ -81,9 +81,8 @@ public class Block extends AbstractFuture<Block> {
          if ( getParent() == null && stats().hasVar( VAR_ONDONE ) ) {
             log( Level.FINER, "Dispatching ondone" );
             List<Consumer<? super Block>> list = (List<Consumer<? super Block>>) stats().getVar( VAR_ONDONE );
-            for ( Consumer<? super Block> func : list ) {
+            for ( Consumer<? super Block> func : list )
                func.accept( this );
-            }
             log( Level.FINER, "Finished" );
          }
 
@@ -204,7 +203,7 @@ public class Block extends AbstractFuture<Block> {
       for ( Charset charset : toBinaryCharset ) try {
          setBinary(I18n.encode(textResult, I18n.strictEncoder( charset ) ) );
          currentCharset = charset;
-         log( Level.FINEST, "Converted {0} characters to {1} binary.", textLen, charset );
+         log( CocoConfig.MICRO, "Converted {0} characters to {1} binary.", textLen, charset );
          return;
       } catch ( IOException ex ) {
          error = ex;
@@ -223,7 +222,7 @@ public class Block extends AbstractFuture<Block> {
       for ( Charset charset : toTextCharset ) try {
          setText(I18n.decode(buf, I18n.strictDecoder( charset ) ) );
          currentCharset = charset;
-         log( Level.FINEST, "Converted {0} bytes of {1} to text.", buf.length, charset );
+         log( CocoConfig.MICRO, "Converted {0} bytes of {1} to text.", buf.length, charset );
          return;
       } catch ( CharacterCodingException ex ) {
          error = ex;

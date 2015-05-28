@@ -5,6 +5,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Matcher;
+import sheepy.cocodoc.CocoConfig;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
@@ -19,8 +20,6 @@ import sheepy.cocodoc.worker.task.TaskFile;
 import sheepy.util.text.Text;
 
 public class ParserCoco extends Parser {
-   private static final boolean logDetails = false;
-
    private String startTag = "<\\?coco(?:-(\\w*))?"; // Dynamic; first group must be the directive
    private String endTag = "\\?>"; // Dynamic; set on creation.
    private Matcher startMatcher;
@@ -141,12 +140,12 @@ public class ParserCoco extends Parser {
          String txt = tag.substring( start.group().length() ).trim();
          List<Task> tasks = null;
 
-         log( Level.FINEST, "Parsing coco directive: {0} {1}", action, txt );
+         log( CocoConfig.MICRO, "Parsing coco directive: {0} {1}", action, txt );
          if ( ! txt.isEmpty() ) {
             tasks = new ArrayList<>();
             String[] defaultCheck = checkDefaultParameter( txt );
             if ( defaultCheck != null ) {
-               if ( logDetails ) log( Level.FINEST, "Matched parameter {1} for default task {0}", action, defaultCheck[0] );
+               log( CocoConfig.NANO, "Matched parameter {1} for default task {0}", action, defaultCheck[0] );
                tasks.add( new TaskFile().addParam( defaultCheck[0] ) );
                txt = defaultCheck[1];
             }
@@ -179,7 +178,7 @@ public class ParserCoco extends Parser {
       List<String> params = new ArrayList<>(8);
       Matcher para = parameterMatcher;
       if ( para == null ) para = parameterMatcher = CocoUtils.tagPool.get( paramRegx );
-      if ( logDetails ) log( Level.FINEST, "Parsing coco task: {0} {1}", taskname, txt );
+      log( CocoConfig.NANO, "Parsing coco task: {0} {1}", taskname, txt );
       if ( txt != null ) {
          txt = Text.unquote( txt, '(', ')' ).trim();
          while ( ! txt.isEmpty() ) {
@@ -386,7 +385,7 @@ public class ParserCoco extends Parser {
 
    private void deleteFromResult ( TextRange range ) {
       if ( range != null && range.isValid() && range.length() > 0 ) {
-         if ( logDetails ) log( Level.FINEST, "Delete: {0}", range.showInText( resultText ) );
+         log( CocoConfig.NANO, "Delete: {0}", Text.defer( () -> range.showInText( resultText ) ) );
          resultText.delete( range.start, range.end );
          for ( Context c : resultStack )
             c.position.shiftDeleted( range, true );
@@ -397,7 +396,9 @@ public class ParserCoco extends Parser {
 
    private void insertToResult ( CharSequence txt, TextRange insPos ) {
       if ( insPos != null && insPos.isValid() ) {
-         if ( logDetails ) log( Level.FINEST, "Inserts {0} to {1}", Text.ellipsisWithin( txt, 12 ), insPos.showInText( resultText ) );
+         log( CocoConfig.NANO, "Inserts {0} to {1}",
+               Text.defer( () -> Text.ellipsisWithin( txt, 12 ) ),
+               Text.defer( () -> insPos.showInText( resultText ) ) );
          resultText.insert( insPos.start, txt );
          for ( Context c : resultStack )
             c.position.shiftInserted( insPos.start, txt.length() );

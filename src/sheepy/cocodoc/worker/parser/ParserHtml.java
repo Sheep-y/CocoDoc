@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
+import sheepy.cocodoc.CocoConfig;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.Block;
@@ -16,8 +16,6 @@ import sheepy.cocodoc.worker.parser.coco.XmlParser;
 import sheepy.util.text.Text;
 
 public class ParserHtml extends Parser {
-   private static final boolean logDetails = false;
-
    private String lastId = null;
 
    public ParserHtml () {}
@@ -153,7 +151,7 @@ public class ParserHtml extends Parser {
    private void handleHeader ( XmlNode node ) {
       if ( isDisabled( node ) ) return;
       CharSequence content = node.getXml();
-      if ( logDetails ) log( Level.FINEST, "Found header {0}", content );
+      log( CocoConfig.MICRO, "Found header {0}", content );
       if ( node.stream( XmlNode.NODE_TYPE.TAG ).skip( 1 ).map( XmlNode::getValue ).anyMatch( ParserHtml::isHeader ) )
          throw new CocoParseError( "Recursive headers are ignored (" + content + ")" );
 
@@ -188,7 +186,7 @@ public class ParserHtml extends Parser {
 
    public void handleTitle ( XmlNode node ) {
       if ( isDisabled( node ) ) return;
-      if ( logDetails ) log(Level.FINEST, "Found title {0}", node.getXml());
+      log( CocoConfig.MICRO, "Found title {0}", Text.defer( node::getXml ) );
       Header orig = title;
       title = new Header( null, node.clone().striptAttribute( "id" ), (byte) 0 );
       title.children = orig.children;
@@ -238,7 +236,7 @@ public class ParserHtml extends Parser {
       }
 
       if ( type.equals( "index" ) || type.equals( "glossary" ) ) {
-         if ( logDetails ) log( Level.FINEST, "Found {0} attribute on {1}", type, node );
+         log( CocoConfig.NANO, "Found {0} attribute on {1}", type, node );
 
          String varKey = type.equals( "index" ) ? VAR_INDEX( name ) : VAR_GLOSSARY( name );
          BlockStats stats = context.getRoot().stats();
@@ -276,7 +274,7 @@ public class ParserHtml extends Parser {
       result.add( new XmlNode( XmlNode.NODE_TYPE.TEXT, text, 0, 5 ) );
 
       ++ indexCount;
-      if ( logDetails ) log( Level.FINEST, "Saved index {0}", result.getXml() );
+      log( CocoConfig.MICRO, "Saved index {0}", Text.defer( node::getXml ) );
       list.add( result );
    }
 
@@ -294,7 +292,7 @@ public class ParserHtml extends Parser {
                node = node.clone().striptAttribute( "id", "data-coco-" + name );
                list.add( node );
                ++glossaryCount;
-               if ( logDetails ) log( Level.FINEST, "Saved glossary {0}", node );
+               log( CocoConfig.MICRO, "Saved glossary {0}", node );
       /*
                return;
 

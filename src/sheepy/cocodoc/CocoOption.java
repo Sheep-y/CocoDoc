@@ -1,5 +1,7 @@
 package sheepy.cocodoc;
 
+import java.util.logging.Level;
+
 /**
  * Application options
  */
@@ -13,5 +15,11 @@ public class CocoOption {
 
    /** Auto open created files? */
    public static boolean auto_open = false;
+
+   /** GUI log level */
+   public static int log_level_gui = Level.FINEST.intValue();
+
+   /** Whether to log parser actions */
+   public static boolean log_parser = false;
 
 }

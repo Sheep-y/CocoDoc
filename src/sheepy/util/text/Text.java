@@ -1,9 +1,11 @@
 package sheepy.util.text;
 
+import java.lang.ref.SoftReference;
 import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.StringJoiner;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.IntStream;
 
@@ -119,5 +121,25 @@ public class Text {
    public static String toLf ( CharSequence text ) {
       if ( text == null ) return null;
       return text.toString().replaceAll( "\r\n", "\n" );
+   }
+
+   /**
+    * Return an object that, when toString is called, calls supplied function and use it as result.
+    * The result is cached in a SoftReference.
+    *
+    * @param func Supplier of toString result
+    * @return Object with deferred toString execution.
+    */
+   public static Object defer ( Supplier<? extends CharSequence> func ) {
+      return new Object () {
+         private SoftReference<String> cache;
+         @Override public synchronized String toString() {
+            CharSequence result = null;
+            if ( cache != null ) result = cache.get();
+            if ( result == null )
+               cache = new SoftReference<>( nonNull( result = func.get() ) );
+            return result.toString();
+         }
+      };
    }
 }
