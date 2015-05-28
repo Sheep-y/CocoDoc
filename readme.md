@@ -1,14 +1,16 @@
 CocoDoc: HTML App builder
 =========================
 
-CocoDoc is a Java GUI program designed to build single file web documents and web applications from multiple files.
+CocoDoc is a desktop utility program designed to build single file web documents and web applications from multiple files.
+
+Java 1.8.0u40 or upper must be installed.
 
 <!--
 
 For Developers
 --------------
 
-To build: Extract the jar, then use Ant to run "make" task of build.xml.
+To build: Extract the jar (or exe), then use Ant to run "make" task of build.xml.
 
 Documentation in doc folder.
 Source code in src folder.
@@ -29,7 +31,10 @@ License: <a href='http://www.gnu.org/licenses/lgpl.html'>Lesser GPL v3</a>
 Quick Start
 -----------
 
-CocoDoc commands are XML directives - except that they can be used in any text file, not limited to XML.
+CocoDoc does not need to be installed - just download, launch, and point it to the build file.
+Windows users should download the exe file, Linux and Mac users may download the jar file.
+
+The build file is assumed to be a text file containing commands, that the program will follows to build your project.
 
 ### I/O ###
 
@@ -140,4 +145,4 @@ The above code will produce this:
 
 Passing file names as parameters will cause CocoDoc to build those files and, when finished, starts auto-close countdown.
 
-If no files are provided, CocoDoc will look for the file <code>build.cocodoc.conf</code> to auto-run and auto-close.
+If there are no file parameters, CocoDoc will look for the file <code>build.cocodoc.conf</code> to auto-run and auto-close.

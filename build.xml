@@ -54,11 +54,15 @@
             <attribute name="Permissions" value="all-permissions" />
          </manifest>
       </jar>
+      <!-- clean -->
+      <delete includeemptydirs="true" failonerror="false"><fileset dir ="${dir.jar}" /></delete>
+   </target>
+
+   <!-- Wrap jar file into exe -->
+   <target name="exe" depends="make" description="Compile and build a Windows deliverable.">
       <!-- Windows binary -->
       <taskdef name="launch4j" classname="net.sf.launch4j.ant.Launch4jTask" classpath="${launch4j.dir}/launch4j.jar:${launch4j.dir}/lib/xstream.jar" />
       <launch4j configFile="launch4j.xml" />
-      <!-- clean -->
-      <delete includeemptydirs="true" failonerror="false"><fileset dir ="${dir.jar}" /></delete>
    </target>
 
    <!-- Copy support files to ${jar.root} -->
