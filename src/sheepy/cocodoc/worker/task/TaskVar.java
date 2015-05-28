@@ -51,6 +51,8 @@ public class TaskVar extends Task {
                return;
             } // Otherwise fallthrough
 
+         case BlockStats.TIME_BUILD:
+            // Time build is a variable, so fall through
          default:
             if ( ! block.stats().hasVar( varname ) ) {
                if ( ! isPostProcess() ) {

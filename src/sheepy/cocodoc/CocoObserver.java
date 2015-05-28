@@ -14,7 +14,7 @@ public interface CocoObserver {
    public CocoObserver error ( String message );
 
    /** Mark that the process has started. */
-   public void start();
+   public void start( long baseTime );
 
    /** Mark that the process ended. */
    public void done();

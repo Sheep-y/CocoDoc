@@ -19,6 +19,7 @@ public class BlockStats {
    private final ReentrantLock varLock;
    public static final String IO_BYTES_IN   = "io.in_bytes";
    public static final String IO_BYTES_OUT  = "io.out_bytes";
+   public static final String NANO_BUILD    = "__time.build__"; // nano build time
    public static final String TIME_BUILD    = "time.build";
    public static final String TIME_COCO     = "time.coco";
    public static final String TIME_LAST_MOD = "time.last_modified";
@@ -35,6 +36,7 @@ public class BlockStats {
       if ( block.getParent() == null ) {
          root = this;
          variables = new HashMap<>();
+         variables.put( NANO_BUILD   , System.nanoTime() );
          variables.put( TIME_BUILD   , ZonedDateTime.now() );
          variables.put( TIME_LAST_MOD, ZonedDateTime.now() );
          variables.put( IO_BYTES_IN  , new AtomicLong(0) );

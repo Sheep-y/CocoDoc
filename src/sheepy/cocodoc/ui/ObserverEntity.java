@@ -21,7 +21,7 @@ public abstract class ObserverEntity implements CocoObserver {
          time = System.nanoTime();
          this.message = message;
       }
-      public long getTime() { return Math.round( time - startTime ) / 1000_000; }
+      public long getTime() { return Math.round( time - baseTime ) / 1000_000; }
       public String getMessage() { return message; }
    }
 
@@ -54,6 +54,7 @@ public abstract class ObserverEntity implements CocoObserver {
    }
 
    protected final TreeItem<ObserverEntity> node = new TreeItem( this );
+   protected volatile long baseTime;
    protected volatile long startTime;
    protected volatile long endTime;
 
@@ -64,9 +65,10 @@ public abstract class ObserverEntity implements CocoObserver {
       this.name.set( name );
    }
 
-   @Override public void start () {
+   @Override public void start ( long baseTime ) {
       if ( isStarted() ) return;
       startTime = System.nanoTime();
+      this.baseTime = baseTime;
       setStatus( "Running" );
    }
 

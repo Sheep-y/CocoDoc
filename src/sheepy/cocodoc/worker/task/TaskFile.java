@@ -52,7 +52,7 @@ public class TaskFile extends Task {
       Block block = getBlock();
 
       if ( getDirective().getAction() == INLINE ) { // Read file and add to block
-         File base = block.getBasePath();
+         File base = block.getParentBasePath();
          for ( String s : getParams() ) try {
             log( Level.FINE, "Reading {1} from base path {0}.", base, s );
             File f = new File( base, s );

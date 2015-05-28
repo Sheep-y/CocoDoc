@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.logging.Level;
 import sheepy.cocodoc.worker.Block;
+import sheepy.cocodoc.worker.BlockStats;
 import sheepy.cocodoc.worker.Worker;
 import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.task.Task;
@@ -20,7 +21,7 @@ public class DirStart extends Directive {
    @Override public Directive start( Block parent ) {
       if ( countdown.getCount() <= 0 ) throw new IllegalStateException( "Start directive should not be started more than once." );
       if ( branchObserver( parent, toString() ) != null )
-         getObserver().start(); // Notice start before parsing (and before block start)
+         getObserver().start( (Long) parent.stats().getVar( BlockStats.NANO_BUILD ) ); // Notice start before parsing (and before block start)
       log( Level.FINEST, "Started parsing", this );
 
       Block b = new Block( parent, this );

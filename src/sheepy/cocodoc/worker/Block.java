@@ -49,7 +49,7 @@ public class Block extends AbstractFuture<Block> {
    }
 
    @Override protected Block implRun () {
-      if ( hasObserver() ) getObserver().start();
+      if ( hasObserver() ) getObserver().start( (Long) stats().getVar( BlockStats.NANO_BUILD ) );
 
       try {
          log( Level.FINEST, "Initialising" );
@@ -271,10 +271,11 @@ public class Block extends AbstractFuture<Block> {
       return this;
    }
 
+   public File getParentBasePath() {
+      return parent == null ? null : parent.getBasePath();
+   }
    public File getBasePath() {
-      if ( basePath == null )
-         return parent == null ? null : parent.getBasePath();
-      return basePath;
+      return basePath == null ? getParentBasePath() : basePath;
    }
    public Block setBasePath( File basePath ) {
       if ( basePath != null && this.basePath == null ) {
