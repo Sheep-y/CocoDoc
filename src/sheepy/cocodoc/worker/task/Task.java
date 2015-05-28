@@ -134,8 +134,8 @@ public abstract class Task {
 
    protected boolean isPostProcess () { return getDirective().getAction() == Directive.Action.POSTPROCESS; }
    protected void setPostProcess( String name ) {
-      if ( getDirective().getTasks().size() > 1 )
-         throw new CocoParseError( name + " must be used alone to be deferred for post process." );
+      //if ( getDirective().getTasks().size() > 1 )
+      //   throw new CocoParseError( name + " must be used alone to be deferred for post process." );
       getBlock().setText( "<?coco-postprocess " + toString() + " ?>" );
    }
 

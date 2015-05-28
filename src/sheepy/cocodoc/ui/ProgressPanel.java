@@ -49,7 +49,6 @@ public class ProgressPanel {
    public CocoObserver newNode( String name ) {
       final ProgressTab result = new ProgressTab( name );
       Platform.runLater( () -> {
-      //JavaFX.runNow( () -> {
          if ( tabWelcome != null ) {
             tabPane.getTabs().remove( tabWelcome );
             tabWelcome = null;
@@ -79,17 +78,19 @@ public class ProgressPanel {
 
       public ProgressTab( String name ) {
          super( name );
-         Region pnlTree = createTreePane();
-         Region pnlLog = createLogPane();
+         Platform.runLater( () -> {
+            Region pnlTree = createTreePane();
+            Region pnlLog = createLogPane();
 
-         pnlC.getItems().addAll( pnlLog, pnlTree );
-         pnlC.setOrientation( Orientation.VERTICAL );
+            pnlC.getItems().addAll( pnlLog, pnlTree );
+            pnlC.setOrientation( Orientation.VERTICAL );
 
-         node.setExpanded( true );
-         tab.setContent( pnlC );
-         tab.setClosable( false );
-         collapseLog( null );
-         updateLog();
+            node.setExpanded( true );
+            tab.setContent( pnlC );
+            tab.setClosable( false );
+            collapseLog( null );
+            updateLog();
+         } );
       }
 
       private Region createTreePane() {
@@ -214,10 +215,9 @@ public class ProgressPanel {
       public ProgressNode( ProgressTab tab, TreeItem parent, String name ) {
          super( name );
          this.tab = tab;
-         if ( parent == tab.node || parent.getParent() == tab.node ) // Count progress of first two levels
-            tab.register();
          Platform.runLater( () -> {
-         //JavaFX.runNow( () -> {
+            if ( parent == tab.node || parent.getParent() == tab.node ) // Count progress of first two levels
+               tab.register();
             node.setExpanded( true );
             parent.getChildren().add( node );
          } );
@@ -229,10 +229,10 @@ public class ProgressPanel {
 
       @Override public void done () {
          super.done();
-         int level = findLevel( node );
-         if ( level <= 2 ) // Count progress of first two levels
-            tab.arrive();
          Platform.runLater( () -> {
+            int level = findLevel( node );
+            if ( level <= 2 ) // Count progress of first two levels
+               tab.arrive();
             if ( level >= CocoDoc.option.auto_collapse_level )
                node.setExpanded( false );
          } );
