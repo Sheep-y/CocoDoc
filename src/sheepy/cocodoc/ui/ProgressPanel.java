@@ -26,7 +26,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Region;
 import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoObserver;
-import sheepy.util.ui.JavaFX;
 import sheepy.util.ui.ObservableArrayList;
 
 public class ProgressPanel {
@@ -49,7 +48,8 @@ public class ProgressPanel {
 
    public CocoObserver newNode( String name ) {
       final ProgressTab result = new ProgressTab( name );
-      JavaFX.runNow( () -> {
+      Platform.runLater( () -> {
+      //JavaFX.runNow( () -> {
          if ( tabWelcome != null ) {
             tabPane.getTabs().remove( tabWelcome );
             tabWelcome = null;
@@ -216,7 +216,8 @@ public class ProgressPanel {
          this.tab = tab;
          if ( parent == tab.node || parent.getParent() == tab.node ) // Count progress of first two levels
             tab.register();
-         JavaFX.runNow( () -> {
+         Platform.runLater( () -> {
+         //JavaFX.runNow( () -> {
             node.setExpanded( true );
             parent.getChildren().add( node );
          } );
