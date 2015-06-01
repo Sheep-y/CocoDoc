@@ -96,17 +96,7 @@ public class CocoUtils {
       return time.truncatedTo( ChronoUnit.SECONDS ).format( DateTimeFormatter.ISO_INSTANT );
    }
 
-   public static String getText ( String file ) throws IOException {
-      InputStream is = getStream(file);
-      if ( is == null ) throw new FileNotFoundException( "Resource not found: " + file );
-      try {
-         return new Scanner(is).useDelimiter("\\A").next();
-      } finally {
-         is.close();
-      }
-   }
-
-   public static InputStream getStream(String file) {
+   public static InputStream getStream ( String file ) {
       try {
          File f = new File( file );
          if ( f.exists() && f.isFile() && f.canRead() )
@@ -117,4 +107,15 @@ public class CocoUtils {
          return null;
       }
    }
+
+   public static String getText ( String file ) throws IOException {
+      InputStream is = getStream(file);
+      if ( is == null ) throw new FileNotFoundException( "Resource not found: " + file );
+      try {
+         return new Scanner(is).useDelimiter("\\A").next();
+      } finally {
+         is.close();
+      }
+   }
+
 }

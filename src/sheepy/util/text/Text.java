@@ -17,6 +17,10 @@ public class Text {
       return in.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
    }
 
+   public static String toString ( Collection<?> list ) {
+      return toString( ", ", list );
+   }
+
    public static String toString ( CharSequence delimiter, Collection<?> list ) {
       if ( list == null || list.isEmpty() ) return "";
       return String.join( delimiter, list.stream().map( Object::toString ).toArray( String[]::new ) );
