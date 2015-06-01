@@ -35,21 +35,29 @@ public abstract class ObserverEntity implements CocoObserver {
    public StringProperty nameProperty() { return name; }
    @Override public CocoObserver setName( String value ) { nameProperty().set( value ); return this; }
 
-   private volatile String error;
+   private String error;
    private final StringProperty message = new SimpleStringProperty( this, "" );
    public StringProperty messageProperty() { return message; }
 
    public List<Log> getLogs () { return new ArrayList<>( logList ); }
 
    @Override public CocoObserver log ( String value ) {
-      synchronized ( logList ) { logList.add( new Log( value ) ); }
-      if ( error == null ) messageProperty().set( value );
+      Log log = new Log( value );
+      synchronized ( logList ) {
+         logList.add( log );
+         if ( error != null ) return this; // Do not set message if has error
+      }
+      messageProperty().set( value );
       return this;
    }
 
    @Override public CocoObserver error ( String value ) {
-      synchronized ( logList ) { logList.add( new Log( value ) ); }
-      messageProperty().set( error = value ); // Assumes thread safe, just because it hasn't crashed so far
+      Log log = new Log( value );
+      synchronized ( logList ) {
+         logList.add( log );
+         error = value;
+      }
+      messageProperty().set( value );
       return this;
    }
 
