@@ -1,4 +1,5 @@
-(function (ns){
+(function (ns){ 'use strict';
+
 var exports = ns.uglifyjs.pro;
 
 /**

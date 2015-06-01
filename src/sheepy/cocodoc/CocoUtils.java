@@ -109,7 +109,7 @@ public class CocoUtils {
    }
 
    public static String getText ( String file ) throws IOException {
-      InputStream is = getStream(file);
+      InputStream is = getStream( file );
       if ( is == null ) throw new FileNotFoundException( "Resource not found: " + file );
       try {
          return new Scanner(is).useDelimiter("\\A").next();

@@ -68,6 +68,7 @@
    <!-- Copy support files to ${jar.root} -->
    <target name="-copy-file">
       <copy todir="${jar.root}/doc"><fileset dir="doc"/></copy>
+      <copy todir="${jar.root}/js"><fileset dir="js"/></copy>
       <copy todir="${jar.root}/META-INF"><fileset dir="META-INF"/></copy>
       <copy todir="${jar.root}/src"><fileset dir="src"/></copy>
       <copy todir="${jar.root}">
@@ -102,6 +103,7 @@
    <target name="-post-jar" if="src.src.dir">
       <delete includeemptydirs="true" failonerror="false">
          <fileset dir ="${build.dir}/classes/doc" />
+         <fileset dir ="${build.dir}/classes/js" />
          <fileset dir ="${build.dir}/classes/META-INF"/>
          <fileset dir ="${build.dir}/classes/src"/>
          <fileset file="${build.dir}/classes/build.xml"/>

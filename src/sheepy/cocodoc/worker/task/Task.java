@@ -48,6 +48,7 @@ public abstract class Task {
       TEXT,
       TEST,
       TRIM,
+      UGLIFYCSS,
       UGLIFYJS,
       VAR
    }
@@ -88,6 +89,7 @@ public abstract class Task {
          case TEXT       : result = new TaskText(); break;
          case TEST       : result = new TaskTest(); break;
          case TRIM       : result = new TaskTrim(); break;
+         case UGLIFYCSS  : result = new TaskUglifyCSS(); break;
          case UGLIFYJS   : result = new TaskUglifyJS(); break;
          case VAR        : result = new TaskVar(); break;
          default         : throw new UnsupportedOperationException( "Unimplemented task: " + task );

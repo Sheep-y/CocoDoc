@@ -12,21 +12,21 @@ import sheepy.cocodoc.CocoUtils;
 import sheepy.util.concurrent.ObjectPoolMap;
 import sheepy.util.text.Text;
 
-public class TaskUglifyJS extends Task {
-   @Override public Action getAction () { return Action.UGLIFYJS; }
+public class TaskUglifyCSS extends Task {
+   @Override public Action getAction () { return Action.UGLIFYCSS; }
 
    @Override protected Predicate<List<String>> validParam() { return isEmpty; }
-   @Override protected String invalidParamMessage() { return "uglifyjs() task parameters is not implemented."; }
+   @Override protected String invalidParamMessage() { return "uglifycss() task has no parameters."; }
 
    @Override protected void run () {
       String txt = getBlock().getText().toString();
       if ( txt == null || txt.isEmpty() ) {
-         log( Level.INFO, "Skipping uglify js, no content" );
+         log( Level.INFO, "Skipping uglify css, no content" );
          return;
       }
 
-      log( Level.FINER, "Uglifying JS {1}", Text.ellipsisWithin( txt, 8 ) );
-      Object get = enginePool.get( "js" );
+      log( Level.FINER, "Uglifying CSS {1}", Text.ellipsisWithin( txt, 8 ) );
+      Object get = enginePool.get( "css" );
       try {
          if ( get instanceof RuntimeException ) {
             throwOrWarn( (RuntimeException) get );
@@ -37,16 +37,16 @@ public class TaskUglifyJS extends Task {
          js.put( "code", txt );
          log( Level.FINEST, "Running Uglify JS" );
 
-         String result = js.eval( "pro.gen_code( pro.ast_squeeze( pro.ast_mangle( jsp.parse( code ) ) ) )" ).toString();
+         String result = js.eval( "uglifycss.processString( code )" ).toString();
          log( Level.FINEST, "Uglified: {0} -> {1}", txt.length(), result.length() );
 
          getBlock().setText( result );
 
       } catch ( ScriptException ex ) {
-         throwOrWarn( new CocoRunError( "Cannot uglify js", ex ) );
+         throwOrWarn( new CocoRunError( "Cannot uglify css", ex ) );
 
       } finally {
-         enginePool.recycle( "js", get );
+         enginePool.recycle( "css", get );
       }
    }
 
@@ -54,13 +54,10 @@ public class TaskUglifyJS extends Task {
       ( key ) -> {
          ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
          try {
-            js.eval( CocoUtils.getText( "js/uglifyjs/lib/parse-js.js" ) );
-            js.eval( CocoUtils.getText( "js/uglifyjs/lib/process.js" ) );
-            js.eval( CocoUtils.getText( "js/uglifyjs/lib/squeeze-more.js" ) );
-            js.eval( "var jsp = uglifyjs.jsp, pro = uglifyjs.pro;" );
+            js.eval( CocoUtils.getText( "js/uglifycss/uglifycss-lib.js" ) );
             return js;
          } catch ( ScriptException | IOException ex ) {
-            return new CocoRunError( "Cannot load UglifyJS", ex );
+            return new CocoRunError( "Cannot load UglifyCSS", ex );
          }
       }
    );

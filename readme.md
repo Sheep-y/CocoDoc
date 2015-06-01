@@ -24,7 +24,9 @@ Major features:
   1. Hierarchically merge files and apply filters such as variable filling or converting to base64.
   2. Replace tag content or property with data, like replacing relative img src with base64 data uri.
   3. Parse HTML to generate Table of Content, Index, and/or Glossary.
-  4. A modern GUI that shows instant progress and let you drill down the build process.
+  4. Minify HTML, CSS, and JS in one go as part of the build process.
+  5. Parallel processing architecture that make the best use of multi-core processors.
+  6. A GUI that shows instant progress and let you drill down the process log.
 
 License: <a href='http://www.gnu.org/licenses/lgpl.html'>Lesser GPL v3</a>
 
@@ -140,6 +142,23 @@ The above code will produce this:
    &lt;dd&gt;&lt;div&gt; Another Glossary term. &lt;/div&gt;&lt;/dd&gt;
 &lt;/dl&gt; &lt;/div&gt;
 </code></pre>
+
+### Minify ###
+
+CocoDoc has built-in [UglifyJS2](https://github.com/mishoo/UglifyJS2/releases) and [UglifyCSS](https://github.com/fmarcia/UglifyCSS).
+
+Minify inline data:
+
+<pre>&lt;?coco-start <b>trim( html, oneline )</b> ?&gt;&lt;!DOCTYPE html&gt;
+   &lt;style &gt; &lt;?coco "style.css" <b>uglifycss</b> ?&gt; /*]]&gt;*/ &lt;/style&gt;
+   &lt;script&gt; &lt;?coco "script.js" <b>uglifyjs</b>  ?&gt; /*]]&gt;*/ &lt;/script&gt;
+&lt;body&gt;&lt;!-- HTML comments will be removed by trim( html ) --&gt;&lt;/body&gt;
+&lt;?coco-end?&gt;</pre>
+
+Minify external data:
+
+<pre>&lt;?coco-start?&gt;&lt;?coco "style.css" uglifycss ?&gt;&lt;?coco-output "style.min.css" ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "script.js" uglifyjs  ?&gt;&lt;?coco-output "script.min.js" ?&gt;&lt;?coco-end?&gt;</pre>
 
 ### Auto-run ###
 

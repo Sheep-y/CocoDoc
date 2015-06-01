@@ -1,4 +1,4 @@
-(function (ns){
+(function (ns){ 'use strict';
 
  var jsp = ns.uglifyjs.jsp || require("./parse-js"),
     pro = ns.uglifyjs.pro || require("./process"),

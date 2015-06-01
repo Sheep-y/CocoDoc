@@ -1,7 +1,7 @@
 <!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"><head><meta charset="UTF-8" />
 <title>CocoDoc: HTML App builder</title>
 </head><body>
-<h3>CocoDoc v1.0.1</h3>   <p>Licensed under <a href='http://www.gnu.org/copyleft/gpl.html'>LGPL v3</a>. </p>
+<h3>CocoDoc v1.1</h3>   <p>Licensed under <a href='http://www.gnu.org/copyleft/gpl.html'>LGPL v3</a>. </p>
 <p>
   CocoDoc is a simple text document builder, designed to merge web app resources such as html, css, js, and images. <br/>
   Usage: Drag and drop build file onto jar, or pass in build file(s) as parameter. Default build file is "cocodoc.conf".
@@ -56,6 +56,8 @@
   <dt>test(xml)</dt>                <dd>Test (validate) current data as xml. [Text or Binary]</dd>
   <dt>trim(xml,css,js,line,ws,crlf)</dt> <dd>Trim XML/CSS/JS comments, lines, multi spaces, and line breaks. "oneline" = "line,ws,crlf" [Text]</dd>
   <dt>var(name)</dt>                <dd>Append variable value (e.g. <code>time.build</code> for build time). </dd>
+  <dt>uglifycss()</dt>              <dd>Run UglifyCSS on data.</dd>
+  <dt>uglifyjs()</dt>               <dd>Run UglifyJS (default config) on data.</dd>
 </dl>
 <h4>HTML Parsing</h4>
 <p>    An (X)HTML document can be parsed to yield various information (add "data-coco-disabled" attribute to bypass): </p>
