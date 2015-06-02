@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.worker.BlockStats;
+import sheepy.util.collection.NullData;
 
 /**
  * Call OS to open specified file or last file in same directive.
@@ -37,7 +38,7 @@ public class TaskOpen extends Task {
       } else {
          final List<String> params = getParams();
          log( Level.FINER, "Adding {0} files to open queue", params.size() );
-         open( params.toArray( new String[ params.size() ] ) );
+         open( NullData.stringArray( params ) );
       }
    }
 

@@ -34,13 +34,16 @@ public class NullData {
       return subject == null ? Collections.emptyMap() : subject;
    }
 
-   public static <T> T[] nullOrArray(Collection<T> subject, IntFunction<T[]> builder) {
+   public static <T> T[] nullOrArray ( Collection<T> subject, IntFunction<T[]> builder ) {
       if (subject == null) return null;
       return subject.toArray( builder.apply( subject.size() ) );
    }
-   public static <T> T[] toArray(Collection<T> subject, IntFunction<T[]> builder) {
+   public static <T> T[] toArray( Collection<T> subject, IntFunction<T[]> builder ) {
       if (subject == null) return builder.apply( 0 );
       return subject.toArray( builder.apply( subject.size() ) );
+   }
+   public static String[] stringArray ( Collection<String> subject ) {
+      return toArray( subject, String[]::new );
    }
    public static <T extends Collection> T nullIfEmpty ( T subject ) {
       return isEmpty( subject ) ? null : subject;

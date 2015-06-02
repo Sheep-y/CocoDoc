@@ -1,13 +1,12 @@
 package sheepy.cocodoc;
 
 import java.awt.Desktop;
+import java.awt.GraphicsEnvironment;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -19,41 +18,36 @@ import sheepy.cocodoc.worker.directive.Directive;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
 import sheepy.cocodoc.worker.task.TaskCoco;
 import sheepy.cocodoc.worker.task.TaskFile;
+import sheepy.util.collection.NullData;
 
-public class CocoDoc extends Application {
+public class CocoDoc {
    public static final CocoConfig config = new CocoConfig();
    public static final CocoOption option = new CocoOption();
-   public static MainStage stage;
+   public static volatile MainStage stage;
 
    public static void main ( String[] args ) {
+      boolean launched = false;
+
       try {
          config.parseCommandLine( args );
 
          System.getProperties().setProperty( "java.util.logging.SimpleFormatter.format", "%5$s\n" );
          Logger.getGlobal().getParent().getHandlers()[0].setLevel( Level.FINE );
 
-         CocoDoc.launch( args );
+         if ( ! GraphicsEnvironment.getLocalGraphicsEnvironment().isHeadless() ) {
+            Application.launch( Launcher.class );
+            launched = true;
+         }
+      } catch ( RuntimeException ignored ) {}
 
-      } catch ( RuntimeException ex ) {
-         showHeadlessHelp( ex );
-         System.exit( ex.toString().hashCode() );
-      }
+      if ( ! launched )
+         runHeadless();
    }
 
-   @Override public void start ( Stage stage ) {
-      try {
-
-         this.stage = new MainStage( stage );
-         new Timer().schedule( new TimerTask () { @Override public void run() {
-            List<String> files = config.runFiles;
-            if ( files.size() > 0 ) {
-               CocoDoc.run( files.toArray( new String[ files.size() ] ) );
-               CocoDoc.this.stage.autoClose();
-            }
-         } }, 100 );
-
-      } catch ( Exception ex ) {
-         showHeadlessHelp( ex );
+   /** Must be a public class, otherwise JavaFX cannot create it to launch */
+   public static class Launcher extends Application {
+      @Override public void start(Stage primaryStage) throws Exception {
+         stage = new MainStage( primaryStage );
       }
    }
 
@@ -61,7 +55,8 @@ public class CocoDoc extends Application {
       List<Directive> dirs = new ArrayList<>( config.runFiles.size() );
       for ( String file : files ) try {
          Directive dir = Directive.create( INLINE, Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() ) );
-         dir.setObserver( stage.newNode( file ) );
+         if ( stage != null )
+            dir.setObserver( stage.newNode( file ) );
          dir.setBlock( new Block( null, dir ).addOnDone( (b) -> {
             if ( CocoOption.auto_open )
                for ( File f : b.getOutputList() ) try {
@@ -75,12 +70,19 @@ public class CocoDoc extends Application {
       } catch ( RuntimeException ex ) {
          ex.printStackTrace();
       }
-      for ( Directive dir : dirs )try {
+      for ( Directive dir : dirs ) try {
          dir.get();
       } catch ( InterruptedException ex ) {}
    }
 
-   public static void showHeadlessHelp ( Exception ex ) {
+   public static void runHeadless () {
+      if ( ! config.runFiles.isEmpty() )
+         CocoDoc.run( NullData.stringArray( config.runFiles ) );
+      else
+         showHeadlessHelp();
+   }
+
+   public static void showHeadlessHelp () {
       if ( config.help != null ) {
 
          String doc;
@@ -93,10 +95,8 @@ public class CocoDoc extends Application {
          }
 
          System.out.println( doc );
-         System.exit( 0 );
 
       } else {
-         if ( ex != null ) ex.printStackTrace();
          System.out.println( "Input /? or --help for manual, or --license for the license.");
 
       }

@@ -2,8 +2,11 @@ package sheepy.cocodoc.ui;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
+import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -21,24 +24,27 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import sheepy.cocodoc.CocoConfig;
 import sheepy.cocodoc.CocoDoc;
+import static sheepy.cocodoc.CocoDoc.config;
 import sheepy.cocodoc.CocoObserver;
 import sheepy.cocodoc.CocoUtils;
 import sheepy.cocodoc.worker.Worker;
+import sheepy.util.Time;
+import sheepy.util.collection.NullData;
 
 public class MainStage {
 
    private final Stage stage;
    private final ProgressPanel progress = new ProgressPanel();
 
-   private BorderPane   pnlC = new BorderPane();
-     private TabPane        tabs = new TabPane();
-       private Node           workPane = progress.getPanel();
-       private TabPane        docPane = new TabPane();
-         private WebView web = new WebView();
-     private Button       btnRun = new Button();
+   private final BorderPane   pnlC = new BorderPane();
+     private final TabPane        tabs = new TabPane();
+       private final Node           workPane = progress.getPanel();
+       private final TabPane        docPane = new TabPane();
+         private final WebView web = new WebView();
+     private final Button       btnRun = new Button();
    //BorderPane docPane = new BorderPane( web );
 
-   public MainStage( Stage stage ) {
+   public MainStage ( Stage stage ) {
       this.stage = stage;
       stage.setTitle( "ChocoDoc 1.1" );
       stage.setScene( new Scene( pnlC, 760, 580 ) );
@@ -81,6 +87,14 @@ public class MainStage {
       stage.addEventFilter( MouseEvent.MOUSE_RELEASED, this::stopAutoClose );
       stage.addEventFilter( KeyEvent.KEY_RELEASED, this::stopAutoClose );
       stage.show();
+
+      if ( ! config.runFiles.isEmpty() ) {
+         new Thread( () -> {
+            while ( CocoDoc.stage == null ) Time.sleep( 50 );
+            CocoDoc.run( NullData.stringArray( config.runFiles ) );
+            startAutoClose();
+         } ).start();
+      }
    }
 
    private Tab selectedDocTab;
@@ -143,43 +157,51 @@ public class MainStage {
          Worker.run( () -> CocoDoc.run( file.toString() ) );
    }
 
+   /*******************************************************************************************************************/
+
    Timer autoClose;
    int countdown = 0;
-   public synchronized void autoClose() {
-      if ( autoClose != null ) {
-         autoClose.cancel();
-         autoClose = null;
-      }
-      if ( noAutoClose ) return;
 
-      countdown= CocoDoc.option.auto_close_second;
-      if ( countdown < 0 ) return;
-      autoClose = new Timer( "AutoClose", true );
-
+   public void startAutoClose() {
+      stopAutoClose();
       Platform.runLater( () -> {
+         if ( noAutoClose ) return;
+         countdown =  CocoDoc.option.auto_close_second;
+         if ( countdown < 0 ) return;
+
          btnRun.setOnAction( this::stopAutoClose );
          btnRun.requestFocus();
+         autoClose = new Timer( "AutoClose", true );
          autoClose.schedule( new TimerTask() { @Override public void run() {
-            Platform.runLater( () -> {
-               btnRun.setText( "🚪 Auto close 🚪 in " + countdown + " (Stop)" );
-               if ( countdown-- == 0 ) synchronized( MainStage.this ) {
-                  autoClose.cancel();
-                  stage.close();
-               }
-            } );
+            autoCloseCountdown();
          } }, 0, 1000 );
       });
    }
 
-   private synchronized void stopAutoClose( Event evt ) {
-      if ( autoClose == null ) return;
-      autoClose.cancel();
-      autoClose = null;
+   private void autoCloseCountdown () {
+      Platform.runLater( () -> {
+         btnRun.setText( "🚪 Auto close 🚪 in " + countdown + " (Stop)" );
+         if ( --countdown < 0 ) {
+            if ( autoClose != null ) autoClose.cancel();
+            stage.close();
+         }
+      } );
+   }
+
+   private void stopAutoClose() {
+      Platform.runLater( () -> {
+         if ( autoClose == null ) return;
+         autoClose.cancel();
+         autoClose = null;
+      } );
+   }
+
+   private void stopAutoClose( Event evt ) {
+      stopAutoClose();
       // Delay reset a little bit to prevent double trigger of button action
-      Timer reset = new Timer();
-      reset.schedule( new TimerTask() { @Override public void run() {
+      new Thread( () -> {
+         Time.sleep( 20 );
          Platform.runLater( MainStage.this::resetBtnRun );
-         reset.cancel();
-      } }, 20 );
+      }, "Stop autoclose" ).start();
    }
 }

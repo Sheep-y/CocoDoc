@@ -7,6 +7,7 @@ import java.util.Scanner;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoRunError;
+import sheepy.util.collection.NullData;
 import sheepy.util.text.I18n;
 
 /**
@@ -21,7 +22,7 @@ public class TaskExec extends Task {
 
    @Override protected void run () {
       if ( ! hasParams() ) return;
-      String[] params = getParams().toArray( new String[ getParams().size() ] );
+      String[] params = NullData.stringArray( getParams() );
       String cmd = String.join( " ", params );
       log( Level.FINER, "Executing {0}", cmd );
 
