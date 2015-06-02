@@ -29,7 +29,8 @@ abstract class XmlSelector {
          }
          return result;
       } catch ( CocoRunError ex ) {
-         throw new CocoRunError( "Cannot find " + toString(), ex.getCause() == null ? ex : ex.getCause() );
+         Throwable cause = ex.getCause();
+         throw new CocoRunError( "Cannot find " + toString(), cause == null ? ex : cause );
       }
    }
 
@@ -43,7 +44,18 @@ abstract class XmlSelector {
       return node == null || ( node.isValid() && node.getType() == NODE_TYPE.TAG );
    }
 
+   /**
+    * Find element using relative location.
+    * Used by ParserCoco's delete task and position task.
+    *
+    * @param text Text to search.
+    * @param range Starting range.  May be find within or find outward, depending on the selector.
+    * @return Found range, or null if not found.
+    */
    abstract TextRange find ( CharSequence text, TextRange range );
+   boolean match ( XmlNode node ) {
+      throw new UnsupportedOperationException();
+   };
 
    protected String nextToString() {
       return next == null ? "" : next.toString();
@@ -58,6 +70,9 @@ abstract class XmlSelector {
       }
       @Override public String toString() {
          return ( nextToString() + " this" ).trim();
+      }
+      @Override boolean match ( XmlNode node ) {
+         throw new UnsupportedOperationException();
       }
    }
 
@@ -110,8 +125,8 @@ abstract class XmlSelector {
    }
 
    static class PosElement extends PosLine {
-      private String tag;
-      private List<PosElementAttr> attr; // Never be null.
+      private final String tag;
+      private final List<PosElementAttr> attr; // Never be null.
 
       PosElement ( String count, String tag, List<PosElementAttr> attr, String position ) {
          super( count, position );
@@ -134,19 +149,38 @@ abstract class XmlSelector {
          throw new CocoRunError( "Cannot find " + this );
       }
 
-      private boolean match( XmlNode node ) {
-         return node != null && isTag( node ) && node.getValue().toString().equals( tag );
+      @Override boolean match( XmlNode node ) {
+         if ( ! isTag( node ) || ( ! tag.equals( "*" ) && ! node.getValue().toString().equals( tag ) ) )
+            return false;
+         for ( PosElementAttr a : attr ) {
+            XmlNode name = node.getAttribute( a.attr );
+            if ( name == null ) return false;
+            String target = a.value;
+            if ( target != null ) {
+               String val = name.getAttributeValue().toString();
+               if ( a.caseInsensitive ) {
+                  val = val.toLowerCase();
+                  target = target.toLowerCase();
+               }
+               switch ( a.matcher ) {
+                  case  "=" : if ( ! val.equals    ( target ) ) return false;
+                  case "^=" : if ( ! val.startsWith( target ) ) return false;
+                  case "$=" : if ( ! val.endsWith  ( target ) ) return false;
+               }
+            }
+         }
+         return true;
       }
+
       @Override public String toString() {
          return ( nextToString() + " " + Text.ifNull( count, "the" ) + " " + tag + Text.toString( "[", "][", "]", attr ) + " " + position ).trim();
       }
 
-
       static class PosElementAttr {
-         private String attr;
-         private String matcher;
-         private String value;
-         private boolean caseInsensitive;
+         private final String attr;
+         private final String matcher;
+         private final String value;
+         private final boolean caseInsensitive;
 
          PosElementAttr(String attr, String matcher, String value, boolean caseInsensitive) {
             this.attr = attr;
@@ -163,8 +197,8 @@ abstract class XmlSelector {
    }
 
    static class PosAttr extends XmlSelector {
-      String attr;
-      PosAttr(String attr) { this.attr = attr; }
+      private final String attr;
+      PosAttr ( String attr ) { this.attr = attr; }
 
       @Override TextRange find ( CharSequence text, TextRange range ) {
          XmlNode base = firstTag( range.context.root().findChildrenBefore( range.start ) );
@@ -173,7 +207,7 @@ abstract class XmlSelector {
                return child.range;
          throw new CocoRunError( "Cannot find " + this );
       }
-      private boolean match( XmlNode node ) {
+      @Override boolean match ( XmlNode node ) {
          return node.isValid() && node.getType() == NODE_TYPE.ATTRIBUTE && node.value.toString().equals( attr );
       }
       @Override public String toString() {
