@@ -1,8 +1,8 @@
 package sheepy.cocodoc.worker.task;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
@@ -52,13 +52,15 @@ public class TaskFile extends Task {
       Block block = getBlock();
 
       if ( getDirective().getAction() == INLINE ) { // Read file and add to block
+
          File base = block.getParentBasePath();
          for ( String s : getParams() ) try {
             log( Level.FINE, "Reading {1} from base path {0}.", base, s );
             File f = new File( base, s );
             byte[] buffer;
-            try ( FileInputStream in = new FileInputStream( f ) ) {
-               buffer = new byte[ (int) f.length() ];
+            try ( InputStream in = CocoUtils.getStream( f.getPath() ) ) {
+               if ( in == null ) throw new IOException( "File not found: " + f );
+               buffer = new byte[ in.available() ];
                int len = in.read( buffer );
                if ( len < buffer.length ) buffer = Arrays.copyOfRange( buffer, 0, len ); // In case file size changed
             }

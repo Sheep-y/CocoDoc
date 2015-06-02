@@ -15,10 +15,9 @@ import sheepy.cocodoc.CocoObserver;
 public abstract class ObserverEntity implements CocoObserver {
 
    public class Log {
-      public final long time;
+      public final long time = System.nanoTime();
       public final String message;
       public Log ( String message ) {
-         time = System.nanoTime();
          this.message = message;
       }
       public long getTime() { return Math.round( time - baseTime ) / 1000_000; }

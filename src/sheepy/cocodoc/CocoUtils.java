@@ -99,11 +99,14 @@ public class CocoUtils {
    public static InputStream getStream ( String file ) {
       try {
          File f = new File( file );
-         if ( f.exists() && f.isFile() && f.canRead() )
-            return new BufferedInputStream( new FileInputStream( f ) );
-         else
-            return CocoUtils.class.getResourceAsStream( '/' + file );
-      } catch (FileNotFoundException ex) {
+         if ( f.exists() && f.isFile() && f.canRead() ) {
+            return new FileInputStream( f );
+         } else {
+            file = file.replace( '\\', '/' );
+            if ( ! file.startsWith( "/" ) ) file = '/' + file;
+            return CocoUtils.class.getResourceAsStream( file );
+         }
+      } catch ( FileNotFoundException ex ) {
          return null;
       }
    }

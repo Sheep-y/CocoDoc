@@ -1,6 +1,7 @@
 package sheepy.cocodoc;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +29,9 @@ public class CocoConfig {
 
    public CocoConfig parseCommandLine( String[] args ) {
       if ( args == null || args.length <= 0 ) {
-         if ( new File( DEFAULT_BUILD ).exists() ) {
+         String hasFile = null;
+         try { hasFile = CocoUtils.getText( DEFAULT_BUILD ); } catch ( IOException ex ) {}
+         if ( hasFile != null ) {
             args = new String[]{ DEFAULT_BUILD };
          } else {
             help = HELP_FILE;

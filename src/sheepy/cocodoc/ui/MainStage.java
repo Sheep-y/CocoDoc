@@ -40,7 +40,7 @@ public class MainStage {
 
    public MainStage( Stage stage ) {
       this.stage = stage;
-      stage.setTitle( "ChocoDoc 1.0" );
+      stage.setTitle( "ChocoDoc 1.1" );
       stage.setScene( new Scene( pnlC, 760, 580 ) );
       stage.setOnCloseRequest( e -> Worker.stop() );
 
