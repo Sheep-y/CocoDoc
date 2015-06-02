@@ -74,10 +74,10 @@ public class TaskUglifyJS extends Task {
             Thread.currentThread().setPriority( 6 );
          ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
          try {
-            js.eval( CocoUtils.getText( "js/uglifyjs/lib/parse-js.js" ) );
-            js.eval( CocoUtils.getText( "js/uglifyjs/lib/process.js" ) );
-            js.eval( CocoUtils.getText( "js/uglifyjs/lib/squeeze-more.js" ) );
-            js.eval( CocoUtils.getText( "js/uglifyjs/lib/consolidator.js" ) );
+            js.eval( CocoUtils.getText( "res/uglifyjs/lib/parse-js.js" ) );
+            js.eval( CocoUtils.getText( "res/uglifyjs/lib/process.js" ) );
+            js.eval( CocoUtils.getText( "res/uglifyjs/lib/squeeze-more.js" ) );
+            js.eval( CocoUtils.getText( "res/uglifyjs/lib/consolidator.js" ) );
             js.eval( "var jsp = uglifyjs.jsp, pro = uglifyjs.pro;" );
             return js;
          } catch ( ScriptException | IOException ex ) {

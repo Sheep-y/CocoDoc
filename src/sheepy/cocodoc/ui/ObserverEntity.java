@@ -7,7 +7,10 @@ import java.util.List;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import sheepy.cocodoc.CocoObserver;
+import sheepy.cocodoc.CocoUtils;
 
 /**
  * CocoObserver entity for JavFX (e.g. TreeTableView)
@@ -55,6 +58,9 @@ public abstract class ObserverEntity implements CocoObserver {
       synchronized ( logList ) {
          logList.add( log );
          error = value;
+         try {
+            node.setGraphic( new ImageView( new Image( CocoUtils.getStream( "res/img/error.gif" ) ) ) );
+         } catch ( NullPointerException ex ) {}
       }
       messageProperty().set( value );
       return this;
@@ -67,6 +73,13 @@ public abstract class ObserverEntity implements CocoObserver {
 
    protected boolean isStarted() { return startTime != 0; }
    protected boolean isDone() { return endTime != 0; }
+   protected boolean canCollapse() {
+      if ( error != null ) return false;
+      for ( TreeItem<ObserverEntity> e : node.getChildren() )
+         if ( e.isExpanded() && ! e.getValue().canCollapse() )
+            return false;
+      return true;
+   }
 
    public ObserverEntity ( String name ) {
       this.name.set( name );

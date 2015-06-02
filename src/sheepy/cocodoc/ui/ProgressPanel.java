@@ -200,7 +200,7 @@ public class ProgressPanel {
             progress.setProgress( 1 );
             tab.setText( nameProperty().get() );
             tab.setClosable( true );
-            if ( CocoDoc.option.auto_collapse_level <= 0 )
+            if ( CocoDoc.option.auto_collapse_level <= 0 && canCollapse() )
                node.setExpanded( false );
          } );
       }
@@ -233,9 +233,14 @@ public class ProgressPanel {
             int level = findLevel( node );
             if ( level <= 2 ) // Count progress of first two levels
                tab.arrive();
-            if ( level >= CocoDoc.option.auto_collapse_level )
+            if ( level >= CocoDoc.option.auto_collapse_level && canCollapse() )
                node.setExpanded( false );
          } );
+      }
+
+      @Override protected boolean canCollapse() {
+         // Cannot collapse if selected
+         return super.canCollapse() && ! tab.tree.getSelectionModel().getSelectedItems().contains( node ) ;
       }
 
       /** Tree root is 0, top visible nodes are 1. */

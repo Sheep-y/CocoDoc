@@ -54,7 +54,7 @@ public class TaskUglifyCSS extends Task {
       ( key ) -> {
          ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
          try {
-            js.eval( CocoUtils.getText( "js/uglifycss/uglifycss-lib.js" ) );
+            js.eval( CocoUtils.getText( "res/uglifycss/uglifycss-lib.js" ) );
             return js;
          } catch ( ScriptException | IOException ex ) {
             return new CocoRunError( "Cannot load UglifyCSS", ex );
