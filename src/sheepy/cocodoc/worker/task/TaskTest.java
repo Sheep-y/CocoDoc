@@ -30,7 +30,7 @@ public class TaskTest extends Task {
 
    @Override protected void run () {
       if ( ! hasParams() ) {
-         log( Level.INFO, "Skipping, no parameter" );
+         log( Level.INFO, "Skipping test(), no parameter" );
          return;
       }
       log( Level.FINER, "Validating data" );

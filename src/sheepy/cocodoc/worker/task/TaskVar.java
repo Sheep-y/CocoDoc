@@ -21,7 +21,7 @@ public class TaskVar extends Task {
    ZonedDateTime app_build_time;
    @Override protected void run () {
       if ( ! hasParams() ) {
-         log( Level.INFO, "Skipping, no parameter" );
+         log( Level.INFO, "Skipping var(), no parameter" );
          return;
       }
 

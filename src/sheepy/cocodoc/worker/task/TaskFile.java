@@ -46,7 +46,7 @@ public class TaskFile extends Task {
 
    @Override protected void run () {
       if ( ! hasParams() ) {
-         log( Level.INFO, "Skipping, no parameter" );
+         log( Level.INFO, "Skipping file(), no parameter" );
          return;
       }
       Block block = getBlock();

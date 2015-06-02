@@ -18,7 +18,7 @@ public class TaskPrefix extends Task {
 
    @Override protected void run () {
       if ( ! hasParams() ) {
-         log( Level.INFO, "Skipping, no parameter" );
+         log( Level.INFO, "Skipping prefix(), no parameter" );
          return;
       }
       log( Level.FINER, "Adding prefix" );

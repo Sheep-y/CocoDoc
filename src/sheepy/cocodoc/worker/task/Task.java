@@ -45,6 +45,7 @@ public abstract class Task {
       POSTFIX,
       POSTPROCESS,
       REPLACE,
+      STRIP,
       TEXT,
       TEST,
       TRIM,
@@ -89,6 +90,7 @@ public abstract class Task {
          case TEXT       : result = new TaskText(); break;
          case TEST       : result = new TaskTest(); break;
          case TRIM       : result = new TaskTrim(); break;
+         case STRIP      : result = new TaskStrip(); break;
          case UGLIFYCSS  : result = new TaskUglifyCSS(); break;
          case UGLIFYJS   : result = new TaskUglifyJS(); break;
          case VAR        : result = new TaskVar(); break;

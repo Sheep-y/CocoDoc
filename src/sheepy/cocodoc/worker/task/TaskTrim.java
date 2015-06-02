@@ -30,7 +30,7 @@ public class TaskTrim extends Task {
 
    @Override protected void run () {
       if ( ! hasParams() ) {
-         log( Level.INFO, "Skipping, no parameter" );
+         log( Level.INFO, "Skipping trim(), no parameter" );
          return;
       }
       log( Level.FINER, "Trimming text" );
