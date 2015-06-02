@@ -185,7 +185,7 @@ exports['ast_consolidate'] = function(oAbstractSyntaxTree) {
        * @namespace
        * @type {!TProcessor}
        */
-      oProcessor = (/** @type {!TProcessor} */ require('./process')),
+      oProcessor = exports || (/** @type {!TProcessor} */ require('./process')),
       /**
        * A record consisting of a number of constants that represent the
        * difference in the number of terminal symbols between a source text with
