@@ -188,7 +188,7 @@ public class ProgressPanel {
 
       @Override public CocoObserver setName ( String name ) {
          Platform.runLater( () -> {
-            tab.setText( isDone() ? name : ( "*" + name + "*" ) );
+            tab.setText( ( isDone() ? "✔ " : "▶ " ) + name );
          });
          return super.setName( name );
       }
@@ -198,7 +198,7 @@ public class ProgressPanel {
          super.done();
          Platform.runLater( () -> {
             progress.setProgress( 1 );
-            tab.setText( nameProperty().get() );
+            setName( nameProperty().get() );
             tab.setClosable( true );
             if ( CocoDoc.option.auto_collapse_level <= 0 && canCollapse() )
                node.setExpanded( false );

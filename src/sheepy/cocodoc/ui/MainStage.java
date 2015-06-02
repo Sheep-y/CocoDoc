@@ -49,13 +49,13 @@ public class MainStage {
       resetBtnRun();
       btnRun.setMaxWidth( Double.MAX_VALUE );
 
-      createTab( tabs, "Build", workPane );
-      createTab( tabs, "Documents", docPane );
+      createTab( tabs, "⚒ Build", workPane );
+      createTab( tabs, "📖 Documents", docPane );
 
-      createDocTab( docPane, "Help", CocoConfig.HELP_FILE );
-      createDocTab( docPane, "License 1", CocoConfig.LGPL_FILE );
-      createDocTab( docPane, "License 2", CocoConfig.GPL_FILE );
-      createDocTab( docPane, "Program Design", CocoConfig.DESIGN_FILE );
+      createDocTab( docPane, "📖 Help", CocoConfig.HELP_FILE );
+      createDocTab( docPane, "⚖ License 1", CocoConfig.LGPL_FILE );
+      createDocTab( docPane, "⚖ License 2", CocoConfig.GPL_FILE );
+      createDocTab( docPane, "⚙ Program Design", CocoConfig.DESIGN_FILE );
 
       if ( CocoDoc.config.help != null ) {
          tabs.getSelectionModel().select( 1 );
@@ -126,7 +126,7 @@ public class MainStage {
    private boolean noAutoClose = false;
 
    private void resetBtnRun() {
-      btnRun.setText( "New Build" );
+      btnRun.setText( "⚒ New Build ⚒" );
       btnRun.setOnAction( this::btnRunOnAction );
    }
 
@@ -161,7 +161,7 @@ public class MainStage {
          btnRun.requestFocus();
          autoClose.schedule( new TimerTask() { @Override public void run() {
             Platform.runLater( () -> {
-               btnRun.setText( "Auto close in " + countdown + " (Stop)" );
+               btnRun.setText( "🚪 Auto close 🚪 in " + countdown + " (Stop)" );
                if ( countdown-- == 0 ) synchronized( MainStage.this ) {
                   autoClose.cancel();
                   stage.close();

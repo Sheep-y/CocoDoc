@@ -61,8 +61,8 @@ public class ParserCoco extends Parser {
 
    private static final String paramRegx = "\"([^\"]|\"\")*\"|'([^']|'')*'|[^,()]+"; // double quoted | single quoted | plain parameter
    private static final String firstParamRegx = "\"([^\"]|\"\")*\"|'([^']|'')*'|[^\r\n\t ,()]+"; // differs from paramRegx in that this stop at space
-   private static final String attrRegx = ("(\\w+)\\s* ( \\(\\s* (?: (?:" + paramRegx + ") (?:\\s*,\\s*(?:"+paramRegx+") )* \\s* )? \\))?").replaceAll( " +", "" );
-                                       //   directive     \(              first param      (      ,        more params   )*          \)
+   private static final String attrRegx = ("(-?\\w+)\\s* ( \\(\\s* (?: (?:" + paramRegx + ") (?:\\s*,\\s*(?:"+paramRegx+") )* \\s* )? \\))?").replaceAll( " +", "" );
+                                       //   directive       \(              first param      (      ,        more params   )*          \)
    // Only live during parsing.
    private Matcher attributeMatcher;
    private Matcher parameterMatcher;
@@ -156,7 +156,8 @@ public class ParserCoco extends Parser {
                   if ( ! attr.reset( txt ).find() || attr.start() != 0 )
                      throw new CocoParseError( "Cannot parse tasks \"" + txt + "\"" );
 
-                  tasks.add( parseTask( attr.group(1), attr.group(2) ) );
+                  if ( ! attr.group(1).startsWith( "-" ) )
+                     tasks.add( parseTask( attr.group(1), attr.group(2) ) );
 
                   txt = txt.substring( attr.end() ).trim();
                }
