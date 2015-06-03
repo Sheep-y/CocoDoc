@@ -20,8 +20,7 @@ public class DirStart extends Directive {
 
    @Override public Directive start( Block parent ) {
       if ( countdown.getCount() <= 0 ) throw new IllegalStateException( "Start directive should not be started more than once." );
-      if ( branchObserver( parent, toString() ) != null )
-         getObserver().start( (Long) parent.stats().getVar( BlockStats.NANO_BUILD ) ); // Notice start before parsing (and before block start)
+      if ( parent != null ) setObserver( parent.getObserver() ); // Same thread as parent
       log( Level.FINEST, "Started parsing", this );
 
       Block b = new Block( parent, this );
@@ -32,12 +31,15 @@ public class DirStart extends Directive {
       // By this time all subblock parsing has finished, and parent can continue.
 
       Worker.run( () -> { // And this part is about running the start directive's tasks.
+         if ( branchObserver( parent, toString() ) != null )
+            getObserver().start( (Long) parent.stats().getVar( BlockStats.NANO_BUILD ) );
          try {
             b.setText( parser.get() );
             log( Level.FINEST, "Copied {1} ({0} chars) to start block", this, b.getText().length(), Text.ellipsis( b.getText(), 10 ) );
             b.run();
          } finally {
             countdown.countDown();
+            if ( getObserver() != null ) getObserver().done();
          }
       } );
 

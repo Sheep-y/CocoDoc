@@ -27,22 +27,25 @@ public abstract class ObserverEntity implements CocoObserver {
       public String getMessage() { return message; }
    }
 
+   private String error;
    private final List<Log> logList = new ArrayList<>();
-
    private final StringProperty status = new SimpleStringProperty( this, "Waiting" );
+   private final StringProperty name = new SimpleStringProperty( this, "" );
+   private final StringProperty message = new SimpleStringProperty( this, "" );
+
+   public ObserverEntity ( String name ) {
+      this.name.set( name );
+   }
+
    public StringProperty statusProperty() { return status; }
    private void setStatus( String value ) { statusProperty().set( value ); }
 
-   private final StringProperty name = new SimpleStringProperty( this, "" );
    public StringProperty nameProperty() { return name; }
    @Override public CocoObserver setName( String value ) { nameProperty().set( value ); return this; }
 
-   private String error;
-   private final StringProperty message = new SimpleStringProperty( this, "" );
    public StringProperty messageProperty() { return message; }
 
    public List<Log> getLogs () { return new ArrayList<>( logList ); }
-
    @Override public CocoObserver log ( String value ) {
       Log log = new Log( value );
       synchronized ( logList ) {
@@ -81,11 +84,13 @@ public abstract class ObserverEntity implements CocoObserver {
       return true;
    }
 
-   public ObserverEntity ( String name ) {
-      this.name.set( name );
+   protected void reset() {
+      baseTime = startTime = endTime = 0;
+      logList.clear();
+      node.getChildren().clear();
    }
 
-   @Override public void start ( long baseTime ) {
+   @Override public void start ( Thread curThread, long baseTime ) {
       if ( isStarted() ) return;
       startTime = System.nanoTime();
       this.baseTime = baseTime;
@@ -93,7 +98,7 @@ public abstract class ObserverEntity implements CocoObserver {
    }
 
    private static final NumberFormat timeFormatter = new DecimalFormat("#0.00");
-   @Override public void done () {
+   @Override public void done ( Thread curThread ) {
       if ( isDone() ) return;
       this.endTime = System.nanoTime();
       setStatus( "Done (" + timeFormatter.format( ( endTime-startTime ) / 1000_000_000.00 ) + " s)" );

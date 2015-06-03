@@ -13,9 +13,11 @@ public interface CocoObserver {
    /** Log an error message */
    public CocoObserver error ( String message );
 
-   /** Mark that the process has started. */
-   public void start( long baseTime );
+   /** mark that the process has started. */
+   public default void start ( long basetime ) { start( Thread.currentThread(), basetime ); }
+   public void start ( Thread currentThread, long basetime );
 
    /** Mark that the process ended. */
-   public void done();
+   public default void done () { done( Thread.currentThread() ); }
+   public void done ( Thread currentThread );
 }

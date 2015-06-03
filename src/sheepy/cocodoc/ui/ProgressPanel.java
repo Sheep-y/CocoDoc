@@ -1,5 +1,7 @@
 package sheepy.cocodoc.ui;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
@@ -23,6 +25,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoObserver;
@@ -69,9 +72,15 @@ public class ProgressPanel {
       private final TreeTableView<ObserverEntity> tree = new TreeTableView<>( node );
       private final ObservableList<ObserverEntity.Log> log = new ObservableArrayList<>();
       private final TableView<ObserverEntity.Log> tblLog = new TableView<>();
-      private final ProgressBar progress = new ProgressBar( ProgressBar.INDETERMINATE_PROGRESS );
+      private final ProgressBar progress = new ProgressBar();
       private final Button btnCloseLog = new Button();
+      private final Button btnPauseRerun = new Button( "↻" );
+      private final Label lblThread = new Label();
       private final SplitPane pnlC = new SplitPane();
+
+      private final AtomicInteger runningThread = new AtomicInteger( 0 );
+      private Timer timer; // Can use a global timer, but only if we keep a list of active tab
+      private long startTime; // Coarse timer
 
       private final AtomicInteger maxProgress = new AtomicInteger();
       private final AtomicInteger curProgress = new AtomicInteger();
@@ -81,15 +90,10 @@ public class ProgressPanel {
          Platform.runLater( () -> {
             Region pnlTree = createTreePane();
             Region pnlLog = createLogPane();
-
             pnlC.getItems().addAll( pnlLog, pnlTree );
             pnlC.setOrientation( Orientation.VERTICAL );
-
-            node.setExpanded( true );
             tab.setContent( pnlC );
-            tab.setClosable( false );
-            collapseLog( null );
-            updateLog();
+            reset( null );
          } );
       }
 
@@ -108,7 +112,7 @@ public class ProgressPanel {
          tree.setOnMouseClicked( evt -> {
             if ( evt.getButton() == MouseButton.PRIMARY && evt.getClickCount() == 2 )
                expandLog( null );
-         });
+         } );
 
          ScrollPane result = new ScrollPane( tree );
          result.setFitToWidth ( true );
@@ -117,9 +121,12 @@ public class ProgressPanel {
       }
 
       private Region createLogPane() {
+         HBox pnlTR = new HBox( lblThread, btnPauseRerun );
          BorderPane pnlT = new BorderPane( progress );
          pnlT.setLeft( btnCloseLog );
+         pnlT.setRight( pnlTR );
          progress.setMaxSize( Double.MAX_VALUE, Double.MAX_VALUE );
+         btnPauseRerun.setOnAction( this::rerun );
 
          TableColumn<ObserverEntity.Log, String> colTime    = new TableColumn<>( "Time (ms)" );
          TableColumn<ObserverEntity.Log, String> colMessage = new TableColumn<>( "Message"   );
@@ -145,7 +152,7 @@ public class ProgressPanel {
          if ( ( progress.getHeight() + 5 ) <= (int) Math.round( pnlC.getHeight() * pnlC.getDividerPositions()[0] ) )
             return;
          pnlC.setDividerPosition( 0, splitPos );
-         splitPos = pnlC.getDividerPositions()[0];
+         splitPos = pnlC.getDividerPositions()[ 0 ];
          btnCloseLog.setText( "▲" );
          btnCloseLog.setOnAction( this::collapseLog );
          int i = tree.getSelectionModel().getSelectedIndex();
@@ -153,7 +160,7 @@ public class ProgressPanel {
       }
 
       private void collapseLog ( ActionEvent evt ) {
-         splitPos = pnlC.getDividerPositions()[0];
+         splitPos = pnlC.getDividerPositions()[ 0 ];
          pnlC.setDividerPosition( 0, 0 );
          btnCloseLog.setText( "▼" );
          btnCloseLog.setOnAction( this::expandLog );
@@ -190,19 +197,72 @@ public class ProgressPanel {
          Platform.runLater( () -> {
             tab.setText( ( isDone() ? "✔ " : "▶ " ) + name );
          });
-         return super.setName( name );
+         if ( ! name.equals( nameProperty().get() ) ) super.setName( name );
+         return this;
       }
 
-      @Override public void done () {
-         if ( isDone() ) return;
-         super.done();
+      private void updateThread () {
          Platform.runLater( () -> {
-            progress.setProgress( 1 );
+            String txt = "Threads:  " + runningThread.get();
+            if ( ! isDone() ) {
+               long sec = Math.round( ( System.currentTimeMillis() - startTime ) / 1000 );
+               txt += ", Time:  " + sec + "  s";
+            }
+            lblThread.setText( txt );
+         } );
+      }
+
+      @Override public void start ( Thread curThread, long baseTime ) {
+         super.start( curThread, baseTime );
+         runningThread.incrementAndGet();
+         // updateThread();
+      }
+
+      @Override public void done ( Thread curThread ) {
+         if ( isDone() ) return;
+         super.done( curThread );
+         Platform.runLater( () -> {
+            timer.cancel();
+            timer = null;
+            runningThread.decrementAndGet();
+            updateThread();
             setName( nameProperty().get() );
             tab.setClosable( true );
+            progress.setProgress( 1 );
+            btnPauseRerun.setDisable( false );
             if ( CocoDoc.option.auto_collapse_level <= 0 && canCollapse() )
                node.setExpanded( false );
          } );
+      }
+
+      private void reset ( ActionEvent evt ) {
+         super.reset();
+         assert( Platform.isFxApplicationThread() );
+         String name = nameProperty().get();
+
+         if ( timer != null ) timer.cancel();
+         startTime = System.currentTimeMillis();
+         timer = new Timer( name + " Timer", true );
+         timer.schedule( new TimerTask() { @Override public void run() {
+            updateThread();
+         } }, 100, 100 );
+
+         setName( name );
+         tab.setClosable( false );
+         btnPauseRerun.setDisable( true );
+         progress.setProgress( ProgressBar.INDETERMINATE_PROGRESS );
+         maxProgress.set( 0 );
+         curProgress.set( 0 );
+
+         node.setExpanded( true );
+         collapseLog( null );
+         updateLog();
+      }
+
+      private void rerun ( ActionEvent evt ) {
+         assert( runningThread.get() == 0 );
+         reset( null );
+         new Thread( () -> CocoDoc.run( this, nameProperty().get() ) ).start();
       }
    }
 
@@ -212,7 +272,7 @@ public class ProgressPanel {
    private static class ProgressNode extends ObserverEntity {
       final ProgressTab tab;
 
-      public ProgressNode( ProgressTab tab, TreeItem parent, String name ) {
+      public ProgressNode ( ProgressTab tab, TreeItem parent, String name ) {
          super( name );
          this.tab = tab;
          Platform.runLater( () -> {
@@ -227,9 +287,17 @@ public class ProgressPanel {
          return new ProgressNode( tab, node, name );
       }
 
-      @Override public void done () {
-         super.done();
+      @Override public void start ( Thread curThread, long baseTime ) {
+         super.start( curThread, baseTime );
+         tab.runningThread.incrementAndGet();
+         // tab.updateThread();
+      }
+
+      @Override public void done ( Thread curThread ) {
+         super.done( curThread );
          Platform.runLater( () -> {
+            tab.runningThread.decrementAndGet();
+            // tab.updateThread();
             int level = findLevel( node );
             if ( level <= 2 ) // Count progress of first two levels
                tab.arrive();
@@ -238,13 +306,13 @@ public class ProgressPanel {
          } );
       }
 
-      @Override protected boolean canCollapse() {
+      @Override protected boolean canCollapse () {
          // Cannot collapse if selected
          return super.canCollapse() && ! tab.tree.getSelectionModel().getSelectedItems().contains( node ) ;
       }
 
       /** Tree root is 0, top visible nodes are 1. */
-      private static int findLevel( TreeItem t ) {
+      private static int findLevel ( TreeItem t ) {
          int level = -1;
          while ( t != null ) {
             t = t.getParent();

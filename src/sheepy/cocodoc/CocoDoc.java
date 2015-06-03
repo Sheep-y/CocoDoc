@@ -52,11 +52,14 @@ public class CocoDoc {
    }
 
    public static void run ( String ... files ) {
+      run( null, files );
+   }
+
+   public static void run ( CocoObserver observer, String ... files ) {
       List<Directive> dirs = new ArrayList<>( config.runFiles.size() );
       for ( String file : files ) try {
          Directive dir = Directive.create( INLINE, Arrays.asList( new TaskFile().addParam( file ), new TaskCoco() ) );
-         if ( stage != null )
-            dir.setObserver( stage.newNode( file ) );
+         dir.setObserver( observer == null && stage != null ? stage.newNode( file ) : observer );
          dir.setBlock( new Block( null, dir ).addOnDone( (b) -> {
             if ( CocoOption.auto_open )
                for ( File f : b.getOutputList() ) try {
