@@ -38,7 +38,11 @@ public class CocoDoc {
             Application.launch( Launcher.class );
             launched = true;
          }
-      } catch ( RuntimeException ignored ) {}
+      } catch ( RuntimeException ex ) {
+         // This should not happens in main thread, but just in case
+         if ( ex instanceof CocoRunError || ex instanceof CocoParseError )
+            launched = true; // Do not relaunch if ran into coco error.
+      }
 
       if ( ! launched )
          runHeadless();

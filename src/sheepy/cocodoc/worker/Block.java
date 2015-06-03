@@ -110,7 +110,7 @@ public class Block extends AbstractFuture<Block> {
 
       try ( FileOutputStream out = new FileOutputStream( f, false ) ) {
          out.write( data );
-         stats().createVar( VAR_OUTPUT_LIST, new ArrayList<>() ).add( f );
+         stats().createVar( VAR_OUTPUT_LIST, ArrayList::new ).add( f );
       } catch ( IOException ex ) {
          if ( getOutputTarget().isThrowError() ) throw new CocoRunError( ex );
       }
@@ -293,7 +293,7 @@ public class Block extends AbstractFuture<Block> {
    }
 
    public Block addOnDone( Consumer<? super Block> task ) {
-      stats.createVar( VAR_ONDONE, new ArrayList<>() ).add( task );
+      stats.createVar( VAR_ONDONE, ArrayList::new ).add( task );
       return this;
    }
 

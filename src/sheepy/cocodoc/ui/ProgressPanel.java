@@ -1,5 +1,6 @@
 package sheepy.cocodoc.ui;
 
+import java.io.File;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -235,6 +236,12 @@ public class ProgressPanel {
          } );
       }
 
+      public CocoObserver monitor ( File f ) {
+         // TODO: Implement auto rerun
+         return this;
+      }
+
+      /** Reset panel to initial state, ready to monitor a new job */
       private void reset ( ActionEvent evt ) {
          super.reset();
          assert( Platform.isFxApplicationThread() );
@@ -309,6 +316,10 @@ public class ProgressPanel {
       @Override protected boolean canCollapse () {
          // Cannot collapse if selected
          return super.canCollapse() && ! tab.tree.getSelectionModel().getSelectedItems().contains( node ) ;
+      }
+
+      @Override public CocoObserver monitor ( File f ) {
+         return tab.monitor( f );
       }
 
       /** Tree root is 0, top visible nodes are 1. */

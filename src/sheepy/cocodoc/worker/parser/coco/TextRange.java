@@ -105,6 +105,10 @@ public class TextRange implements Comparable<TextRange> {
       return obj == this || ( obj instanceof TextRange && this.compareTo( (TextRange) obj) == 0 );
    }
 
+   @Override public int hashCode() {
+      return start << 16 + end;
+   }
+
    @Override protected TextRange clone() {
       return new TextRange( start, end ).setContext( context );
    }

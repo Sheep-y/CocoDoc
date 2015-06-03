@@ -63,6 +63,8 @@ public class TaskFile extends Task {
                buffer = new byte[ in.available() ];
                int len = in.read( buffer );
                if ( len < buffer.length ) buffer = Arrays.copyOfRange( buffer, 0, len ); // In case file size changed
+               if ( f.exists() && f.isFile() && f.canRead() && getBlock().getObserver() != null )
+                  getBlock().getObserver().monitor( f );
             }
             block.stats().addInBytes( buffer.length );
             log( Level.FINEST, "Read {0} bytes from {1}.", buffer.length, f );

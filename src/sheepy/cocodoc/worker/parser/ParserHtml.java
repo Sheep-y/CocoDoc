@@ -3,7 +3,6 @@ package sheepy.cocodoc.worker.parser;
 import java.io.Closeable;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import sheepy.cocodoc.CocoConfig;
@@ -13,6 +12,7 @@ import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.BlockStats;
 import sheepy.cocodoc.worker.parser.coco.XmlNode;
 import sheepy.cocodoc.worker.parser.coco.XmlParser;
+import sheepy.util.collection.Dictionary;
 import sheepy.util.text.Text;
 
 public class ParserHtml extends Parser {
@@ -244,9 +244,8 @@ public class ParserHtml extends Parser {
          // Get or create the index / glossary list
          List<XmlNode> list = null;
          try ( Closeable lock = stats.lockVar() ) {
-            Map<String,List<XmlNode>> data = stats.createVar( varKey, new HashMap<>() ) ;
+            Map<String,List<XmlNode>> data = stats.createVar( varKey, () -> new Dictionary.List<>() ) ;
             list = data.get( key );
-            if ( list == null ) data.put( key, list = new ArrayList<>(4) );
          } catch ( IOException ignored ) {}
 
          if ( type.equals( "index" ) )

@@ -21,15 +21,15 @@ public interface CollectionPredicate {
       assert( min <= max );
       return e -> e == null ? min <= 0 : ( e.size() >= min && e.size() <= max );
    }
-   public static <C extends Collection> Predicate<C> hasDuplicate () {
-      return e -> e != null && new HashSet<Object>( e ).size() <  e.size();
+   public static <T,C extends Collection<T>> Predicate<C> hasDuplicate () {
+      return e -> e != null && new HashSet<>( e ).size() <  e.size();
    }
-   public static <C extends Collection> Predicate<C> noDuplicate  () {
-      return e -> e == null || new HashSet<Object>( e ).size() >= e.size();
+   public static <T,C extends Collection<T>> Predicate<C> noDuplicate  () {
+      return e -> e == null || new HashSet<>( e ).size() >= e.size();
    }
 
    /** true if collection only have items on the candidate list, and nothing else */
-   public static <C extends Collection> Predicate<C> onlyContains ( C items ) {
+   public static <T,C extends Collection<T>> Predicate<C> onlyContains ( C items ) {
       return e -> e == null || e.stream().allMatch( items::contains );
    }
    public static <C extends Collection<? extends CharSequence>> Predicate<C> onlyContains ( Pattern regx ) {
@@ -41,7 +41,7 @@ public interface CollectionPredicate {
    }
 
    /** true if collection does not have any items on the candidate list */
-   public static <C extends Collection> Predicate<C> notContains ( C items ) {
+   public static <T,C extends Collection<T>> Predicate<C> notContains ( C items ) {
       return e -> e == null || ! e.stream().anyMatch( items::contains );
    }
    public static <C extends Collection<? extends CharSequence>> Predicate<C> notContains ( Pattern regx ) {
@@ -53,7 +53,7 @@ public interface CollectionPredicate {
    }
 
    /** true if collection have any items on the candidate list */
-   public static <C extends Collection> Predicate<C> contains ( C items ) {
+   public static <T,C extends Collection<T>> Predicate<C> contains ( C items ) {
       return e -> e != null && e.stream().anyMatch( items::contains );
    }
    public static <C extends Collection<? extends CharSequence>> Predicate<C> contains ( Pattern regx ) {

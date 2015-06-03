@@ -69,7 +69,7 @@ public abstract class ObserverEntity implements CocoObserver {
       return this;
    }
 
-   protected final TreeItem<ObserverEntity> node = new TreeItem( this );
+   protected final TreeItem<ObserverEntity> node = new TreeItem<>( this );
    protected volatile long baseTime;
    protected volatile long startTime;
    protected volatile long endTime;

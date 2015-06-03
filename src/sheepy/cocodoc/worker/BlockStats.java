@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 public class BlockStats {
 
@@ -77,12 +78,13 @@ public class BlockStats {
       } catch ( IOException ignore ) { }
    }
 
-   public <T> T createVar( String name, T ifnew ) {
+   public <T> T createVar( String name, Supplier<T> ifnew ) {
       assert( ifnew != null );
       try ( Closeable lock = lockVar() ) {
          if ( hasVar( name ) ) return (T) root.variables.get( name );
-         root.variables.put( name, ifnew );
-         return ifnew;
+         T obj = ifnew.get();
+         root.variables.put( name, obj );
+         return obj;
       } catch ( IOException ignore ) { return null; }
    }
 
