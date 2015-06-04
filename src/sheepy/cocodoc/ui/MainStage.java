@@ -77,7 +77,7 @@ public class MainStage {
       }
 
       try {
-         stage.getIcons().add( new Image( CocoUtils.getStream( "doc/favicon.gif" ) ) );
+         stage.getIcons().add( new Image( CocoUtils.getStream( "res/img/favicon.gif" ) ) );
       } catch ( Exception ignored ) {}
       stage.addEventFilter( MouseEvent.MOUSE_RELEASED, this::stopAutoClose );
       stage.addEventFilter( KeyEvent.KEY_RELEASED, this::stopAutoClose );
