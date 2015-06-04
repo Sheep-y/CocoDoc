@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Future;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -156,48 +157,38 @@ public class MainStage {
 
    /*******************************************************************************************************************/
 
-   Timer autoClose;
-   int countdown = 0;
+   Future autoClose;
 
    public void startAutoClose() {
-      stopAutoClose();
-      Platform.runLater( () -> {
-         if ( noAutoClose ) return;
-         countdown =  CocoDoc.option.auto_close_second;
-         if ( countdown < 0 ) return;
+      Platform.runLater(() -> {
+         if ( autoClose != null ) return; // Already started
+         final int auto_close_second = CocoDoc.option.auto_close_second;
+         if ( noAutoClose || auto_close_second < 0 ) return;
 
          btnRun.setOnAction( this::stopAutoClose );
          btnRun.requestFocus();
-         autoClose = new Timer( "AutoClose", true );
-         autoClose.schedule( new TimerTask() { @Override public void run() {
-            autoCloseCountdown();
-         } }, 0, 1000 );
-      });
-   }
-
-   private void autoCloseCountdown () {
-      Platform.runLater( () -> {
-         btnRun.setText( "🚪 Auto close 🚪 in " + countdown + " (Stop)" );
-         if ( --countdown < 0 ) {
-            if ( autoClose != null ) autoClose.cancel();
-            stage.close();
-         }
+         autoClose = Time.countDown( auto_close_second, 1000, ( e ) -> {
+            Platform.runLater( () -> {
+               btnRun.setText("🚪 Auto close 🚪 in " + e + " (Stop)" );
+               if ( e <= 0 )
+                  stage.close();
+            } );
+         } );
       } );
    }
 
    private void stopAutoClose() {
       Platform.runLater( () -> {
          if ( autoClose == null ) return;
-         autoClose.cancel();
+         autoClose.cancel( true );
          autoClose = null;
       } );
    }
 
    private void stopAutoClose( Event evt ) {
       stopAutoClose();
-      // Delay reset a little bit to prevent double trigger of button action
+      // Run reset in new thread to ensure it happens in a new event queue, to avoid double trigger of button action
       new Thread( () -> {
-         Time.sleep( 20 );
          Platform.runLater( MainStage.this::resetBtnRun );
       }, "Stop autoclose" ).start();
    }
