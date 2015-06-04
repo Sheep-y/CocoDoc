@@ -145,7 +145,6 @@ public class MainStage {
          dlgOpen = new FileChooser();
          dlgOpen.setTitle( "Run CocoDoc on..." );
       }
-      noAutoClose = true;
       File file = dlgOpen.showOpenDialog( stage );
       if ( file != null )
          Worker.run( () -> CocoDoc.run( file.toString() ) );
@@ -161,7 +160,7 @@ public class MainStage {
          final int auto_close_second = CocoDoc.option.auto_close_second;
          if ( noAutoClose || auto_close_second < 0 ) return;
 
-         btnRun.setOnAction( this::stopAutoClose );
+         btnRun.setOnAction( this::stopAutoClose ); // Just to be safe.  In fact any click already stop auto close.
          btnRun.requestFocus();
          autoClose = Time.countDown( auto_close_second, 1000, ( e ) -> {
             Platform.runLater( () -> {
@@ -173,16 +172,13 @@ public class MainStage {
       } );
    }
 
-   private void stopAutoClose() {
-      Platform.runLater( () -> {
-         if ( autoClose == null ) return;
-         autoClose.cancel( true );
-         autoClose = null;
-      } );
-   }
-
    private void stopAutoClose( Event evt ) {
-      stopAutoClose();
+      noAutoClose = true;
+      if ( autoClose == null ) return;
+      autoClose.cancel( true );
+      autoClose = null;
+      stage.removeEventFilter( MouseEvent.MOUSE_RELEASED, this::stopAutoClose );
+      stage.removeEventFilter( KeyEvent.KEY_RELEASED, this::stopAutoClose );
       // Run reset in new thread to ensure it happens in a new event queue, to avoid double trigger of button action
       new Thread( () -> {
          Platform.runLater( MainStage.this::resetBtnRun );

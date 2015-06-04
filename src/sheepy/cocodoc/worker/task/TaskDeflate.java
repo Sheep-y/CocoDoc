@@ -16,7 +16,7 @@ public class TaskDeflate extends Task {
 
    @Override public Action getAction () { return Action.DEFLATE; }
 
-   private static final Predicate<List<String>> validate = CollectionPredicate.<List<String>>size( 0, 2 ).and( onlyContains( Pattern.compile( "\\d|zip" ) ) );
+   private static final Predicate<List<String>> validate = CollectionPredicate.<List<String>>size( 0, 2 ).and( onlyContains( Pattern.compile( "\\d|zlib" ) ) );
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "deflate() task accepts 0-9 for compression level (default 9), and 'zlib' to include zlib header/checksum: {0}"; }
 

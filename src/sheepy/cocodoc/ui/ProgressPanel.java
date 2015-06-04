@@ -117,7 +117,6 @@ public class ProgressPanel {
          colStatus.setPrefWidth( 100 );
          tree.getColumns().addAll( colName, colMsg, colStatus );
          tree.getSelectionModel().selectedItemProperty().addListener( ( observable, oldVal, newVal ) -> {
-            main.noAutoClose = true;
             this.updateLog();
          } );
 
@@ -253,6 +252,7 @@ public class ProgressPanel {
       }
 
       public void monitor ( Path[] f ) {
+         if ( ! isDone() ) return;
          Platform.runLater( () -> {
             if ( autorerun != null ) return;
             autorerun = Time.defer( 1000, () -> {

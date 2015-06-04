@@ -150,7 +150,13 @@ public abstract class Task {
    public <T extends Exception> void throwOrWarn ( T ex ) throws T {
       log( Level.WARNING, ex.getMessage() );
       if ( isThrowError() ) throw ex;
-      else log.warning( ex.getLocalizedMessage() );
+      else {
+         Throwable e = ex;
+         while ( e != null ) {
+            log.warning( e.getLocalizedMessage() );
+            e = e.getCause();
+         }
+      }
    }
 
    // Errors should be thrown, warnings should be logged.

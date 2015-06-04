@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
+import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.Block;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 import sheepy.util.text.Escape;
@@ -21,10 +22,17 @@ public class TaskEncode extends Task {
    @Override protected String invalidParamMessage() { return "encode() task should have one or more of " + String.join( ",", validParams ) + ". Actual: {0}"; }
 
    @Override protected void run () {
-      if ( ! hasParams() ) return;
+      if ( ! hasParams() ) {
+         log( Level.INFO, "Skipping encode(), no parameter" );
+         return;
+      }
+      Block block = getBlock();
+      if ( ! block.hasData() ) {
+         log( Level.INFO, "Skipping encode(), no content" );
+         return;
+      }
       log( Level.FINER, "Encoding data" );
 
-      Block block = getBlock();
       for ( String e : getParams() ) {
          log( Level.FINEST, "Encode to {0}", e.toLowerCase() );
          switch ( e.toLowerCase() ) {
@@ -42,17 +50,17 @@ public class TaskEncode extends Task {
                break;
 
             case "js" :
-               block.setText(Escape.javascript( block.getText() ) );
+               block.setText( Escape.javascript( block.getText() ) );
                break;
 
             case "url":
-               block.setText(Escape.url( block.getText() ) );
+               block.setText( Escape.url( block.getText() ) );
                break;
 
             case "html" :
             case "xhtml" :
             case "xml" :
-               block.setText(Escape.xml( block.getText() ) );
+               block.setText( Escape.xml( block.getText() ) );
                break;
 
             default :
