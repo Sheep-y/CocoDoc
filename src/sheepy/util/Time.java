@@ -1,7 +1,6 @@
 package sheepy.util;
 
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import sheepy.util.concurrent.AbstractFuture;
 
@@ -47,9 +46,9 @@ public class Time {
          long count = init;
          do {
             if ( Thread.currentThread().isInterrupted() ) return null;
-            try { callback.accept( count ); } catch ( Exception ignored ) {}
+            try { callback.accept( count ); } catch ( Exception ex ) { ex.printStackTrace(); }
             if ( Thread.currentThread().isInterrupted() ) return null;
-            if ( --count >= 0 ) break;
+            if ( --count < 0 ) break;
             Time.sleep( interval );
          } while ( count >= 0 );
          return null;

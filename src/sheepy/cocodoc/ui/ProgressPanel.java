@@ -1,13 +1,16 @@
 package sheepy.cocodoc.ui;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import javafx.application.Platform;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -24,27 +27,30 @@ import javafx.scene.control.TreeTableColumn;
 import javafx.scene.control.TreeTableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TreeItemPropertyValueFactory;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoObserver;
+import sheepy.util.FilePath;
+import sheepy.util.Time;
 import sheepy.util.ui.ObservableArrayList;
 
 public class ProgressPanel {
 
+   private final MainStage main;
    private final TabPane tabPane = new TabPane();
 
    private Tab tabWelcome;
 
-   public ProgressPanel() {
+   public ProgressPanel ( MainStage main ) {
+      this.main = main;
       tabWelcome = new Tab( "Welcome", new Label( "Click the New Build button below to launch a new job." ) );
       tabWelcome.setClosable( false );
       tabPane.getTabs().add( tabWelcome );
    }
 
-   Node getPanel() {
+   Node getPanel () {
       return tabPane;
    }
 
@@ -68,7 +74,7 @@ public class ProgressPanel {
    /**
     * Main job tab
     */
-   private static class ProgressTab extends ObserverEntity {
+   private class ProgressTab extends ObserverEntity {
       final Tab tab = new Tab( "New Job" );
       private final TreeTableView<ObserverEntity> tree = new TreeTableView<>( node );
       private final ObservableList<ObserverEntity.Log> log = new ObservableArrayList<>();
@@ -94,6 +100,7 @@ public class ProgressPanel {
             pnlC.getItems().addAll( pnlLog, pnlTree );
             pnlC.setOrientation( Orientation.VERTICAL );
             tab.setContent( pnlC );
+            tab.setOnClosed( this::reset );
             reset( null );
          } );
       }
@@ -109,10 +116,9 @@ public class ProgressPanel {
          colMsg   .setPrefWidth( 330 );
          colStatus.setPrefWidth( 100 );
          tree.getColumns().addAll( colName, colMsg, colStatus );
-         tree.getSelectionModel().selectedItemProperty().addListener( this::updateLog );
-         tree.setOnMouseClicked( evt -> {
-            if ( evt.getButton() == MouseButton.PRIMARY && evt.getClickCount() == 2 )
-               expandLog( null );
+         tree.getSelectionModel().selectedItemProperty().addListener( ( observable, oldVal, newVal ) -> {
+            main.noAutoClose = true;
+            this.updateLog();
          } );
 
          ScrollPane result = new ScrollPane( tree );
@@ -149,7 +155,7 @@ public class ProgressPanel {
 
       private double splitPos = 0.5;
 
-      private void expandLog ( ActionEvent evt ) {
+      private void expandLog ( Event evt ) {
          if ( ( progress.getHeight() + 5 ) <= (int) Math.round( pnlC.getHeight() * pnlC.getDividerPositions()[0] ) )
             return;
          pnlC.setDividerPosition( 0, splitPos );
@@ -160,15 +166,15 @@ public class ProgressPanel {
          if ( i >= 0 ) tree.scrollTo( i );
       }
 
-      private void collapseLog ( ActionEvent evt ) {
+      private void collapseLog ( Event evt ) {
          splitPos = pnlC.getDividerPositions()[ 0 ];
          pnlC.setDividerPosition( 0, 0 );
          btnCloseLog.setText( "▼" );
          btnCloseLog.setOnAction( this::expandLog );
       }
 
-      private void updateLog() { updateLog( null, null, tree.getSelectionModel().getSelectedItem() ); }
-      private void updateLog( ObservableValue<? extends TreeItem<ObserverEntity>> observable, TreeItem<ObserverEntity> oldValue, TreeItem<ObserverEntity> newValue ) {
+      private void updateLog() {
+         TreeItem<ObserverEntity> newValue = tree.getSelectionModel().getSelectedItem();
          log.clear();
          if ( newValue == null ) {
             log.add( new Log( "Select a process to see message log" ) );
@@ -236,17 +242,40 @@ public class ProgressPanel {
          } );
       }
 
+      Future autorerun;
+      final List<Runnable> monitorList = new ArrayList<>();
+
       public CocoObserver monitor ( File f ) {
-         // TODO: Implement auto rerun
+         synchronized( monitorList ) {
+            monitorList.add( FilePath.watchFile( f.toPath(), this::monitor ) );
+         }
          return this;
       }
 
+      public void monitor ( Path[] f ) {
+         Platform.runLater( () -> {
+            if ( autorerun != null ) return;
+            autorerun = Time.defer( 1000, () -> {
+               if ( main.autoClose != null ) return; // Do not rerun if auto-closing
+               Platform.runLater( this::rerun );
+            } );
+         } );
+      }
+
       /** Reset panel to initial state, ready to monitor a new job */
-      private void reset ( ActionEvent evt ) {
+      private void reset ( Event evt ) {
          super.reset();
          assert( Platform.isFxApplicationThread() );
          String name = nameProperty().get();
 
+         if ( autorerun != null ) {
+            autorerun.cancel( false );
+            autorerun = null;
+         }
+         synchronized( monitorList ) {
+            for ( Runnable r : monitorList ) r.run();
+            monitorList.clear();
+         }
          if ( timer != null ) timer.cancel();
          startTime = System.currentTimeMillis();
          timer = new Timer( name + " Timer", true );
@@ -266,7 +295,8 @@ public class ProgressPanel {
          updateLog();
       }
 
-      private void rerun ( ActionEvent evt ) {
+      private void rerun () { rerun( null ); }
+      private void rerun ( Event evt ) {
          assert( runningThread.get() == 0 );
          reset( null );
          new Thread( () -> CocoDoc.run( this, nameProperty().get() ) ).start();

@@ -2,6 +2,10 @@ package sheepy.util.ui;
 
 import java.util.concurrent.CountDownLatch;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.DialogPane;
 
 public class JavaFX {
    /** Run a job on FX thread and wait until it finishes */
@@ -21,5 +25,13 @@ public class JavaFX {
             latch.await();
          } catch ( InterruptedException ignored ) {}
       }
+   }
+
+   /** Set a dialog's default button and return the dialog */
+   private static Alert dialogDefault ( Alert alert, ButtonType defBtn ) {
+      DialogPane pane = alert.getDialogPane();
+      for ( ButtonType t : alert.getButtonTypes() )
+         ( (Button) pane.lookupButton(t) ).setDefaultButton( t == defBtn );
+      return alert;
    }
 }

@@ -2,11 +2,8 @@ package sheepy.cocodoc.ui;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.Future;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -32,7 +29,7 @@ import sheepy.util.collection.NullData;
 public class MainStage {
 
    private final Stage stage;
-   private final ProgressPanel progress = new ProgressPanel();
+   private final ProgressPanel progress = new ProgressPanel( this );
 
    private final BorderPane   pnlC = new BorderPane();
      private final TabPane        tabs = new TabPane();
@@ -135,7 +132,7 @@ public class MainStage {
    /*******************************************************************************************************************/
 
    /** Set to true to temporary disable autoclose, e.g. when file dialog is open */
-   private boolean noAutoClose = false;
+   boolean noAutoClose = false;
 
    private void resetBtnRun() {
       btnRun.setText( "⚒ New Build ⚒" );
@@ -143,14 +140,13 @@ public class MainStage {
    }
 
    private FileChooser dlgOpen;
-   public void btnRunOnAction ( ActionEvent evt ) {
+   public void btnRunOnAction ( Event evt ) {
       if ( dlgOpen == null ) {
          dlgOpen = new FileChooser();
          dlgOpen.setTitle( "Run CocoDoc on..." );
       }
       noAutoClose = true;
       File file = dlgOpen.showOpenDialog( stage );
-      noAutoClose = false;
       if ( file != null )
          Worker.run( () -> CocoDoc.run( file.toString() ) );
    }
