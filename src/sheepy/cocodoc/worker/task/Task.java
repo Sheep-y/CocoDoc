@@ -36,10 +36,12 @@ public abstract class Task {
       EXEC,
       CDATA,
       COCO,
+      CSS,
       DEFLATE,
       DECODE,
       ENCODE,
       HTML,
+      JS,
       OPEN,
       PREFIX,
       POSTFIX,
@@ -49,8 +51,6 @@ public abstract class Task {
       TEXT,
       TEST,
       TRIM,
-      UGLIFYCSS,
-      UGLIFYJS,
       VAR
    }
 
@@ -73,6 +73,7 @@ public abstract class Task {
       Task result = null;
       switch ( task ) {
          case COCO       : result = new TaskCoco(); break;
+         case CSS        : result = new TaskCSS(); break;
          case CDATA      : result = new TaskCData(); break;
          case DEFINE     : result = new TaskDefine(); break;
          case DELETE     : result = new TaskDelete(); break;
@@ -81,6 +82,7 @@ public abstract class Task {
          case ENCODE     : result = new TaskEncode(); break;
          case FILE       : result = new TaskFile(); break;
          case HTML       : result = new TaskHtml(); break;
+         case JS         : result = new TaskJS(); break;
          case OPEN       : result = new TaskOpen(); break;
          case PREFIX     : result = new TaskPrefix(); break;
          case POSITION   : result = new TaskPosition(); break;
@@ -91,8 +93,6 @@ public abstract class Task {
          case TEST       : result = new TaskTest(); break;
          case TRIM       : result = new TaskTrim(); break;
          case STRIP      : result = new TaskStrip(); break;
-         case UGLIFYCSS  : result = new TaskUglifyCSS(); break;
-         case UGLIFYJS   : result = new TaskUglifyJS(); break;
          case VAR        : result = new TaskVar(); break;
          default         : throw new UnsupportedOperationException( "Unimplemented task: " + task );
       }

@@ -1,8 +1,10 @@
 package sheepy.cocodoc.worker.task;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.script.ScriptEngine;
@@ -10,26 +12,66 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
+import static sheepy.util.collection.CollectionPredicate.noDuplicate;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 import sheepy.util.concurrent.ObjectPoolMap;
 import sheepy.util.text.Text;
 
-public class TaskUglifyJS extends Task {
-   @Override public Action getAction () { return Action.UGLIFYJS; }
+public class TaskJS extends Task {
+   @Override public Action getAction () { return Action.JS; }
 
-   private static final String[] validParams = new String[]{ "consolidate","-mangle" };
-   private static final Predicate<List<String>> validate = onlyContains( Arrays.asList( validParams ) );
+   private static final String[] validParams = new String[]{ "minify", "uglyifyjs", "consolidate","-mangle" };
+   private static final Predicate<List<String>> validate = nonEmpty.and( onlyContains( Arrays.asList( validParams ) ) ).and( noDuplicate() );
    @Override protected Predicate<List<String>> validParam() { return validate; }
-   @Override protected String invalidParamMessage() { return "uglifyjs() task parameters must be 'consolidate','-mangle'."; }
+   @Override protected String invalidParamMessage() { return "js() task parameters must be 'minify', 'uglyifyjs', 'consolidate','-mangle'."; }
+
+   private Consumer<List<String>> action;
+   private List<String> action_param = new ArrayList<>();
 
    @Override protected void run () {
-      List<String> params = getParams();
-      String txt = getBlock().getText().toString();
-      if ( txt == null || txt.isEmpty() ) {
-         log( Level.INFO, "Skipping uglify js, no content" );
+      if ( ! hasParams() ) {
+         log( Level.INFO, "Skipping js(), no parameter" );
+         return;
+      }
+      if ( ! getBlock().hasData() ) {
+         log( Level.INFO, "Skipping js(), no content" );
          return;
       }
 
+      List<String> params = new ArrayList( getParams() );
+      while ( ! params.isEmpty() ) {
+         String p = params.remove( 0 ).toLowerCase();
+         switch ( p ) {
+            case "minify":
+            case "uglyifyjs":
+               action();
+               action = this::uglifyJS;
+               break;
+            default:
+               action_param.add( p );
+         }
+      }
+      action();
+   }
+
+   private void action() {
+      if ( action != null ) {
+         try {
+            action.accept( action_param );
+         } catch ( CocoRunError ex ) {
+            throwOrWarn( ex );
+         } finally {
+            action = null;
+            action_param.clear();
+         }
+      } else {
+         if ( ! action_param.isEmpty() )
+            throwOrWarn( new CocoRunError( "Parameters missing action: " + Text.toString( action_param ) ) );
+      }
+   }
+
+   private void uglifyJS( List<String> params ) {
+      String txt = getBlock().getText().toString();
       log( Level.FINER, "Uglifying JS {1}", Text.ellipsisWithin( txt, 8 ) );
       Object get = enginePool.get( "js" );
       try {
