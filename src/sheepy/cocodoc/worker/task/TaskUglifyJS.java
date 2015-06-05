@@ -70,8 +70,6 @@ public class TaskUglifyJS extends Task {
 
    public static final ObjectPoolMap<String, Object> enginePool = ObjectPoolMap.create(
       ( key ) -> {
-         if ( Thread.currentThread().getPriority() < 6 ) // Uglify JS needs heavy computation
-            Thread.currentThread().setPriority( 6 );
          ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
          try {
             js.eval( CocoUtils.getText( "res/uglifyjs/lib/parse-js.js" ) );

@@ -78,12 +78,15 @@ public class Block extends AbstractFuture<Block> {
             }
          }
 
-         if ( getParent() == null && stats().hasVar( VAR_ONDONE ) ) {
-            log( Level.FINER, "Dispatching ondone" );
-            List<Consumer<? super Block>> list = (List<Consumer<? super Block>>) stats().getVar( VAR_ONDONE );
-            for ( Consumer<? super Block> func : list )
-               func.accept( this );
-            log( Level.FINER, "Finished" );
+         if ( getParent() == null ) {
+            if ( stats().hasVar( VAR_ONDONE ) ) {
+               log( Level.FINER, "Dispatching ondone" );
+               List<Consumer<? super Block>> list = (List<Consumer<? super Block>>) stats().getVar( VAR_ONDONE );
+               for ( Consumer<? super Block> func : list )
+                  func.accept( this );
+            }
+            double time = Math.round( ( System.nanoTime() - (Long) stats().getVar( BlockStats.NANO_BUILD ) ) / 1000_000l ) / 1000.0;
+            log( Level.FINE, "Finished ({0} s)", time );
          }
 
       } finally {

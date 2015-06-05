@@ -345,7 +345,7 @@ public class ProgressPanel {
 
       @Override protected boolean canCollapse () {
          // Cannot collapse if selected
-         return super.canCollapse() && ! tab.tree.getSelectionModel().getSelectedItems().contains( node ) ;
+         return isDone() && super.canCollapse() && ! tab.tree.getSelectionModel().getSelectedItems().contains( node ) ;
       }
 
       @Override public CocoObserver monitor ( File f ) {

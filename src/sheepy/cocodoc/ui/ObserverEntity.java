@@ -23,7 +23,7 @@ public abstract class ObserverEntity implements CocoObserver {
       public Log ( String message ) {
          this.message = message;
       }
-      public long getTime() { return Math.round( time - baseTime ) / 1000_000; }
+      public long getTime() { return Math.round( ( time - baseTime ) / 1000_000l ); }
       public String getMessage() { return message; }
    }
 
