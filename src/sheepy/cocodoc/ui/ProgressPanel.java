@@ -3,7 +3,9 @@ package sheepy.cocodoc.ui;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.Future;
@@ -32,6 +34,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import sheepy.cocodoc.CocoDoc;
 import sheepy.cocodoc.CocoObserver;
+import sheepy.cocodoc.worker.Worker;
 import sheepy.util.FilePath;
 import sheepy.util.Time;
 import sheepy.util.ui.ObservableArrayList;
@@ -81,13 +84,13 @@ public class ProgressPanel {
       private final TableView<ObserverEntity.Log> tblLog = new TableView<>();
       private final ProgressBar progress = new ProgressBar();
       private final Button btnCloseLog = new Button();
-      private final Button btnPauseRerun = new Button( "↻" );
+      private final Button btnPauseRerun = new Button();
       private final Label lblThread = new Label();
       private final SplitPane pnlC = new SplitPane();
 
-      private final AtomicInteger runningThread = new AtomicInteger( 0 );
       private Timer timer; // Can use a global timer, but only if we keep a list of active tab
       private long startTime; // Coarse timer
+      private Set<Thread> threads = new HashSet<>();
 
       private final AtomicInteger maxProgress = new AtomicInteger();
       private final AtomicInteger curProgress = new AtomicInteger();
@@ -132,7 +135,7 @@ public class ProgressPanel {
          pnlT.setLeft( btnCloseLog );
          pnlT.setRight( pnlTR );
          progress.setMaxSize( Double.MAX_VALUE, Double.MAX_VALUE );
-         btnPauseRerun.setOnAction( this::rerun );
+         btnPauseRerun.setOnAction( this::pauseRerun );
 
          TableColumn<ObserverEntity.Log, String> colTime    = new TableColumn<>( "Time (ms)" );
          TableColumn<ObserverEntity.Log, String> colMessage = new TableColumn<>( "Message"   );
@@ -209,7 +212,7 @@ public class ProgressPanel {
 
       private void updateThread () {
          Platform.runLater( () -> {
-            String txt = "Threads:  " + runningThread.get();
+            String txt = "Threads:  " + threads.size();
             if ( ! isDone() ) {
                long sec = Math.round( ( System.currentTimeMillis() - startTime ) / 1000 );
                txt += ", Time:  " + sec + "  s";
@@ -220,7 +223,7 @@ public class ProgressPanel {
 
       @Override public void start ( Thread curThread, long baseTime ) {
          super.start( curThread, baseTime );
-         runningThread.incrementAndGet();
+         Platform.runLater( () -> threads.add( curThread ) );
          // updateThread();
       }
 
@@ -230,12 +233,12 @@ public class ProgressPanel {
          Platform.runLater( () -> {
             timer.cancel();
             timer = null;
-            runningThread.decrementAndGet();
+            threads.remove( curThread );
             updateThread();
             setName( nameProperty().get() );
             tab.setClosable( true );
             progress.setProgress( 1 );
-            btnPauseRerun.setDisable( false );
+            btnPauseRerun.setText( "||" );
             if ( CocoDoc.option.auto_collapse_level <= 0 && canCollapse() )
                node.setExpanded( false );
          } );
@@ -282,24 +285,31 @@ public class ProgressPanel {
          timer.schedule( new TimerTask() { @Override public void run() {
             updateThread();
          } }, 100, 100 );
+         threads.clear();
 
          setName( name );
          tab.setClosable( false );
-         btnPauseRerun.setDisable( true );
          progress.setProgress( ProgressBar.INDETERMINATE_PROGRESS );
          maxProgress.set( 0 );
          curProgress.set( 0 );
+         btnPauseRerun.setText( "↻" );
 
          node.setExpanded( true );
          collapseLog( null );
          updateLog();
       }
 
-      private void rerun () { rerun( null ); }
-      private void rerun ( Event evt ) {
-         assert( runningThread.get() == 0 );
+      private void pauseRerun ( Event evt ) {
+         if ( isDone() )
+            rerun();
+         else if ( threads.isEmpty() )
+            return;
+      }
+
+      private void rerun () {
+         assert( threads.size() == 0 );
          reset( null );
-         new Thread( () -> CocoDoc.run( this, nameProperty().get() ) ).start();
+         Worker.run( () -> CocoDoc.run( this, nameProperty().get() ) );
       }
    }
 
@@ -326,14 +336,13 @@ public class ProgressPanel {
 
       @Override public void start ( Thread curThread, long baseTime ) {
          super.start( curThread, baseTime );
-         tab.runningThread.incrementAndGet();
-         // tab.updateThread();
+         Platform.runLater( () -> tab.threads.add( curThread ) );
       }
 
       @Override public void done ( Thread curThread ) {
          super.done( curThread );
          Platform.runLater( () -> {
-            tab.runningThread.decrementAndGet();
+            tab.threads.remove( curThread );
             // tab.updateThread();
             int level = findLevel( node );
             if ( level <= 2 ) // Count progress of first two levels
