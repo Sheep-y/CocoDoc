@@ -74,7 +74,7 @@ public class TaskCSS extends Task {
    private void uglifyCSS ( List<String> params ) {
       String txt = getBlock().getText().toString();
       log( Level.FINER, "Uglifying CSS {1}", Text.ellipsisWithin( txt, 8 ) );
-      Object get = enginePool.get( "css" );
+      Object get = enginePool.get( "uglifycss" );
       try {
          if ( get instanceof RuntimeException ) {
             throwOrWarn( (RuntimeException) get );

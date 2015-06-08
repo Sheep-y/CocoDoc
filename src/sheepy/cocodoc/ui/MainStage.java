@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Future;
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -37,7 +38,6 @@ public class MainStage {
        private final TabPane        docPane = new TabPane();
          private final WebView web = new WebView();
      private final Button       btnRun = new Button();
-   //BorderPane docPane = new BorderPane( web );
 
    public MainStage ( Stage stage ) {
       this.stage = stage;
@@ -81,6 +81,8 @@ public class MainStage {
       } catch ( Exception ignored ) {}
       stage.addEventFilter( MouseEvent.MOUSE_RELEASED, this::stopAutoClose );
       stage.addEventFilter( KeyEvent.KEY_RELEASED, this::stopAutoClose );
+      stage.iconifiedProperty().addListener( this::stopAutoClose );
+      stage.maximizedProperty().addListener( this::stopAutoClose );
       stage.show();
 
       if ( ! config.runFiles.isEmpty() ) {
@@ -131,7 +133,7 @@ public class MainStage {
 
    /*******************************************************************************************************************/
 
-   /** Set to true to temporary disable autoclose, e.g. when file dialog is open */
+   /** Set to true to disable current or fucure autoclose requests */
    boolean noAutoClose = false;
 
    private void resetBtnRun() {
@@ -152,7 +154,7 @@ public class MainStage {
 
    /*******************************************************************************************************************/
 
-   Future autoClose;
+   Future autoClose; // Non-null if autoclose is in progress. Call to cancel it.
 
    public void startAutoClose() {
       Platform.runLater(() -> {
@@ -172,6 +174,7 @@ public class MainStage {
       } );
    }
 
+   private void stopAutoClose( Observable o ) { stopAutoClose( (Event) null ); }
    private void stopAutoClose( Event evt ) {
       noAutoClose = true;
       if ( autoClose == null ) return;
@@ -179,6 +182,8 @@ public class MainStage {
       autoClose = null;
       stage.removeEventFilter( MouseEvent.MOUSE_RELEASED, this::stopAutoClose );
       stage.removeEventFilter( KeyEvent.KEY_RELEASED, this::stopAutoClose );
+      stage.iconifiedProperty().removeListener( this::stopAutoClose );
+      stage.maximizedProperty().removeListener( this::stopAutoClose );
       // Run reset in new thread to ensure it happens in a new event queue, to avoid double trigger of button action
       new Thread( () -> {
          Platform.runLater( MainStage.this::resetBtnRun );
