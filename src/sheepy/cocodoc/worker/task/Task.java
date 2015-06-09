@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
@@ -20,7 +21,10 @@ public abstract class Task {
       log.setLevel( Level.ALL );
    }
    public void log ( Level level, String message, Object ... parameter ) {
-      log.log( getDirective().observe( level, message, this, parameter ) );
+      if ( getDirective() != null )
+         log.log( getDirective().observe( level, message, this, parameter ) );
+      else
+         log.log( new LogRecord( level, message ) );
    }
 
    protected static final Predicate<List<String>> isEmpty = CollectionPredicate.isEmpty();

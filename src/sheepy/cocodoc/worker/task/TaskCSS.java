@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import javax.script.ScriptEngine;
@@ -26,7 +26,7 @@ public class TaskCSS extends Task {
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "css() task takes only 'minify' parameter."; }
 
-   private Consumer<List<String>> action;
+   private Function<List<String>,String> action;
    private List<String> action_param = new ArrayList<>();
 
    @Override protected void run () {
@@ -44,7 +44,7 @@ public class TaskCSS extends Task {
          String p = params.remove( 0 ).toLowerCase();
          switch ( p ) {
             case "minify":
-            case "uglyifyjs":
+            case "uglyifycss":
                action();
                action = this::uglifyCSS;
                break;
@@ -58,7 +58,10 @@ public class TaskCSS extends Task {
    private void action() {
       if ( action != null ) {
          try {
-            action.accept( action_param );
+            action_param.add( 0, getBlock().getText().toString() );
+            String result = action.apply( action_param );
+            if ( result != null )
+               getBlock().setText( result );
          } catch ( CocoRunError ex ) {
             throwOrWarn( ex );
          } finally {
@@ -66,39 +69,45 @@ public class TaskCSS extends Task {
             action_param.clear();
          }
       } else {
-         if ( ! action_param.isEmpty() )
-            throwOrWarn( new CocoRunError( "Parameters missing action: " + Text.toString( action_param ) ) );
+         if ( ! action_param.isEmpty() ) {
+            throwOrWarn( new CocoRunError( "css() parameters missing action: " + Text.toString( action_param ) ) );
+            action_param.clear();
+         }
       }
    }
 
-   private void uglifyCSS ( List<String> params ) {
-      String txt = getBlock().getText().toString();
+   public String uglifyCSS ( List<String> params ) {
+      params = new ArrayList<>( params );
+      final String txt = params.remove( 0 );
       log( Level.FINER, "Uglifying CSS {1}", Text.ellipsisWithin( txt, 8 ) );
-      Object get = enginePool.get( "uglifycss" );
+
+      final String key = "uglifycss";
+      final Object get = enginePool.get( key );
       try {
          if ( get instanceof RuntimeException ) {
             throwOrWarn( (RuntimeException) get );
-            return;
+            return null;
          }
 
          ScriptEngine js = (ScriptEngine) get;
          js.put( "code", txt );
-         log( Level.FINEST, "Running Uglify JS" );
+         log( Level.FINEST, "Uglify CSS: Loaded, now processing {0} chars", txt.length() );
 
          String result = js.eval( "uglifycss.processString( code )" ).toString();
-         log( Level.FINEST, "Uglified: {0} -> {1}", txt.length(), result.length() );
+         log( Level.FINEST, "Uglify CSS: {0} -> {1}", txt.length(), result.length() );
 
-         getBlock().setText( result );
+         return result;
 
       } catch ( ScriptException ex ) {
          throwOrWarn( new CocoRunError( "Cannot uglify css", ex ) );
+         return null;
 
       } finally {
-         enginePool.recycle( "css", get );
+         enginePool.recycle( key, get );
       }
    }
 
-   public static final ObjectPoolMap<String, Object> enginePool = ObjectPoolMap.create(
+   private static final ObjectPoolMap<String, Object> enginePool = ObjectPoolMap.create(
       ( key ) -> {
          ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
          try {
