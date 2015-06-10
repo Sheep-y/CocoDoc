@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -23,7 +24,7 @@ import sheepy.util.text.Text;
 public class TaskJS extends Task {
    @Override public Action getAction () { return Action.JS; }
 
-   private static final String[] validParams = new String[]{ "es5", "babel", "minify", "uglyifyjs", "consolidate","-mangle" };
+   private static final String[] validParams = new String[]{ "es5", "babel", "minify", "uglyifyjs", "consolidate", "-mangle" };
    private static final Predicate<List<String>> validate = nonEmpty.and( onlyContains( Arrays.asList( validParams ) ) ).and( noDuplicate() );
    @Override protected Predicate<List<String>> validParam() { return validate; }
    @Override protected String invalidParamMessage() { return "js() task parameters must be 'es5', 'minify', 'consolidate','-mangle'."; }
@@ -99,11 +100,12 @@ public class TaskJS extends Task {
          }
 
          final ScriptEngine js = (ScriptEngine) get;
+         //js.put( "out", System.out );
          js.put( "console", new Console() );
          js.put( "code", txt );
 
          log( Level.FINEST, "Babel JS: Loaded, now transforming {0} chars", txt.length() );
-         String result = js.eval( "babel.transform( code, {nonStandard:false,ast:false,comments:true}).code" ).toString();
+         String result = js.eval( "babel.transform( code, {ast:false,compact:false,comments:true,nonStandard:false}).code" ).toString();
 
          log( Level.FINEST, "Babel JS: {0} -> {1}", txt.length(), result.length() );
          return result;
@@ -232,21 +234,18 @@ public class TaskJS extends Task {
    /**
     * Console bridge because Babel may use console!
     */
-   private class Console {
-      public void log( Object ... args ) {
+   public class Console {
+      public void log( Object args ) {
          handle( Level.FINER, args );
       }
-      public void warn( Object ... args ) {
+      public void warn( Object args ) {
          handle( Level.WARNING, args );
       }
-      public void error( Object ... args ) {
+      public void error( Object args ) {
          handle( Level.SEVERE, args );
       }
-      public void log( String arg ) { log( new Object[]{ arg } ); }
-      public void warn( String arg ) { warn( new Object[]{ arg } ); }
-      public void error( String arg ) { error( new Object[]{ arg } ); }
-      private void handle( Level level, Object ... args ) {
-         TaskJS.this.log( level, Text.toString( "\n", Arrays.asList( args ) ) );
+      private void handle( Level level, Object args ) {
+         TaskJS.this.log( level, Objects.toString( args ) );
       }
    }
 

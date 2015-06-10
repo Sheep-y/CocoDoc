@@ -157,8 +157,8 @@ Minify inline data and protect with cdata:
 
 Minify external data:
 
-<pre>&lt;?coco-start?&gt;&lt;?coco "style.css" uglifycss ?&gt;&lt;?coco-output "style.min.css" ?&gt;&lt;?coco-end?&gt;
-&lt;?coco-start?&gt;&lt;?coco "script.js" uglifyjs  ?&gt;&lt;?coco-output "script.min.js" ?&gt;&lt;?coco-end?&gt;</pre>
+<pre>&lt;?coco-start?&gt;&lt;?coco "style.css" css(minify) ?&gt;&lt;?coco-output "style.min.css" ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "script.js" js(minify)  ?&gt;&lt;?coco-output "script.min.js" ?&gt;&lt;?coco-end?&gt;</pre>
 
 ### Auto-run ###
 

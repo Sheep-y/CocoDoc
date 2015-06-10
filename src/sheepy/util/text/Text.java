@@ -7,7 +7,9 @@ import java.util.StringJoiner;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class Text {
    public static final Charset UTF16 = Charset.forName("UTF-16");
@@ -17,8 +19,16 @@ public class Text {
       return in.collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
    }
 
+   public static String toString ( Stream<?> in ) {
+      return toString( ", ", in );
+   }
+
    public static String toString ( Collection<?> list ) {
       return toString( ", ", list );
+   }
+
+   public static String toString ( CharSequence delimiter, Stream<?> stream ) {
+      return toString( delimiter, stream.map( Object::toString ).collect( Collectors.toList() ) );
    }
 
    public static String toString ( CharSequence delimiter, Collection<?> list ) {
