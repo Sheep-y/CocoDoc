@@ -1,5 +1,6 @@
 package sheepy.util.concurrent;
 
+import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,7 +20,7 @@ import java.util.function.UnaryOperator;
  * @param <V> Map value
  */
 public abstract class ObjectPoolMap<K,V> {
-   private final Map<K, List<SoftReference<V>>> cache = new HashMap<>();
+   private final Map<K, List<Reference<V>>> cache = new HashMap<>();
 
    /**
     * Get an object from pool.  Will create a new object if pool is empty.
@@ -29,7 +30,7 @@ public abstract class ObjectPoolMap<K,V> {
     */
    public V get ( K key ) {
       V result = null;
-      List<SoftReference<V>> pool;
+      List<Reference<V>> pool;
       // Try to read from cache
 
       synchronized ( cache ) {
@@ -50,7 +51,7 @@ public abstract class ObjectPoolMap<K,V> {
     * Release given object back to the pool.
     */
    public void recycle( K key, V object ) {
-      List<SoftReference<V>> pool;
+      List<Reference<V>> pool;
       object = refresh( key, object );
       if ( object == null ) return;
 

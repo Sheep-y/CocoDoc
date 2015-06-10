@@ -13,6 +13,7 @@ import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
 import sheepy.cocodoc.worker.Block;
 import static sheepy.cocodoc.worker.directive.Directive.Action.INLINE;
+import sheepy.util.text.Text;
 
 public class TaskFile extends Task {
    @Override public Action getAction () { return Action.FILE; }
@@ -55,8 +56,8 @@ public class TaskFile extends Task {
 
          File base = block.getParentBasePath();
          for ( String s : getParams() ) try {
-            log( Level.FINE, "Reading {1} from base path {0}.", base, s );
             File f = new File( base, s );
+            log( Level.FINE, "Reading {0}", Text.defer( () -> f.toPath().normalize().toString() ) );
             byte[] buffer;
             try ( InputStream in = CocoUtils.getStream( f.getPath() ) ) {
                if ( in == null ) throw new IOException( "File not found: " + f );

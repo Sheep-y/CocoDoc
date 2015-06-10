@@ -32,7 +32,7 @@ public class Escape {
 
    public static String javascript ( CharSequence text ) {
       if ( text == null ) return null;
-      return text.toString().replaceAll( "[\"'`\n\r]", "\\$0" );
+      return text.toString().replaceAll( "[\"'`\n\r]", "\\\\$0" );
    }
 
 

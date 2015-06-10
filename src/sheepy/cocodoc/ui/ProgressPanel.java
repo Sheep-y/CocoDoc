@@ -313,7 +313,8 @@ public class ProgressPanel {
          super( name );
          this.tab = tab;
          Platform.runLater( () -> {
-            if ( parent == tab.node || parent.getParent() == tab.node ) // Count progress of first two levels
+            int level = findLevel( node );
+            if ( level <= 2 ) // Count progress of first two levels
                tab.register();
             node.setExpanded( true );
             parent.getChildren().add( node );
