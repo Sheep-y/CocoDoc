@@ -147,11 +147,14 @@ The above code will produce this:
 
 CocoDoc has built-in [UglifyJS2](https://github.com/mishoo/UglifyJS2/releases) and [UglifyCSS](https://github.com/fmarcia/UglifyCSS).
 
+Minification is a heavy processing task.
+It is often best to include all js and css then minify in one go.
+
 Minify inline data and protect with cdata:
 
 <pre>&lt;?coco-start <b>trim( html, oneline )</b> ?&gt;&lt;!DOCTYPE html&gt;
-   &lt;style &gt; &lt;?coco "style.css" <b>css(minify) cdata(css)</b> ?&gt; &lt;/style&gt;
-   &lt;script&gt; &lt;?coco "script.js" <b>js(minify)  cdata(js) </b> ?&gt; &lt;/script&gt;
+   &lt;style &gt; &lt;?coco file( "style.css", "ui.css" ) <b>css(minify) cdata(css)</b> ?&gt; &lt;/style&gt;
+   &lt;script&gt; &lt;?coco file( "script.js", "ui.js"  ) <b>js(minify)  cdata(js) </b> ?&gt; &lt;/script&gt;
 &lt;body&gt;&lt;!-- HTML comments will be removed by trim( html ) --&gt;&lt;/body&gt;
 &lt;?coco-end?&gt;</pre>
 

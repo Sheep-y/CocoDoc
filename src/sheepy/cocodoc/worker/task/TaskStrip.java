@@ -18,12 +18,14 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpression;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
+import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import sheepy.cocodoc.CocoConfig;
 import sheepy.cocodoc.CocoRunError;
+import sheepy.util.text.Text;
 
 public class TaskStrip extends Task {
 
@@ -46,6 +48,7 @@ public class TaskStrip extends Task {
 
       XPath path = XPathFactory.newInstance().newXPath();
       Document doc = null;
+      boolean hasDeclaration = false;
       int count = 0;
 
       for ( String param : getParams() ) {
@@ -63,6 +66,10 @@ public class TaskStrip extends Task {
             // Parse document on first run.  The document will be reused in subsequence params.
             if ( doc == null ) {
                DocumentBuilder docFac = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+               try { // Try detect present of doctype or xml declarations
+                  String txt = getBlock().getText().toString();
+                  hasDeclaration = txt.startsWith( "<!DOCTYPE" ) || txt.startsWith( "<?xml" );
+               } catch( CocoRunError ignored ){}
                doc = docFac.parse( new ByteArrayInputStream( getBlock().getBinary() ) );
                docFac = null;
             }
@@ -71,12 +78,21 @@ public class TaskStrip extends Task {
             if ( list == null || list.getLength() <= 0 ) continue;
 
             // Remove nodes from document
-            log( CocoConfig.MICRO, "Strip found {0} elements for {1}", list.getLength(), param );
+            log( Level.FINEST, "Strip found {0} {1}", list.getLength(), param );
             for ( int i = list.getLength()-1 ; i >= 0 ; i-- ) {
-               Node target = list.item( i ), parent = target.getParentNode();
-               if ( parent != null ) {
-                  parent.removeChild( target );
-                  ++count;
+               Node target = list.item( i );
+               if ( target instanceof Attr ) {
+                  Element parent = ( (Attr) target ).getOwnerElement();
+                  if ( parent != null ) {
+                     parent.removeAttribute( target.getNodeName() );
+                     ++count;
+                  }
+               } else {
+                  Node parent = target.getParentNode();
+                  if ( parent != null ) {
+                     parent.removeChild( target );
+                     ++count;
+                  }
                }
             }
 
@@ -92,12 +108,16 @@ public class TaskStrip extends Task {
          ByteArrayOutputStream buf = new ByteArrayOutputStream();
          StreamResult result = new StreamResult( buf );
          TransformerFactory.newInstance().newTransformer().transform( source, result );
-         getBlock().setBinary( buf.toByteArray() );
+         if ( ! hasDeclaration ) { // Transformer rebuild may introduce xml declaration that is originally missing.
+            getBlock().setText( new String( buf.toByteArray(), Text.UTF8 ).replaceFirst( "^<\\?xml[^>]+>", "" ) );
+         } else {
+            getBlock().setBinary( buf.toByteArray() );
+         }
       } catch ( TransformerException ex ) {
          throwOrWarn( new CocoRunError( "Cannot rebuild doucment", ex ) );
       }
 
-      log( Level.FINEST, "Stripped {0} elements", count );
+      log( Level.FINEST, "Stripped {0} document nodes", count );
    }
 
 }

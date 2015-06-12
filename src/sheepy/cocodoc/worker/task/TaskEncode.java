@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import sheepy.cocodoc.CocoParseError;
-import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.Block;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 import sheepy.util.text.Escape;
