@@ -172,6 +172,8 @@ public abstract class Task {
          while ( params.remove( "noerr" ) );
          while ( params.remove( null ) );
       }
+      if ( ! allowedDirective().contains( getDirective().getAction() ) )
+         throwOrWarn( new CocoParseError( getAction().toString().toLowerCase() + " task does not supports " + getDirective().getAction().toString().toLowerCase() + " directive." ) );
       // Validate parameters
       Predicate<List<String>> validate = validParam();
       if ( validate != null )
@@ -180,6 +182,10 @@ public abstract class Task {
    }
    protected abstract Predicate<List<String>> validParam();
    protected String invalidParamMessage() { return "Incorrect or non-effective parameters: {0}"; };
+
+   protected List<Directive.Action> allowedDirective () {
+      return Arrays.asList( Directive.Action.INLINE, Directive.Action.START, Directive.Action.POSTPROCESS );
+   }
 
    List<String> params;
    public boolean hasParams () { return ! NullData.isEmpty( params ); }

@@ -280,10 +280,7 @@ public class Block extends AbstractFuture<Block> {
       return basePath == null ? getParentBasePath() : basePath;
    }
    public Block setBasePath( File basePath ) {
-      if ( basePath != null && this.basePath == null ) {
-         log( Level.FINER, "Block base path set to {0}", basePath );
-         this.basePath = basePath;
-      }
+      this.basePath = basePath;
       return this;
    }
 
