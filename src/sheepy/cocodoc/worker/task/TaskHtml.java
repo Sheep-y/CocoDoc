@@ -76,7 +76,10 @@ public class TaskHtml extends Task {
          String content = h.tag.getXml().toString();
          content = content.replaceAll( "<a[^>]+>|</a>", "" ); // Removes <a>
          content = content.substring( 3, content.length()-5 ); // Removes <h1 ... </h1>
-         buf.append( "\n<li class='h" ).append( h.level ).append( "'>" ); // And replace by <li ... </li>
+         buf.append( "\n<li class='h" ).append( h.level ); // And replace by <li ... </li>
+         if ( h.children == null || h.children.isEmpty() )
+            buf.append( " leaf" ); // Set leaf class if this is a leaf
+         buf.append( "'>" );
          buf.append( "<a href=\"#" ).append( Escape.xml( h.id ) ).append( '"' ).append( content ).append( "</a>" );
          if ( h.children != null && ! h.children.isEmpty() ) {
             buf.append( "\n<ol class='h" ).append( h.level ).append( "'>" );
