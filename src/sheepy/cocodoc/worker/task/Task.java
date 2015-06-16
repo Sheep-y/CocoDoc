@@ -152,7 +152,13 @@ public abstract class Task {
    public boolean isThrowError () { return throwError; }
    public void setThrowError( boolean throwError ) { this.throwError = throwError; }
    public <T extends Exception> void throwOrWarn ( T ex ) throws T {
-      log( Level.WARNING, ex.getMessage() );
+      Throwable next = ex;
+      String prefix = "";
+      while ( next != null ) {
+         log( Level.WARNING, prefix + next.getMessage() );
+         next = ex.getCause() == next ? null : ex.getCause();
+         prefix += "> ";
+      }
       if ( isThrowError() ) throw ex;
       else {
          Throwable e = ex;
