@@ -179,7 +179,7 @@ public abstract class Task {
          while ( params.remove( null ) );
       }
       if ( ! allowedDirective().contains( getDirective().getAction() ) )
-         throwOrWarn( new CocoParseError( getAction().toString().toLowerCase() + " task does not supports " + getDirective().getAction().toString().toLowerCase() + " directive." ) );
+         throwOrWarn( new CocoParseError( getName() + " task does not supports " + getDirective().getAction().toString().toLowerCase() + " directive." ) );
       // Validate parameters
       Predicate<List<String>> validate = validParam();
       if ( validate != null )
@@ -206,8 +206,11 @@ public abstract class Task {
       return this;
    }
 
+   public String getName () {
+      return getAction().toString().toLowerCase();
+   }
    @Override public String toString () {
-      String task = getAction().toString().toLowerCase();
+      String task = getName();
       if ( hasParams() ) task = task + "(" + getParamText() + ")";
       return task;
    }
