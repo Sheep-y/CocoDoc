@@ -9068,6 +9068,7 @@ ImportVisitor.prototype = {
 
         this.isFinished = true;
         this._sequencer.tryRun();
+        if ( this._finish ) this._finish();
     },
     _onSequencerEmpty: function() {
         if (!this.isFinished) {
