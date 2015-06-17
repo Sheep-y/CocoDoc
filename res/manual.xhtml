@@ -42,15 +42,15 @@
   <dt>binary(utf-8)</dt>            <dd>Explictly convert text data to binary using the first encoding that works. Default utf-8. </dd>
   <dt>text(utf-8)</dt>              <dd>Explictly convert binary data to text using the first encoding that works. Default utf-8,utf-16.</dd>
   <dt>define(name,value)</dt>       <dd>Define variable.</dd>
-  <dt>cdata(js,css)</dt>            <dd>Wrap code in CDATA. Specify JS or CSS to wrap cdata marker in comment. [Text]</dd>
+  <dt>cdata([js|css])</dt>          <dd>Wrap code in CDATA. Specify JS or CSS to wrap cdata marker in comment. [Text]</dd>
   <dt>coco</dt>                     <dd>Run coco parsing. [Text]</dd>
-  <dt>css(minify)</dt>              <dd>Minify data as CSS (<a href='https://github.com/fmarcia/UglifyCSS'>UglifyCSS</a>).</dd>
+  <dt>css(less|minify)</dt>         <dd>Run data through <a href='http://lesscss.org/'>{less}</a> or <a href='https://github.com/fmarcia/UglifyCSS'>UglifyCSS</a>.</dd>
   <dt>deflate</dt>                  <dd>Deflate data at maximum compression. [Binary]</dd>
-  <dt>decode(base64,xml)</dt>       <dd>Decode data from Base64 code / XML entities. [Text]</dd>
+  <!--dt>decode(base64|xml)</dt>       <dd>Decode data from Base64 code / XML entities. [Text]</dd-->
   <dt>exec(app,param1,par2...)</dt> <dd>Execute a program and append its output to the block. [currently Text, should be binary]</dd>
-  <dt>encode(base64,xml,crlf)</dt>  <dd>Encode data into Base64 code / XML entities / JS string / URL / convert line breaks to lf/crlf. [Text]</dd>
+  <dt>encode(base64|xml|crlf)</dt>  <dd>Encode data into Base64 code / XML entities / JS string / URL / convert line breaks to lf/crlf. [Text]</dd>
   <dt>html(toc|index|glossary[,group])</dt> <dd>Run html parsing (no parameter), or output TOC (ol) / Index (dl) / Glossary (dl). [Text]</dd>
-  <dt>js(es5,minify)</dt>           <dd>ES5: Convert js to ES5 (<a href='https://babeljs.io/'>Babel</a>).  Minify: Minify data as JS.  <a href='https://github.com/mishoo/UglifyJS2'>UglifyJS</a> options: consolidate, -mangle.</dd>
+  <dt>js(es5|minify)</dt>           <dd>ES5: Convert js to ES5 (<a href='https://babeljs.io/'>Babel</a>).  Minify: Minify data as JS.  <a href='https://github.com/mishoo/UglifyJS2'>UglifyJS</a> options: consolidate, -mangle.</dd>
   <dt>open(file)</dt>               <dd>Open specified file. If not specified, use last file task in same directive, or else use block output target.</dd>
   <dt>prefix("prefix")</dt>         <dd>Add text to head of data. Use <kbd>${auto-datauri}</kbd> to auto set mime and charset. [Text]</dd>
   <dt>postfix("postfix")</dt>       <dd>Add text to tail of data. [Text]</dd>
@@ -58,7 +58,7 @@
   <dt>replace(find,replace)</dt>    <dd>Replace find term with replace term.  Find term is Java <a href='https://docs.oracle.com/javase/8/docs/api/java/util/regex/Pattern.html'>RegExp</a> (i.e. <a href='https://docs.oracle.com/javase/8/docs/api/java/lang/String.html#replaceAll-java.lang.String-java.lang.String-'><code>String.replaceAll</code></a>). [Text]</dd>
   <dt>strip(xpath)</dt>             <dd>Remove specified nodes from the XML document.</dd>
   <dt>test(xml)</dt>                <dd>Test (validate) current data as xml. [Text or Binary]</dd>
-  <dt>trim(xml,css,js,line,ws,crlf)</dt> <dd>Trim XML/CSS/JS comments, lines, multi spaces, and line breaks. "oneline" = "line,ws,crlf" [Text]</dd>
+  <dt>trim(xml|css|js|line|ws|crlf)</dt> <dd>Trim XML/CSS/JS comments, lines, multi spaces, and line breaks. "oneline" = "line,ws,crlf" [Text]</dd>
   <dt>var(name)</dt>                <dd>Append variable value (e.g. <code>time.build</code> for build time). </dd>
 </dl>
 <h4>HTML Parsing</h4>

@@ -143,25 +143,34 @@ The above code will produce this:
 &lt;/dl&gt; &lt;/div&gt;
 </code></pre>
 
-### Minify ###
+### Minify and convert ###
 
-CocoDoc has built-in [UglifyJS2](https://github.com/mishoo/UglifyJS2/releases) and [UglifyCSS](https://github.com/fmarcia/UglifyCSS).
+CocoDoc is built-in with:
+* [Babel](http://babeljs.io/) JS convertor (formerly 6to5) ver 5.5.4
+* [Less](http://lesscss.org/) CSS compiler, ver 2.5.1
+* [UglifyJS2](https://github.com/mishoo/UglifyJS2) JS minifier, ver 2.4.23
+* [UglifyCSS](https://github.com/fmarcia/UglifyCSS) CSS minifier, ver 0.0.15
 
-Minification is a heavy processing task.
-It is often best to include all js and css then minify in one go.
+They are all heavy process.
+It is often best to include all js and css then minify or convert in one go, and be patient.
+Keeping CocoDoc open can cut down the loading and warm up time of rebuilds.
 
-Minify inline data and protect with cdata:
+Minify / convert inline data and protect with cdata:
 
 <pre>&lt;?coco-start <b>trim( html, oneline )</b> ?&gt;&lt;!DOCTYPE html&gt;
-   &lt;style &gt; &lt;?coco file( "style.css", "ui.css" ) <b>css(minify) cdata(css)</b> ?&gt; &lt;/style&gt;
-   &lt;script&gt; &lt;?coco file( "script.js", "ui.js"  ) <b>js(minify)  cdata(js) </b> ?&gt; &lt;/script&gt;
-&lt;body&gt;&lt;!-- HTML comments will be removed by trim( html ) --&gt;&lt;/body&gt;
+   &lt;style &gt; &lt;?coco file( "style.css", "ui.css"   ) <b>css(minify) cdata(css)</b> ?&gt; &lt;/style&gt;
+   &lt;script&gt; &lt;?coco file( "script.js", "ui.js"    ) <b>js(minify)  cdata(js) </b> ?&gt; &lt;/script&gt;
+   &lt;style &gt; &lt;?coco file( "sheet.less","sheet.css") <b>css(less)   cdata(css)</b> ?&gt; &lt;/style&gt;
+   &lt;script&gt; &lt;?coco file( "es2015.js", "es5.js"   ) <b>js(es5)     cdata(js) </b> ?&gt; &lt;/script&gt;
+&lt;body&gt;&lt;!-- HTML comments will be removed by trim( html ), above --&gt;&lt;/body&gt;
 &lt;?coco-end?&gt;</pre>
 
-Minify external data:
+Minify / convert external data:
 
-<pre>&lt;?coco-start?&gt;&lt;?coco "style.css" css(minify) ?&gt;&lt;?coco-output "style.min.css" ?&gt;&lt;?coco-end?&gt;
-&lt;?coco-start?&gt;&lt;?coco "script.js" js(minify)  ?&gt;&lt;?coco-output "script.min.js" ?&gt;&lt;?coco-end?&gt;</pre>
+<pre>&lt;?coco-start?&gt;&lt;?coco "style.css"  css(minify) ?&gt;&lt;?coco-output "style.min.css" ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "script.js"  js(minify)  ?&gt;&lt;?coco-output "script.min.js" ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "sheet.less" css(less)   ?&gt;&lt;?coco-output "sheet.css"     ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "es2015.js"  js(es5)     ?&gt;&lt;?coco-output "es5.js"        ?&gt;&lt;?coco-end?&gt;</pre>
 
 ### Auto-run ###
 

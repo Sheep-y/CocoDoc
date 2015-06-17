@@ -17,7 +17,6 @@ import sheepy.cocodoc.CocoUtils;
 import static sheepy.util.collection.CollectionPredicate.noDuplicate;
 import static sheepy.util.collection.CollectionPredicate.onlyContains;
 import sheepy.util.concurrent.ObjectPoolMap;
-import sheepy.util.text.Text;
 
 public class TaskJS extends JSTask {
    @Override public Action getAction () { return Action.JS; }
