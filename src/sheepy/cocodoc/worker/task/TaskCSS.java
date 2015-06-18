@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import sheepy.cocodoc.CocoRunError;
 import static sheepy.cocodoc.worker.task.Task.nonEmpty;
@@ -20,7 +19,7 @@ public class TaskCSS extends JSTask {
    private static final String[] validParams = new String[]{ "less", "minify", "uglyifycss" };
    private static final Predicate<List<String>> validate = nonEmpty.and( onlyContains( Arrays.asList( validParams ) ) ).and( noDuplicate() );
    @Override protected Predicate<List<String>> validParam() { return validate; }
-   @Override protected String invalidParamMessage() { return "css() task takes only 'less', or 'minify' as parameter."; }
+   @Override protected String invalidParamMessage() { return "css() task takes only 'less' or 'minify' as parameter."; }
 
    @Override protected void run () {
       super.run();
@@ -32,6 +31,10 @@ public class TaskCSS extends JSTask {
                action();
                action = this::less;
                break;
+            /*case "sass":
+               action();
+               action = this::sass;
+               break;*/
             case "minify":
             case "uglyifycss":
                action();
@@ -48,7 +51,7 @@ public class TaskCSS extends JSTask {
       return run( "Less", params, context -> {
          ScriptEngine js = context.js;
          try {
-            js.eval( "var result='not ran'; less.render( code, { async: false }, function(err,data){ result = err || data.css; } );" );
+            js.eval( "var result; less.render( code, { async: false }, function(err,data){ result = err || data.css; } );" );
             String result = js.get("result").toString();
             if ( result.startsWith( "Error" ) ) throw new CocoRunError( "Less " + result );
             return result;
@@ -57,6 +60,23 @@ public class TaskCSS extends JSTask {
          }
       } );
    }
+
+   /*
+   public String sass ( List<String> params ) {
+      return run( "Sass", params, context -> {
+         ScriptEngine js = context.js;
+         try {
+            js.eval( "var result;\nSass.compile( code, {}, function(data){ console.log( data ); } );" );
+            //Object result = js.eval( "result.message" );
+            //if ( result != null ) throw new CocoRunError( result.toString() );
+            //return js.eval( "result.text" ).toString();
+            return "";
+         } catch ( ScriptException ex ) {
+            throw new CocoRunError( "Cannot run Sass CSS", ex );
+         }
+      } );
+   }
+   */
 
    public String uglifyCSS ( List<String> params ) {
       return run( "UglifyCSS", params, context -> {
@@ -71,7 +91,7 @@ public class TaskCSS extends JSTask {
    @Override protected ObjectPoolMap<String, Object> getPool() { return enginePool; }
    protected static final ObjectPoolMap<String, Object> enginePool = ObjectPoolMap.create(
       ( key ) -> {
-         ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
+         ScriptEngine js = newJS();
          try {
             switch ( key ) {
                case "Less" :
@@ -81,6 +101,11 @@ public class TaskCSS extends JSTask {
                   js.eval( "var document = { getElementsByTagName: function( tag ){ return tag == 'script' ? [ { dataset: {} } ] : []; } }; " );
                   // Real library code
                   loadJS( js, "res/less/less.js" );
+                  break;
+
+               case "Sass" :
+                  // Does not work. Requires read(), XmlHttpRequest, setTimeout, and perhaps other things that Nashorn does not have
+                  loadJS( js, "res/sass/sass.sync.js" );
                   break;
 
                case "UglifyCSS" :

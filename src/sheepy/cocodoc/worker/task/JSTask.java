@@ -8,6 +8,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
@@ -53,7 +54,13 @@ public abstract class JSTask extends Task {
    /**
     * Console bridge
     */
-   public class Console {
+   public static class Console {
+      private final Task owner;
+
+      public Console(Task owner) {
+         this.owner = owner;
+      }
+
       public void log( Object args ) {
          handle( Level.FINE, args );
       }
@@ -70,7 +77,13 @@ public abstract class JSTask extends Task {
          handle( Level.SEVERE, args );
       }
       private void handle( Level level, Object args ) {
-         JSTask.this.log( level, Objects.toString( args ) );
+         if ( owner != null )
+            owner.log( level, Objects.toString( args ) );
+         else
+            if ( Level.SEVERE.intValue() < level.intValue() )
+               System.out.println( Objects.toString( args ) );
+            else
+               System.err.println( Objects.toString( args ) );
       }
    }
 
@@ -99,7 +112,7 @@ public abstract class JSTask extends Task {
       ScriptEngine js = (ScriptEngine) get;
       try {
          log( Level.FINEST, "{0}: Loaded, now processing {1} chars", key, txt.length() );
-         js.put( "console", new Console() );
+         js.put( "console", new Console( this ) );
          js.put( "code", txt );
          String result = action.apply( new Context( txt, js, params ) );
          log( Level.FINEST, "{0}: {1} -> {2}", key, txt.length(), result.length() );
@@ -114,11 +127,20 @@ public abstract class JSTask extends Task {
       }
    }
 
+   protected static ScriptEngine newJS () {
+      ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
+      js.put( "console", new Console( null ) );
+      return js;
+   }
+
    protected static void loadJS ( ScriptEngine js, String path ) throws ScriptException, IOException {
       if ( new File( path ).canRead() )
          js.eval( "load('" + path + "')" );
-      else
-         js.eval( CocoUtils.getText( path ) );
+      else {
+         String txt = CocoUtils.getText( path );
+         if ( txt == null ) throw new CocoRunError( "Cannot load " + path + "." );
+         js.eval( txt );
+      }
    }
 
    protected abstract ObjectPoolMap<String, Object> getPool();

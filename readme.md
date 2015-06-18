@@ -160,17 +160,19 @@ Minify / convert inline data and protect with cdata:
 <pre>&lt;?coco-start <b>trim( html, oneline )</b> ?&gt;&lt;!DOCTYPE html&gt;
    &lt;style &gt; &lt;?coco file( "style.css", "ui.css"   ) <b>css(minify) cdata(css)</b> ?&gt; &lt;/style&gt;
    &lt;script&gt; &lt;?coco file( "script.js", "ui.js"    ) <b>js(minify)  cdata(js) </b> ?&gt; &lt;/script&gt;
-   &lt;style &gt; &lt;?coco file( "sheet.less","sheet.css") <b>css(less)   cdata(css)</b> ?&gt; &lt;/style&gt;
+   &lt;style &gt; &lt;?coco file( "sheet.less","less.css" ) <b>css(less)   cdata(css)</b> ?&gt; &lt;/style&gt;
    &lt;script&gt; &lt;?coco file( "es2015.js", "es5.js"   ) <b>js(es5)     cdata(js) </b> ?&gt; &lt;/script&gt;
 &lt;body&gt;&lt;!-- HTML comments will be removed by trim( html ), above --&gt;&lt;/body&gt;
 &lt;?coco-end?&gt;</pre>
 
 Minify / convert external data:
 
-<pre>&lt;?coco-start?&gt;&lt;?coco "style.css"  css(minify) ?&gt;&lt;?coco-output "style.min.css" ?&gt;&lt;?coco-end?&gt;
-&lt;?coco-start?&gt;&lt;?coco "script.js"  js(minify)  ?&gt;&lt;?coco-output "script.min.js" ?&gt;&lt;?coco-end?&gt;
-&lt;?coco-start?&gt;&lt;?coco "sheet.less" css(less)   ?&gt;&lt;?coco-output "sheet.css"     ?&gt;&lt;?coco-end?&gt;
-&lt;?coco-start?&gt;&lt;?coco "es2015.js"  js(es5)     ?&gt;&lt;?coco-output "es5.js"        ?&gt;&lt;?coco-end?&gt;</pre>
+<pre>&lt;?coco-start?&gt;&lt;?coco "style.css"  css(minify) ?&gt;&lt;?coco-output "min.css"  ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "script.js"  js(minify)  ?&gt;&lt;?coco-output "min.js"   ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "sheet.less" css(less)   ?&gt;&lt;?coco-output "less.css" ?&gt;&lt;?coco-end?&gt;
+&lt;?coco-start?&gt;&lt;?coco "es2015.js"  js(es5)     ?&gt;&lt;?coco-output "es5.js"   ?&gt;&lt;?coco-end?&gt;</pre>
+
+Note that since Java is <i>not</i> Node.js, file access such as <code>@import</code> is unavailable at the moment.
 
 ### Auto-run ###
 

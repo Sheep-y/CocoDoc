@@ -9,7 +9,6 @@ import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.CocoRunError;
@@ -91,7 +90,7 @@ public class TaskJS extends JSTask {
    @Override protected ObjectPoolMap<String, Object> getPool() { return enginePool; }
    protected static final ObjectPoolMap<String, Object> enginePool = ObjectPoolMap.create(
       ( key ) -> {
-         ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
+         ScriptEngine js = newJS();
          try {
             switch ( key ) {
                case "Babel":
