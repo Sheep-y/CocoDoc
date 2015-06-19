@@ -12,6 +12,8 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
+import sheepy.util.Net;
+import sheepy.util.Net.Console;
 import sheepy.util.concurrent.ObjectPoolMap;
 import sheepy.util.text.Text;
 
@@ -54,36 +56,13 @@ public abstract class JSTask extends Task {
    /**
     * Console bridge
     */
-   public static class Console {
+   public static class LogConsole implements Console {
       private final Task owner;
-
-      public Console(Task owner) {
+      public LogConsole ( Task owner ) {
          this.owner = owner;
       }
-
-      public void log( Object args ) {
-         handle( Level.FINE, args );
-      }
-      public void debug( Object args ) {
-         handle( Level.FINE, args );
-      }
-      public void info( Object args ) {
-         handle( Level.INFO, args );
-      }
-      public void warn( Object args ) {
-         handle( Level.WARNING, args );
-      }
-      public void error( Object args ) {
-         handle( Level.SEVERE, args );
-      }
-      private void handle( Level level, Object args ) {
-         if ( owner != null )
-            owner.log( level, Objects.toString( args ) );
-         else
-            if ( Level.SEVERE.intValue() < level.intValue() )
-               System.out.println( Objects.toString( args ) );
-            else
-               System.err.println( Objects.toString( args ) );
+      @Override public void handle ( Level level, Object args ) {
+         owner.log( level, Objects.toString( args ) );
       }
    }
 
@@ -112,7 +91,7 @@ public abstract class JSTask extends Task {
       ScriptEngine js = (ScriptEngine) get;
       try {
          log( Level.FINEST, "{0}: Loaded, now processing {1} chars", key, txt.length() );
-         js.put( "console", new Console( this ) );
+         js.put( "console", new LogConsole( this ) );
          js.put( "code", txt );
          String result = action.apply( new Context( txt, js, params ) );
          log( Level.FINEST, "{0}: {1} -> {2}", key, txt.length(), result.length() );
@@ -129,7 +108,7 @@ public abstract class JSTask extends Task {
 
    protected static ScriptEngine newJS () {
       ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
-      js.put( "console", new Console( null ) );
+      js.put( "console", Net.defaultConsole() );
       return js;
    }
 
