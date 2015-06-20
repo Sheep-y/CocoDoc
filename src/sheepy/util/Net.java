@@ -41,7 +41,9 @@ public class Net {
     * Returns a default console object.
     * log, debug, and info goes to System.out, warn and error goes to System.err.
     *
-    * Example: scriptEngine.put( "console", Net.defaultConsole() );
+    * Example:
+    * (Nashorn) scriptEngine.put( "console", Net.defaultConsole() );
+    * (WebView) ((netscape.javascript.JSObject)webEngine.executeScript("window")).setMember( "console", Net.defaultConsole() );
     *
     * @return A shared console object.
     */
@@ -61,6 +63,10 @@ public class Net {
     * Console functional interface
     */
    public static interface Console {
+      public default void group() {}
+      public default void groupCollapsed() {}
+      public default void groupEnd() {}
+      public default void trace() { new Exception("Stack trace").printStackTrace(); }
       public default void log  ( Object args ) { handle( Level.INFO, args ); }
       public default void debug( Object args ) { handle( Level.FINE, args ); }
       public default void info ( Object args ) { handle( Level.CONFIG, args ); }
