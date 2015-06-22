@@ -56,7 +56,7 @@ public abstract class JSTask extends Task {
    /**
     * Console bridge
     */
-   public static class LogConsole implements Console {
+   public static class LogConsole extends Console {
       private final Task owner;
       public LogConsole ( Task owner ) {
          this.owner = owner;
@@ -108,7 +108,7 @@ public abstract class JSTask extends Task {
 
    protected static ScriptEngine newJS () {
       ScriptEngine js = new ScriptEngineManager().getEngineByName( "nashorn" );
-      js.put( "console", Net.defaultConsole() );
+      js.put( "console", new Net.ConsoleSystem() );
       return js;
    }
 

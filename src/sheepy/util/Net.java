@@ -4,12 +4,17 @@ import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import netscape.javascript.JSObject;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
 
 public class Net {
 
@@ -38,42 +43,122 @@ public class Net {
    }
 
    /**
-    * Returns a default console object.
-    * log, debug, and info goes to System.out, warn and error goes to System.err.
+    * Take a JSObject and return console.log style representation.
     *
-    * Example:
-    * (Nashorn) scriptEngine.put( "console", Net.defaultConsole() );
-    * (WebView) ((netscape.javascript.JSObject)webEngine.executeScript("window")).setMember( "console", Net.defaultConsole() );
+    * - String will be displayed quoted.
+    * - Nodes will be displayed in #text or in bracket.
+    * - Array like objects will be expanded.
     *
-    * @return A shared console object.
+    * @param o Subject
+    * @return JS console string representation.
     */
-   public static Console defaultConsole() {
-      synchronized ( Console.class ) {
-         if ( defaultConsole != null ) return defaultConsole;
-         return defaultConsole = ( level, args ) -> {
-            if ( Level.SEVERE.intValue() < level.intValue() )
-               System.out.println( Objects.toString( args ) );
-            else
-               System.err.println( Objects.toString( args ) );
-         };
+   public static CharSequence toString( Object o ) {
+      if ( o == null ) return "null";
+      if ( o instanceof String ) return "undefined".equals( o ) ? o.toString() : '"' + o.toString() + '"';
+      if ( o instanceof Node ) return nodeToString( (Node) o );
+      if ( o instanceof JSObject ) {
+         JSObject obj = (JSObject) o;
+         final Object val = obj.getMember( "length" );
+         if ( val != null && val instanceof Number ) { // Array like?
+            final Object apply = obj.getMember( "apply" );
+            if ( apply != null && ! "undefined".equals( apply ) ) {
+               return Objects.toString( obj );
+            }
+            StringBuilder str = new StringBuilder().append( '[' );
+            for ( int i = 0, len = ((Number)val).intValue() ; i < len ; i++ ) {
+               if ( i > 0 ) str.append( ',' );
+               if ( i == 100 ) {
+                  str.append( "and " ).append( len-i ).append( " more" );
+                  break;
+               }
+               Object e = obj.getSlot( i );
+               if ( e != null ) str.append( toString( e ) );
+            }
+            return str.append( ']' );
+         }
+      }
+      return o.toString();
+      //return o.getClass().toString();
+   }
+
+   /**
+    * Given a DOM node, produce a string representation based on id and className.
+    *
+    * @param node Subject node.
+    * @return String representing the node.
+    */
+   public static CharSequence nodeToString ( Node node ) {
+      switch ( node.getNodeType() ) {
+         case Node.ELEMENT_NODE:
+            StringBuilder str = new StringBuilder().append( '<' );
+            str.append( node.getNodeName().toLowerCase() );
+            if ( node.hasAttributes() ) {
+               NamedNodeMap list = node.getAttributes();
+               if ( list.getNamedItem( "id" ) != null )
+                  str.append( " id=\"" ).append( list.getNamedItem( "id" ).getTextContent() ).append( "\"" );
+               if ( list.getNamedItem( "class" ) != null )
+                  str.append( " class=\"" ).append( list.getNamedItem( "class" ).getTextContent() ).append( "\"" );
+            }
+            return str.append( '>' );
+
+         case Node.TEXT_NODE:
+         case Node.CDATA_SECTION_NODE:
+            return "#text \"" + node.getNodeValue().replace( '\n', ' ' ).replace( '\r', ' ' ) + "\"";
+
+         case Node.COMMENT_NODE:
+            return "<!--" + node.getNodeValue().replace( '\n', ' ' ).replace( '\r', ' ' ) + "-->";
+
+         case Node.DOCUMENT_FRAGMENT_NODE:
+            return "<!DOCTYPE " + node.getNodeName() + ">";
+
+         default:
+            return Objects.toString( node );
       }
    }
 
    /**
     * Console functional interface
     */
-   public static interface Console {
-      public default void group() {}
-      public default void groupCollapsed() {}
-      public default void groupEnd() {}
-      public default void trace() { new Exception("Stack trace").printStackTrace(); }
-      public default void log  ( Object args ) { handle( Level.INFO, args ); }
-      public default void debug( Object args ) { handle( Level.FINE, args ); }
-      public default void info ( Object args ) { handle( Level.CONFIG, args ); }
-      public default void warn ( Object args ) { handle( Level.WARNING, args ); }
-      public default void error( Object args ) { handle( Level.SEVERE, args ); }
-      public void handle( Level level, Object args );
+   public abstract static class Console {
+      protected Map<String,Long> timer;
+      public void group() {}
+      public void groupCollapsed() {}
+      public void groupEnd() {}
+      public void trace() { new Exception("Stack trace").printStackTrace(); }
+      public void log  ( Object args ) { handle( Level.INFO, args ); }
+      public void debug( Object args ) { handle( Level.FINE, args ); }
+      public void info ( Object args ) { handle( Level.CONFIG, args ); }
+      public void warn ( Object args ) { handle( Level.WARNING, args ); }
+      public void error( Object args ) { handle( Level.SEVERE, args ); }
+      public void time ( String args ) {
+         if ( args == null ) return;
+         synchronized ( this ) { if ( timer == null ) timer = new HashMap<>(); }
+         synchronized ( timer ) { timer.put( args, System.nanoTime() ); }
+      }
+      public void timeEnd( String args ) {
+         if ( args == null ) return;
+         long ns;
+         synchronized( this ) { if ( timer == null ) return; }
+         synchronized( timer ) {
+            if ( ! timer.containsKey( args ) ) return;
+            ns = System.nanoTime() - timer.remove( args );
+         }
+         handle( Level.INFO, args + ": " + (ns/1_000_000) + "ms" );
+      }
+      public abstract void handle( Level level, Object args );
    }
-   private static Console defaultConsole;
+
+   /**
+    * A console that logs to System.out or System.err.
+    * log, debug, and info goes to System.out, warn and error goes to System.err.
+    */
+   public static class ConsoleSystem extends Console {
+      @Override public void handle(Level level, Object args) {
+         if ( Level.SEVERE.intValue() < level.intValue() )
+            System.out.println( Objects.toString( args ) );
+         else
+            System.err.println( Objects.toString( args ) );
+      }
+   }
 
 }
