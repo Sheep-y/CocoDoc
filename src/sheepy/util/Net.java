@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -161,4 +162,14 @@ public class Net {
       }
    }
 
+   /**
+    * A console that logs to a Java logger
+    */
+   public static class ConsoleLogger extends Console {
+      private final Logger log;
+      public ConsoleLogger(Logger log) { this.log = log; }
+      @Override public void handle(Level level, Object args) {
+         log.log( level, Objects.toString( args ) );
+      }
+   }
 }

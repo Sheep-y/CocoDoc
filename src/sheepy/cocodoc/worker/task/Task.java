@@ -16,7 +16,7 @@ import sheepy.util.text.Text;
 
 /* A normalised action, e.g. prefix({auto-datauri}), encode(base64), or position(src of the img before) */
 public abstract class Task {
-   private static final Logger log = Logger.getLogger( Task.class.getSimpleName() );
+   protected static final Logger log = Logger.getLogger( Task.class.getSimpleName() );
    static {
       log.setLevel( Level.ALL );
    }

@@ -53,19 +53,6 @@ public abstract class JSTask extends Task {
       }
    }
 
-   /**
-    * Console bridge
-    */
-   public static class LogConsole extends Console {
-      private final Task owner;
-      public LogConsole ( Task owner ) {
-         this.owner = owner;
-      }
-      @Override public void handle ( Level level, Object args ) {
-         owner.log( level, Objects.toString( args ) );
-      }
-   }
-
    protected static class Context {
       String input;
       ScriptEngine js;
@@ -91,7 +78,7 @@ public abstract class JSTask extends Task {
       ScriptEngine js = (ScriptEngine) get;
       try {
          log( Level.FINEST, "{0}: Loaded, now processing {1} chars", key, txt.length() );
-         js.put( "console", new LogConsole( this ) );
+         js.put( "console", new Net.ConsoleLogger( log ) );
          js.put( "code", txt );
          String result = action.apply( new Context( txt, js, params ) );
          log( Level.FINEST, "{0}: {1} -> {2}", key, txt.length(), result.length() );
