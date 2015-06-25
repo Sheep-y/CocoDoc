@@ -53,7 +53,7 @@ public class Net {
     * @param o Subject
     * @return JS console string representation.
     */
-   public static CharSequence toString( Object o ) {
+   public static CharSequence toString ( Object o ) {
       if ( o == null ) return "null";
       if ( o instanceof String ) return "undefined".equals( o ) ? o.toString() : '"' + o.toString() + '"';
       if ( o instanceof Node ) return nodeToString( (Node) o );
@@ -66,7 +66,7 @@ public class Net {
                return Objects.toString( obj );
             }
             StringBuilder str = new StringBuilder().append( '[' );
-            for ( int i = 0, len = ((Number)val).intValue() ; i < len ; i++ ) {
+            for ( int i = 0, len = ( (Number) val ).intValue() ; i < len ; i++ ) {
                if ( i > 0 ) str.append( ',' );
                if ( i == 100 ) {
                   str.append( "and " ).append( len-i ).append( " more" );
@@ -125,12 +125,12 @@ public class Net {
       public void group() {}
       public void groupCollapsed() {}
       public void groupEnd() {}
-      public void trace() { new Exception("Stack trace").printStackTrace(); }
-      public void log  ( Object args ) { handle( Level.INFO, args ); }
-      public void debug( Object args ) { handle( Level.FINE, args ); }
-      public void info ( Object args ) { handle( Level.CONFIG, args ); }
+      public void trace() { new Exception( "Stack trace" ).printStackTrace(); }
+      public void log  ( Object args ) { handle( Level.INFO   , args ); }
+      public void debug( Object args ) { handle( Level.FINE   , args ); }
+      public void info ( Object args ) { handle( Level.CONFIG , args ); }
       public void warn ( Object args ) { handle( Level.WARNING, args ); }
-      public void error( Object args ) { handle( Level.SEVERE, args ); }
+      public void error( Object args ) { handle( Level.SEVERE , args ); }
       public void time ( String args ) {
          if ( args == null ) return;
          synchronized ( this ) { if ( timer == null ) timer = new HashMap<>(); }
@@ -154,7 +154,7 @@ public class Net {
     * log, debug, and info goes to System.out, warn and error goes to System.err.
     */
    public static class ConsoleSystem extends Console {
-      @Override public void handle(Level level, Object args) {
+      @Override public void handle ( Level level, Object args ) {
          if ( Level.SEVERE.intValue() < level.intValue() )
             System.out.println( Objects.toString( args ) );
          else
@@ -167,8 +167,8 @@ public class Net {
     */
    public static class ConsoleLogger extends Console {
       private final Logger log;
-      public ConsoleLogger(Logger log) { this.log = log; }
-      @Override public void handle(Level level, Object args) {
+      public ConsoleLogger ( Logger log ) { this.log = log; }
+      @Override public void handle ( Level level, Object args ) {
          log.log( level, Objects.toString( args ) );
       }
    }
