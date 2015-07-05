@@ -142,6 +142,7 @@ public class FilePath {
                      ex.printStackTrace();
                   }
                }
+               callList.clear();
             }
          } catch (InterruptedException ex) {
             synchronized ( watcher ) {

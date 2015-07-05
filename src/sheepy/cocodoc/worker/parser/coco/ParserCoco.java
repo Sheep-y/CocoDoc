@@ -17,6 +17,7 @@ import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElement.PosElementAttr;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.cocodoc.worker.task.TaskFile;
+import sheepy.util.text.Escape;
 import sheepy.util.text.Text;
 
 public class ParserCoco extends Parser {
@@ -356,6 +357,7 @@ public class ParserCoco extends Parser {
             if ( e.dir.getAction() == Directive.Action.OUTPUT ) continue;
             final Block block = e.dir.get();
             if ( block != null && block.hasData() && e.position.isValid() ) try {
+               CharSequence insertContent = block.getText();
                if ( document == null && positionTask != null ) document = new XmlParser( context ).parse( resultText );
                TextRange insPos = positionTask == null
                      ? e.position
@@ -366,11 +368,12 @@ public class ParserCoco extends Parser {
                   if ( ! attr.hasChildren() ) {
                      log( Level.WARNING, "Target position attribute has no value. Replacing attribute instead." );
                   } else {
-                     insPos = attr.children(0).range;
+                     insPos = attr.children(0).range.clone();
+                     insertContent = '"' + insertContent.toString() + '"';
                   }
                }
                deleteFromResult( insPos );
-               insertToResult( block.getText(), insPos );
+               insertToResult( insertContent, insPos );
                block.log( Level.FINEST, "Inserted to parent block" );
             } catch ( CocoParseError | CocoRunError ex ) {
                positionTask.throwOrWarn( ex );
