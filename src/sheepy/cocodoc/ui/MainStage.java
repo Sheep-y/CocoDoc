@@ -148,8 +148,10 @@ public class MainStage {
          dlgOpen.setTitle( "Run CocoDoc on..." );
       }
       File file = dlgOpen.showOpenDialog( stage );
-      if ( file != null )
+      if ( file != null ) {
          Worker.run( () -> CocoDoc.run( file.toString() ) );
+         tabs.getSelectionModel().select( 0 );
+      }
    }
 
    /*******************************************************************************************************************/

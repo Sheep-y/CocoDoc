@@ -3,6 +3,7 @@ package sheepy.cocodoc.ui;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -253,6 +254,7 @@ public class ProgressPanel {
 
       public void monitor ( Path[] f ) {
          if ( ! isDone() ) return;
+         System.out.println( "Rerun of " + tab.getText() + " triggered by modification of " + Arrays.toString( f ) );
          Platform.runLater( () -> {
             if ( autorerun != null ) return;
             autorerun = Time.defer( 1000, () -> {

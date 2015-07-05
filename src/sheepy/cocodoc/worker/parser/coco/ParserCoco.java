@@ -358,6 +358,8 @@ public class ParserCoco extends Parser {
             final Block block = e.dir.get();
             if ( block != null && block.hasData() && e.position.isValid() ) try {
                CharSequence insertContent = block.getText();
+               if ( Character.codePointAt( insertContent, 0 ) == 65279 )
+                  log( Level.WARNING, "BOM detected in inserted content: {0}", e.dir.getBlock() );
                if ( document == null && positionTask != null ) document = new XmlParser( context ).parse( resultText );
                TextRange insPos = positionTask == null
                      ? e.position
@@ -399,16 +401,16 @@ public class ParserCoco extends Parser {
    }
 
    private void insertToResult ( CharSequence txt, TextRange insPos ) {
-      if ( insPos != null && insPos.isValid() ) {
-         log( CocoConfig.NANO, "Inserts {0} to {1}",
-               Text.defer( () -> Text.ellipsisWithin( txt, 12 ) ),
-               Text.defer( () -> insPos.showInText( resultText ) ) );
-         resultText.insert( insPos.start, txt );
-         for ( Context c : resultStack )
-            c.position.shiftInserted( insPos.start, txt.length() );
-         if ( document != null )
-            document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
-      }
+      if ( insPos == null || ! insPos.isValid() ) return;
+      if ( txt == null || txt.length() <= 0 ) return;
+      log( CocoConfig.NANO, "Inserts {0} to {1}",
+            Text.defer( () -> Text.ellipsisWithin( txt, 12 ) ),
+            Text.defer( () -> insPos.showInText( resultText ) ) );
+      resultText.insert( insPos.start, txt );
+      for ( Context c : resultStack )
+         c.position.shiftInserted( insPos.start, txt.length() );
+      if ( document != null )
+         document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
    }
 
    /************************************************************************************************************/
