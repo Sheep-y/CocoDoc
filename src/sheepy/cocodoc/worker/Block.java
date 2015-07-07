@@ -68,7 +68,7 @@ public class Block extends AbstractFuture<Block> {
                log( CocoConfig.MICRO, "Outputting to {0}", fname );
                if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
                   postprocess();
-                  outputToFile(fname);
+                  outputToFile( fname );
                   log( Level.FINEST, "Outputted to {0}", fname );
                }
                setText( null );

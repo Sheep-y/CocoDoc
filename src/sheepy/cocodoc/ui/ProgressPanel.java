@@ -188,7 +188,9 @@ public class ProgressPanel {
       void register       () { maxProgress.incrementAndGet(); updateProgress(); }
       void arrive         () { curProgress.incrementAndGet(); updateProgress(); }
       void updateProgress () {
+         if ( isDone() ) return;
          Platform.runLater( () -> {
+            if ( isDone() ) return;
             progress.setProgress(
                curProgress.intValue() == 0
                   ? ProgressBar.INDETERMINATE_PROGRESS

@@ -62,7 +62,7 @@ public class TaskFile extends Task {
 
          case POSTPROCESS:
          case INLINE:
-            File base = block.getBasePath();
+            File base = block.getParentBasePath();
             for ( String s : getParams() ) try {
                File f = new File( base, s );
                log( Level.FINE, "Reading {0}", Text.defer( () -> f.toPath().normalize().toString() ) );

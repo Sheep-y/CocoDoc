@@ -358,6 +358,7 @@ public class ParserCoco extends Parser {
             final Block block = e.dir.get();
             if ( block != null && block.hasData() && e.position.isValid() ) try {
                CharSequence insertContent = block.getText();
+               // Warns if content has BOM
                if ( Character.codePointAt( insertContent, 0 ) == 65279 )
                   log( Level.WARNING, "BOM detected in inserted content: {0}", e.dir.getBlock() );
                if ( document == null && positionTask != null ) document = new XmlParser( context ).parse( resultText );

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -79,7 +80,7 @@ public class CocoDoc {
       }
       for ( Directive dir : dirs ) try {
          dir.get();
-      } catch ( InterruptedException | CocoRunError | CocoParseError ex ) {}
+      } catch ( CancellationException | InterruptedException | CocoRunError | CocoParseError ex ) {}
    }
 
    public static void runHeadless () {

@@ -117,8 +117,9 @@ public abstract class Directive {
       if ( subject instanceof String || subject instanceof Number )
          throw new IllegalArgumentException( "Wrong subject. Expected Directive, Block, Task, etc." );
       int len = parameter.length;
-      Object[] param = Arrays.copyOf( parameter, len + 1 );
-      param[ len ] = subject;
+      Object[] param = Arrays.copyOf( parameter, len + 2 );
+      param[ len   ] = subject;
+      param[ len+1 ] = Thread.currentThread().getName();
 
       LogRecord rec = new LogRecord( level, message );
       rec.setParameters( param );
@@ -128,7 +129,7 @@ public abstract class Directive {
          else
             getObserver().error( logFormatter.formatMessage( rec ) );
       }
-      rec.setMessage( message + " << {" + parameter.length + "}" );
+      rec.setMessage( message + " << {" + len + "} @ {" + (len+1) + "}" );
       return rec;
    }
 
