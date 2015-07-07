@@ -3,6 +3,7 @@ package sheepy.cocodoc.worker.directive;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.logging.Level;
+import sheepy.cocodoc.CocoObserver;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.worker.Block;
 import sheepy.cocodoc.worker.BlockStats;
@@ -35,6 +36,8 @@ public class DirStart extends Directive {
             block.setText( parser.get() );
             log( Level.FINEST, "Copied {1} ({0} chars) to start block", this, block.getText().length(), Text.ellipsis( block.getText(), 10 ) );
             block.run();
+         } catch ( Exception ex ) {
+            if ( ! block.isDone() ) block.stop( ex );
          } finally {
             if ( getObserver() != null ) getObserver().done();
          }

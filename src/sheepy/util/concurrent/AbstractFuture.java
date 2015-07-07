@@ -59,6 +59,16 @@ public abstract class AbstractFuture<T> implements RunnableFuture<T> {
       try { stateLock.wait(); } catch ( InterruptedException ex ) { throw new RuntimeException(ex); }
       return isCancelled();
    } }
+   public boolean stop ( Exception ex ) { synchronized( stateLock ) {
+      if ( isDone() ) return isCancelled();
+      if ( state == State.INITIAL ) {
+         state = State.COMPLETED;
+         runException = ex;
+         stateLock.notifyAll();
+         return true;
+      }
+      return cancel( true );
+   } }
 
    @Override public T get() throws InterruptedException, ExecutionException {
       try { return get( 0, TimeUnit.MILLISECONDS ); } catch ( TimeoutException ex ) { throw new InterruptedException(); }
