@@ -79,7 +79,7 @@ public class CocoDoc {
       }
       for ( Directive dir : dirs ) try {
          dir.get();
-      } catch ( InterruptedException ex ) {}
+      } catch ( InterruptedException | CocoRunError | CocoParseError ex ) {}
    }
 
    public static void runHeadless () {
