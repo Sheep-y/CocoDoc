@@ -119,5 +119,4 @@ public class CocoUtils {
          is.close();
       }
    }
-
 }

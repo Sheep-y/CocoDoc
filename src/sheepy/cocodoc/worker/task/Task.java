@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 import sheepy.cocodoc.CocoParseError;
 import sheepy.cocodoc.worker.Block;
@@ -15,12 +16,15 @@ import sheepy.util.text.Text;
 
 /* A normalised action, e.g. prefix({auto-datauri}), encode(base64), or position(src of the img before) */
 public abstract class Task {
-   private static final Logger log = Logger.getLogger( Task.class.getSimpleName() );
+   protected static final Logger log = Logger.getLogger( Task.class.getSimpleName() );
    static {
       log.setLevel( Level.ALL );
    }
    public void log ( Level level, String message, Object ... parameter ) {
-      log.log( getDirective().observe( level, message, this, parameter ) );
+      if ( getDirective() != null )
+         log.log( getDirective().observe( level, message, this, parameter ) );
+      else
+         log.log( new LogRecord( level, message ) );
    }
 
    protected static final Predicate<List<String>> isEmpty = CollectionPredicate.isEmpty();
@@ -148,7 +152,13 @@ public abstract class Task {
    public boolean isThrowError () { return throwError; }
    public void setThrowError( boolean throwError ) { this.throwError = throwError; }
    public <T extends Exception> void throwOrWarn ( T ex ) throws T {
-      log( Level.WARNING, ex.getMessage() );
+      Throwable next = ex;
+      String prefix = "";
+      while ( next != null ) {
+         log( Level.WARNING, prefix + next.getMessage() );
+         next = ex.getCause() == next ? null : ex.getCause();
+         prefix += "> ";
+      }
       if ( isThrowError() ) throw ex;
       else {
          Throwable e = ex;
@@ -168,6 +178,8 @@ public abstract class Task {
          while ( params.remove( "noerr" ) );
          while ( params.remove( null ) );
       }
+      if ( ! allowedDirective().contains( getDirective().getAction() ) )
+         throwOrWarn( new CocoParseError( getName() + " task does not supports " + getDirective().getAction().toString().toLowerCase() + " directive." ) );
       // Validate parameters
       Predicate<List<String>> validate = validParam();
       if ( validate != null )
@@ -176,6 +188,10 @@ public abstract class Task {
    }
    protected abstract Predicate<List<String>> validParam();
    protected String invalidParamMessage() { return "Incorrect or non-effective parameters: {0}"; };
+
+   protected List<Directive.Action> allowedDirective () {
+      return Arrays.asList( Directive.Action.INLINE, Directive.Action.START, Directive.Action.POSTPROCESS );
+   }
 
    List<String> params;
    public boolean hasParams () { return ! NullData.isEmpty( params ); }
@@ -190,8 +206,11 @@ public abstract class Task {
       return this;
    }
 
+   public String getName () {
+      return getAction().toString().toLowerCase();
+   }
    @Override public String toString () {
-      String task = getAction().toString().toLowerCase();
+      String task = getName();
       if ( hasParams() ) task = task + "(" + getParamText() + ")";
       return task;
    }

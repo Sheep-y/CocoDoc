@@ -103,7 +103,7 @@ abstract class XmlSelector {
                pos = str.lastIndexOf( '\n', pos );
                if ( pos > 0 && --howMany <= 0 ) {
                   int pos2 = str.lastIndexOf( '\n', pos-1 );
-                  if ( pos2 >= 0 ) return new TextRange( pos2+1, pos ).setContext( range.context.root() );
+                  if ( pos2 >= 0 ) return new TextRange( pos2+1, pos+1 ).setContext( range.context.root() );
                }
             }
          } else {
@@ -138,13 +138,14 @@ abstract class XmlSelector {
          int howMany = count == null ? 1 : Integer.parseInt( count );
          if ( this.position.equals( "before" ) ) {
             XmlNode pos = firstTag( range.context.root().findChildrenBefore( range.start ) );
-            do {
-               pos = firstTag( pos.before() );
+            if ( pos.range.end > range.end ) pos = firstTag( pos.before() );
+            while ( pos != null && howMany > 0 ) {
                if ( ! this.match( pos ) ) break;
                if ( --howMany <= 0 ) return pos.range;
-            } while ( pos != null && howMany > 0 );
+               pos = firstTag( pos.before() );
+            }
          } else {
-            throw new UnsupportedOperationException( "Not implemented" );
+            throw new UnsupportedOperationException( "After has not been implemented" );
          }
          throw new CocoRunError( "Cannot find " + this );
       }
@@ -201,7 +202,7 @@ abstract class XmlSelector {
       PosAttr ( String attr ) { this.attr = attr; }
 
       @Override TextRange find ( CharSequence text, TextRange range ) {
-         XmlNode base = firstTag( range.context.root().findChildrenBefore( range.start ) );
+         XmlNode base = firstTag( range.context.root().findChildrenOver( range.start ) );
          for ( XmlNode child : base.children() )
             if ( match( child ) )
                return child.range;

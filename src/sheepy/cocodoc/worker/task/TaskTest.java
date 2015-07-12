@@ -58,7 +58,7 @@ public class TaskTest extends Task {
                } catch ( IOException | ParserConfigurationException ex ) {
                   throwOrWarn( new CocoRunError( ex ) );
                } catch ( SAXException ex ) {
-                  throwOrWarn( new CocoRunError( "Test failed: Invalid XML.", ex ) );
+                  throwOrWarn( new CocoRunError( "Test failed: Invalid XML - " + ex.getMessage(), ex ) );
                }
                break;
             default :

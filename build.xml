@@ -11,8 +11,6 @@
    <property name="app.title"  value="CocoDoc" />
    <!-- Source code folder -->
    <property name="dir.src"   value="src" />
-   <!-- Document folder -->
-   <property name="dir.doc"   value="doc" />
    <!-- Jar compilation folder -->
    <property name="dir.jar"   value="dist" />
    <!-- Jar file name -->
@@ -67,7 +65,6 @@
 
    <!-- Copy support files to ${jar.root} -->
    <target name="-copy-file">
-      <copy todir="${jar.root}/doc"><fileset dir="doc"/></copy>
       <copy todir="${jar.root}/res"><fileset dir="res"/></copy>
       <copy todir="${jar.root}/META-INF"><fileset dir="META-INF"/></copy>
       <copy todir="${jar.root}/src"><fileset dir="src"/></copy>
@@ -102,7 +99,6 @@
 
    <target name="-post-jar" if="src.src.dir">
       <delete includeemptydirs="true" failonerror="false">
-         <fileset dir ="${build.dir}/classes/doc" />
          <fileset dir ="${build.dir}/classes/res" />
          <fileset dir ="${build.dir}/classes/META-INF"/>
          <fileset dir ="${build.dir}/classes/src"/>

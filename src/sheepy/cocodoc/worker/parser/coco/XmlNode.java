@@ -262,13 +262,13 @@ public class XmlNode implements Cloneable {
    }
 
    XmlNode findChildrenOver ( int position ) {
-      if ( !range.isValid() || range.start > position || range.end < position ) {
+      if ( ! range.isValid() || range.start > position || range.end <= position ) {
          return null;
       }
       if ( child != null ) {
          for ( XmlNode c : child ) {
             XmlNode result = c.findChildrenOver(position);
-            if (result != null) {
+            if ( result != null ) {
                return result;
             }
          }

@@ -33,7 +33,9 @@ public abstract class AbstractFuture<T> implements RunnableFuture<T> {
       try {
          value = implRun(); // subclass can return partial result even if interrupted (non-exception)
       } catch ( Exception ex ) {
-         runException = ex;
+         synchronized( stateLock ) {
+            runException = ex;
+         }
       } finally { synchronized( stateLock ) {
          if ( value != null ) result = value; // Assign result in synchronized block
          state = runningThread.isInterrupted() && runException == null ? State.CANCELLED : State.COMPLETED;
@@ -56,6 +58,16 @@ public abstract class AbstractFuture<T> implements RunnableFuture<T> {
       if ( mayInterruptIfRunning ) runningThread.interrupt();
       try { stateLock.wait(); } catch ( InterruptedException ex ) { throw new RuntimeException(ex); }
       return isCancelled();
+   } }
+   public boolean stop ( Exception ex ) { synchronized( stateLock ) {
+      if ( isDone() ) return isCancelled();
+      if ( state == State.INITIAL ) {
+         state = State.COMPLETED;
+         runException = ex;
+         stateLock.notifyAll();
+         return true;
+      }
+      return cancel( true );
    } }
 
    @Override public T get() throws InterruptedException, ExecutionException {

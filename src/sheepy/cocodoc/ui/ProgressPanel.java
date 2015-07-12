@@ -3,6 +3,7 @@ package sheepy.cocodoc.ui;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -187,7 +188,9 @@ public class ProgressPanel {
       void register       () { maxProgress.incrementAndGet(); updateProgress(); }
       void arrive         () { curProgress.incrementAndGet(); updateProgress(); }
       void updateProgress () {
+         if ( isDone() ) return;
          Platform.runLater( () -> {
+            if ( isDone() ) return;
             progress.setProgress(
                curProgress.intValue() == 0
                   ? ProgressBar.INDETERMINATE_PROGRESS
@@ -253,6 +256,7 @@ public class ProgressPanel {
 
       public void monitor ( Path[] f ) {
          if ( ! isDone() ) return;
+         System.out.println( "Rerun of " + tab.getText() + " triggered by modification of " + Arrays.toString( f ) );
          Platform.runLater( () -> {
             if ( autorerun != null ) return;
             autorerun = Time.defer( 1000, () -> {
@@ -313,7 +317,8 @@ public class ProgressPanel {
          super( name );
          this.tab = tab;
          Platform.runLater( () -> {
-            if ( parent == tab.node || parent.getParent() == tab.node ) // Count progress of first two levels
+            int level = findLevel( node );
+            if ( level <= 2 ) // Count progress of first two levels
                tab.register();
             node.setExpanded( true );
             parent.getChildren().add( node );

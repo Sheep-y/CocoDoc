@@ -17,7 +17,7 @@ public class CocoConfig {
    public List<String> runFiles = new ArrayList<>(0);
 
    public static final String DEFAULT_BUILD    = "build.cocodoc.conf";
-   public static final String DOC_PATH    = "doc/";
+   public static final String DOC_PATH    = "res/";
    public static final String HELP_FILE   = DOC_PATH+ "manual.xhtml";
    public static final String DESIGN_FILE = DOC_PATH+ "design.xhtml";
    public static final String LGPL_FILE   = DOC_PATH+ "license_lgpl.xhtml";

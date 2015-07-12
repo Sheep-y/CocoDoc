@@ -68,7 +68,7 @@ public class Block extends AbstractFuture<Block> {
                log( CocoConfig.MICRO, "Outputting to {0}", fname );
                if ( ! fname.equals( "NUL" ) && ! fname.equals( "/dev/null" ) ) {
                   postprocess();
-                  outputToFile(fname);
+                  outputToFile( fname );
                   log( Level.FINEST, "Outputted to {0}", fname );
                }
                setText( null );
@@ -204,7 +204,7 @@ public class Block extends AbstractFuture<Block> {
       IOException error = null;
       int textLen = textResult.length();
       for ( Charset charset : toBinaryCharset ) try {
-         setBinary(I18n.encode(textResult, I18n.strictEncoder( charset ) ) );
+         setBinary( I18n.encode(textResult, I18n.strictEncoder( charset ) ) );
          currentCharset = charset;
          log( CocoConfig.MICRO, "Converted {0} characters to {1} binary.", textLen, charset );
          return;
@@ -223,7 +223,7 @@ public class Block extends AbstractFuture<Block> {
       byte[] buf = binaryResult.toByteArray();
       IOException error = null;
       for ( Charset charset : toTextCharset ) try {
-         setText(I18n.decode(buf, I18n.strictDecoder( charset ) ) );
+         setText( I18n.decode(buf, I18n.strictDecoder( charset ) ) );
          currentCharset = charset;
          log( CocoConfig.MICRO, "Converted {0} bytes of {1} to text.", buf.length, charset );
          return;
@@ -280,10 +280,7 @@ public class Block extends AbstractFuture<Block> {
       return basePath == null ? getParentBasePath() : basePath;
    }
    public Block setBasePath( File basePath ) {
-      if ( basePath != null && this.basePath == null ) {
-         log( Level.FINER, "Block base path set to {0}", basePath );
-         this.basePath = basePath;
-      }
+      this.basePath = basePath;
       return this;
    }
 

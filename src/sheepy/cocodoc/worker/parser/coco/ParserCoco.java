@@ -17,6 +17,7 @@ import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElement.PosElementAttr;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.cocodoc.worker.task.TaskFile;
+import sheepy.util.text.Escape;
 import sheepy.util.text.Text;
 
 public class ParserCoco extends Parser {
@@ -356,6 +357,10 @@ public class ParserCoco extends Parser {
             if ( e.dir.getAction() == Directive.Action.OUTPUT ) continue;
             final Block block = e.dir.get();
             if ( block != null && block.hasData() && e.position.isValid() ) try {
+               CharSequence insertContent = block.getText();
+               // Warns if content has BOM
+               if ( Character.codePointAt( insertContent, 0 ) == 65279 )
+                  log( Level.WARNING, "BOM detected in inserted content: {0}", e.dir.getBlock() );
                if ( document == null && positionTask != null ) document = new XmlParser( context ).parse( resultText );
                TextRange insPos = positionTask == null
                      ? e.position
@@ -366,11 +371,12 @@ public class ParserCoco extends Parser {
                   if ( ! attr.hasChildren() ) {
                      log( Level.WARNING, "Target position attribute has no value. Replacing attribute instead." );
                   } else {
-                     insPos = attr.children(0).range;
+                     insPos = attr.children(0).range.clone();
+                     insertContent = '"' + insertContent.toString() + '"';
                   }
                }
                deleteFromResult( insPos );
-               insertToResult( block.getText(), insPos );
+               insertToResult( insertContent, insPos );
                block.log( Level.FINEST, "Inserted to parent block" );
             } catch ( CocoParseError | CocoRunError ex ) {
                positionTask.throwOrWarn( ex );
@@ -396,16 +402,16 @@ public class ParserCoco extends Parser {
    }
 
    private void insertToResult ( CharSequence txt, TextRange insPos ) {
-      if ( insPos != null && insPos.isValid() ) {
-         log( CocoConfig.NANO, "Inserts {0} to {1}",
-               Text.defer( () -> Text.ellipsisWithin( txt, 12 ) ),
-               Text.defer( () -> insPos.showInText( resultText ) ) );
-         resultText.insert( insPos.start, txt );
-         for ( Context c : resultStack )
-            c.position.shiftInserted( insPos.start, txt.length() );
-         if ( document != null )
-            document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
-      }
+      if ( insPos == null || ! insPos.isValid() ) return;
+      if ( txt == null || txt.length() <= 0 ) return;
+      log( CocoConfig.NANO, "Inserts {0} to {1}",
+            Text.defer( () -> Text.ellipsisWithin( txt, 12 ) ),
+            Text.defer( () -> insPos.showInText( resultText ) ) );
+      resultText.insert( insPos.start, txt );
+      for ( Context c : resultStack )
+         c.position.shiftInserted( insPos.start, txt.length() );
+      if ( document != null )
+         document.stream().forEach( node -> node.range.shiftInserted( insPos.start, txt.length() ) );
    }
 
    /************************************************************************************************************/
