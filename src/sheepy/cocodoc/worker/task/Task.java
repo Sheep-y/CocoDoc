@@ -147,6 +147,7 @@ public abstract class Task {
       //if ( getDirective().getTasks().size() > 1 )
       //   throw new CocoParseError( name + " must be used alone to be deferred for post process." );
       getBlock().setText( "<?coco-postprocess " + toString() + " ?>" );
+      log( Level.FINEST, "Defer to post process: ", getBlock().getText() );
    }
 
    public boolean isThrowError () { return throwError; }
@@ -194,8 +195,12 @@ public abstract class Task {
    }
 
    List<String> params;
+   public List<String> getParams () {
+      List<String> result = params == null ? new ArrayList<>(1) : new ArrayList<>( params );
+      if ( ! throwError ) result.add( "noerr" );
+      return result;
+   }
    public boolean hasParams () { return ! NullData.isEmpty( params ); }
-   public List<String> getParams () { return NullData.copy( params ); }
    public String getParam ( int index ) { return NullData.get( params, index ); }
    public String getParamText () { return Text.toString( ",", getParams(), Task::quote ); }
    public Task addParam ( String ... param ) {

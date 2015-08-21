@@ -56,7 +56,7 @@ public class TaskVar extends Task {
          default:
             if ( ! block.stats().hasVar( varname ) ) {
                if ( ! isPostProcess() ) {
-                  setPostProcess( "Variable" );
+                  setPostProcess( "var" );
                   return;
                } else // Otherwise fallthrough
                   throwOrWarn( new CocoRunError( "Variable not found: " + varname ) );
@@ -73,7 +73,7 @@ public class TaskVar extends Task {
       if ( value.toString().startsWith( "<?coco-postprocess " ) )
          log( Level.FINEST, "Deferred variable {0} to post-process", varname );
       else
-         log( Level.FINEST, "Found variable {0}: {1}", varname, value );
+         log( Level.FINEST, "Applied variable {0}: {1}", varname, value );
 
       getBlock().getText().append( value.toString() );
    }
