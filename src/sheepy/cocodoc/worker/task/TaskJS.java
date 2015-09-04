@@ -159,7 +159,7 @@ public class TaskJS extends JSTask {
       // Rewrite assignment and remove trailing comma
       func = "modules[" + id + "]=" + func.substring( func.indexOf( ':' )+1, func.length() - 1 ).trim();
       //System.out.println( Text.ellipsisWithin( func, 40 ) );
-      if ( func.length() > 200_000 )
+      if ( func.length() > 100_000 )
          loadBabelTransform( js, id, func );
       else
          js.eval( func );
@@ -178,16 +178,16 @@ public class TaskJS extends JSTask {
       /* Caputre each transform block like the one below and put into global variable
 
            "abstract-expression-call": {
-                   loc: null,
-                   start: null,
-                   range: null,
-                   body: [{ ... }],
                    type: "Program",
-                   end: null
+                   body: [{ ... }],
            },
 
       */
-      Matcher func = Pattern.compile( "\"?([\\w-]+)\"?\\:\\s*(\\{\\s*loc:.*?\\,\\s*type:\\s*\"Program\",[^{}]+\\})\\,?", Pattern.DOTALL ).matcher( src );
+      Matcher func = Pattern.compile(
+            //"(  Name ) ":    (  {    type:     "Program", ...  })
+            "\"([\\w-]+)\":\\s*(\\{\\s*type:\\s*\"Program\",.*?\\})" +
+            "(?=,\n\"[\\w-]|\n\\}\n\\}, \\{\\}\\])" // Either ends with next name, or ends with next module
+            , Pattern.DOTALL ).matcher( src );
       while ( func.find() ) {
          String var = "transforms['" + func.group( 1 ) + "']";
          String code = func.group( 2 );
