@@ -86,7 +86,11 @@ public abstract class ObserverEntity implements CocoObserver {
 
    protected void reset() {
       baseTime = startTime = endTime = 0;
-      logList.clear();
+      messageProperty().set( "" );
+      synchronized ( logList ) {
+         error = null;
+         logList.clear();
+      }
       node.getChildren().clear();
    }
 
