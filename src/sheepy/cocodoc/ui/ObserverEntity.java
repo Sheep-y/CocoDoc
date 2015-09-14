@@ -90,6 +90,7 @@ public abstract class ObserverEntity implements CocoObserver {
       synchronized ( logList ) {
          error = null;
          logList.clear();
+         //node.setGraphic( new ImageView( (Image) null ) );
       }
       node.getChildren().clear();
    }
