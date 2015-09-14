@@ -36,7 +36,7 @@ public class TextRange implements Comparable<TextRange> {
    //         2   2      add within: [1,5]
 
    void shiftInserted ( int atPosition, int deviation ) {
-      if (deviation == 0 || atPosition >= end || start < 0) {
+      if (deviation == 0 || atPosition > end || start < 0) {
          return; // No change, insert or delete after us, or we were deleted.
       }
       if (atPosition <= start) {
