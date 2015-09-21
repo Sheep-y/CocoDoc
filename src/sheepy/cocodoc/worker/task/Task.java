@@ -55,6 +55,7 @@ public abstract class Task {
       TEXT,
       TEST,
       TRIM,
+      XSL,
       VAR
    }
 
@@ -98,6 +99,7 @@ public abstract class Task {
          case TRIM       : result = new TaskTrim(); break;
          case STRIP      : result = new TaskStrip(); break;
          case VAR        : result = new TaskVar(); break;
+         case XSL        : result = new TaskXsl(); break;
          default         : throw new UnsupportedOperationException( "Unimplemented task: " + task );
       }
       return result.addParam( params );
