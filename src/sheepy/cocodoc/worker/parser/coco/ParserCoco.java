@@ -17,7 +17,6 @@ import sheepy.cocodoc.worker.parser.Parser;
 import sheepy.cocodoc.worker.parser.coco.XmlSelector.PosElement.PosElementAttr;
 import sheepy.cocodoc.worker.task.Task;
 import sheepy.cocodoc.worker.task.TaskFile;
-import sheepy.util.text.Escape;
 import sheepy.util.text.Text;
 
 public class ParserCoco extends Parser {
@@ -106,8 +105,8 @@ public class ParserCoco extends Parser {
                   log( Level.FINEST, "Start coco block {0}", dir );
                   dir.setContent( text.substring( end.end() ) ); // Pass content to directive
                   addToResult( dir.start( context ) );
+                  if ( dir.getContent() == null ) throw new CocoParseError( "Coco:start without Coco:end" );
                   text = dir.getContent().toString(); // Get remaining (unparsed) content
-                  if ( text == null ) throw new CocoParseError( "Coco:start without Coco:end" );
 
                } else if ( dir.getAction() == Action.END ) {
                   log( Level.FINEST, "Ends coco block {0}", dir );

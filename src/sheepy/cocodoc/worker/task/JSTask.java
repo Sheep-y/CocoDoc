@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.logging.Level;
 import javax.script.ScriptEngine;
@@ -13,7 +12,6 @@ import javax.script.ScriptException;
 import sheepy.cocodoc.CocoRunError;
 import sheepy.cocodoc.CocoUtils;
 import sheepy.util.Net;
-import sheepy.util.Net.Console;
 import sheepy.util.concurrent.ObjectPoolMap;
 import sheepy.util.text.Text;
 
