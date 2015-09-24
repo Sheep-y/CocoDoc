@@ -31,7 +31,7 @@ public class TaskDeflate extends Task {
          os.write( data );
          os.finish();
          getBlock().setBinary( buffer );
-         log( Level.FINEST, "Deflated {0} bytes to {1}.", data.length, buffer.size() );
+         log( Level.FINEST, "Deflated, {0} -> {1}", data.length, buffer.size() );
       } catch ( IOException ex ) {
          throwOrWarn( new CocoRunError( ex ) );
       }

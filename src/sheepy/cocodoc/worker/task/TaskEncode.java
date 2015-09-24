@@ -32,11 +32,16 @@ public class TaskEncode extends Task {
       }
       log( Level.FINER, "Encoding data" );
 
+      int origLen = 0;
       for ( String e : getParams() ) {
          log( Level.FINEST, "Encode to {0}", e.toLowerCase() );
+         if ( origLen == 0 && ! e.toLowerCase().equals( "base64" ) ) {
+            origLen = block.getText().length();
+         }
          switch ( e.toLowerCase() ) {
             case "base64" :
                byte[] data = block.getBinary();
+               if ( origLen == 0 ) origLen = data.length;
                block.setText( Base64.getEncoder().encodeToString( data ) );
                break;
 
@@ -66,6 +71,6 @@ public class TaskEncode extends Task {
                throwOrWarn( new CocoParseError( "Unknown encode parameter: " + e ) );
          }
       }
-      log( Level.FINEST, "Data Encoded." );
+      log( Level.FINEST, "Data Encoded, {0} chars -> {1} chars.", new Object[]{ origLen, block.getText().length() } );
    }
 }
