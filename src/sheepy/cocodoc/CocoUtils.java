@@ -114,7 +114,7 @@ public class CocoUtils {
       InputStream is = getStream( file );
       if ( is == null ) throw new FileNotFoundException( "Resource not found: " + file );
       try {
-         return new Scanner(is).useDelimiter("\\A").next();
+         return new Scanner( is, "UTF-8" ).useDelimiter("\\A").next();
       } finally {
          is.close();
       }
