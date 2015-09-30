@@ -26,7 +26,10 @@
       <available file="./${file.main.class}" />
    </condition>
    <target name="-delete-class" if="class-in-root">
-      <delete includeemptydirs="true" failonerror="false"><fileset dir ="sheepy" /></delete>
+      <delete includeemptydirs="true" failonerror="false">
+         <fileset dir ="sheepy" />
+         <fileset dir ="SevenZip" />
+      </delete>
    </target>
 
    <!-- Compile and create a redistritabue jar -->

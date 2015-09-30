@@ -48,7 +48,7 @@
   <dt>deflate</dt>                  <dd>Deflate data at maximum compression. [Binary]</dd>
   <!--dt>decode(base64|xml)</dt>       <dd>Decode data from Base64 code / XML entities. [Text]</dd-->
   <dt>exec(app,param1,par2...)</dt> <dd>Execute a program and append its output to the block. [currently Text, should be binary]</dd>
-  <dt>encode(base64|xml|crlf)</dt>  <dd>Encode data into Base64 code / XML entities / JS string / URL / convert line breaks to lf/crlf. [Text]</dd>
+  <dt>encode(7z|base64|xml|js|url|crlf)</dt>  <dd>Encode data into LZMA / Base64 / XML entities / JS string (without quotes) / URL / convert line breaks to lf/crlf. [Usually Text]</dd>
   <dt>html(toc|index|glossary[,group])</dt> <dd>Run html parsing (no parameter), or output TOC (ol) / Index (dl) / Glossary (dl). [Text]</dd>
   <dt>js(es5|minify)</dt>           <dd>ES5: Convert js to ES5 (<a href='https://babeljs.io/'>Babel</a>).  Minify: Minify data as JS.  <a href='https://github.com/mishoo/UglifyJS2'>UglifyJS</a> options: consolidate, -mangle.</dd>
   <dt>open(file)</dt>               <dd>Open specified file. If not specified, use last file task in same directive, or else use block output target.</dd>
