@@ -103,16 +103,18 @@ abstract class XmlSelector {
                pos = str.lastIndexOf( '\n', pos );
                if ( pos > 0 && --howMany <= 0 ) {
                   int pos2 = str.lastIndexOf( '\n', pos-1 );
-                  if ( pos2 >= 0 ) return new TextRange( pos2+1, pos+1 ).setContext( range.context.root() );
+                  if ( pos2 >= 0 ) ++pos2; else pos2 = 0;
+                  return new TextRange( pos2, pos+1 ).setContext( range.context.root() );
                }
             }
          } else {
-            int pos = range.end;
-            while ( howMany > 0 && pos < str.length() ) {
+            int pos = range.end, strlen = str.length();
+            while ( howMany > 0 && pos < strlen ) {
                pos = str.indexOf( '\n', pos );
                if ( pos >= 0 && pos < str.length() &&  --howMany <= 0 ) {
                   int pos2 = str.indexOf( '\n', pos+1 );
-                  if ( pos2 >= 0 ) return new TextRange( pos, pos2 ).setContext( range.context.root() );
+                  if ( pos2 < 0 ) pos2 = strlen;
+                  return new TextRange( pos, pos2 ).setContext( range.context.root() );
                }
             }
          }
