@@ -30,9 +30,9 @@ Major features:
   5. Parallel processing architecture that make the best use of multi-core processors.
   6. GUI with live progress tree that let you drill down the process.
 
-License: <a href='http://www.gnu.org/licenses/lgpl.html'>Lesser GPL v3</a>
+License: <a href='http://www.gnu.org/licenses/lgpl.html'>GNU Lesser GPL v3</a>
 
-Quick Start
+Quick Guide
 -----------
 
 CocoDoc does not need to be installed - just download, launch, and point it to the build file.
@@ -89,17 +89,19 @@ Replacing content can be done with regular expression:
 The above code replace 12.3 with 12,3.
 
 
-### Coexistance of linking and embedding ###
+### Coexist of link and embed ###
 
 To link an external resource while keeping build instructions, use <code>delete</code> task to remove the link during build.
 
-<pre><code>&lt;script     src="script.js"&gt;&lt;/script&gt;
+<pre><code>&lt;link      href="style.css" rel="stylesheet" /&gt;
+&lt;style&gt;  &lt;?coco "style.css" <b>delete( the line before )</b> ?&gt; &lt;/style&gt;
+&lt;script     src="script.js"&gt;&lt;/script&gt;
 &lt;script&gt; &lt;?coco "script.js" <b>delete( the line before )</b> ?&gt; &lt;/script&gt;</code></pre>
 
-Other building tasks, such as minification or cdata wrap, can also be applied (see below).
+Other building tasks, such as [minification or cdata wrap](#minify-and-convert), can also be applied.
 
-Without CocoDoc processing, this will cause a syntax error because xml directive is not js code (or css code).
-Solutions exist, such as using block comments, <code>position</code> task, or <code>prefix</code>&amp;<code>postfix</code> tasks.
+Without CocoDoc processing, this will cause a syntax error because xml directive is not js or css code.
+Solutions include comments, <code>position</code> task, or <code>prefix</code>&amp;<code>postfix</code> tasks.
 
 
 ### Data URI ###
